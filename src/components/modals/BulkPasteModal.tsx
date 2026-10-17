@@ -17,7 +17,6 @@ import {
   Edit2,
   Trash2,
   ChevronDown,
-  ChevronUp,
   Copy,
   Bot,
 } from 'lucide-react';
@@ -568,79 +567,88 @@ ${aiPromptTopic.trim() || '20 từ vựng tiếng Trung thông dụng kèm câu 
                     <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300">
                       {showAiPrompt ? 'Thu gọn' : 'Mở xem prompt'}
                     </span>
-                    {showAiPrompt ? (
-                      <ChevronUp size={16} className="text-purple-700 dark:text-purple-300" />
-                    ) : (
-                      <ChevronDown size={16} className="text-purple-700 dark:text-purple-300" />
-                    )}
+                    <ChevronDown
+                      size={16}
+                      className={`text-purple-700 dark:text-purple-300 transition-transform duration-300 ease-in-out ${
+                        showAiPrompt ? 'rotate-180' : 'rotate-0'
+                      }`}
+                    />
                   </div>
                 </button>
 
-                {showAiPrompt && (
-                  <div className="p-4 pt-1 border-t border-purple-200/70 dark:border-purple-800/60 space-y-3 animate-fadeIn">
-                    {/* Topic Customizer */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 mb-1">
-                        Chủ đề hoặc số lượng từ bạn muốn AI tạo:
-                      </label>
-                      <input
-                        type="text"
-                        value={aiPromptTopic}
-                        onChange={(e) => setAiPromptTopic(e.target.value)}
-                        placeholder="Ví dụ: 30 từ HSK 3 chủ đề đi du lịch, 50 từ vựng kinh doanh..."
-                        className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-800 dark:text-slate-200 font-medium"
-                      />
-                      {/* Quick Preset Pills */}
-                      <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[10px]">
-                        <span className="text-purple-700 dark:text-purple-400 font-semibold">Gợi ý nhanh:</span>
-                        {[
-                          '20 từ HSK 1-2 cơ bản hàng ngày',
-                          '30 từ HSK 3 chủ đề Du lịch & Khách sạn',
-                          '30 từ HSK 4 chủ đề Ẩm thực & Mua sắm',
-                          '25 từ chủ đề Phỏng vấn & Công sở',
-                          '20 từ chủ đề Sức khỏe & Y tế',
-                        ].map((preset) => (
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    showAiPrompt
+                      ? 'grid-rows-[1fr] opacity-100'
+                      : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="p-4 pt-1 border-t border-purple-200/70 dark:border-purple-800/60 space-y-3">
+                      {/* Topic Customizer */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 mb-1">
+                          Chủ đề hoặc số lượng từ bạn muốn AI tạo:
+                        </label>
+                        <input
+                          type="text"
+                          value={aiPromptTopic}
+                          onChange={(e) => setAiPromptTopic(e.target.value)}
+                          placeholder="Ví dụ: 30 từ HSK 3 chủ đề đi du lịch, 50 từ vựng kinh doanh..."
+                          className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-800 dark:text-slate-200 font-medium"
+                        />
+                        {/* Quick Preset Pills */}
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[10px]">
+                          <span className="text-purple-700 dark:text-purple-400 font-semibold">Gợi ý nhanh:</span>
+                          {[
+                            '20 từ HSK 1-2 cơ bản hàng ngày',
+                            '30 từ HSK 3 chủ đề Du lịch & Khách sạn',
+                            '30 từ HSK 4 chủ đề Ẩm thực & Mua sắm',
+                            '25 từ chủ đề Phỏng vấn & Công sở',
+                            '20 từ chủ đề Sức khỏe & Y tế',
+                          ].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setAiPromptTopic(preset)}
+                              className="px-2 py-0.5 rounded-lg bg-purple-100/70 dark:bg-purple-900/40 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-300 cursor-pointer transition-colors"
+                            >
+                              {preset}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Prompt Box */}
+                      <div className="relative">
+                        <pre className="p-3 bg-slate-900 text-slate-100 dark:bg-black/80 rounded-xl text-[11px] font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto border border-purple-900/30">
+                          {generatedAiPrompt}
+                        </pre>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                        <div className="text-[11px] text-purple-700 dark:text-purple-400">
+                          Sau khi AI trả lời, chỉ cần <strong>sao chép toàn bộ kết quả</strong> và dán vào ô nhập bên dưới.
+                        </div>
+                        <div className="flex items-center gap-2">
                           <button
-                            key={preset}
                             type="button"
-                            onClick={() => setAiPromptTopic(preset)}
-                            className="px-2 py-0.5 rounded-lg bg-purple-100/70 dark:bg-purple-900/40 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-300 cursor-pointer transition-colors"
+                            onClick={handleCopyAiPrompt}
+                            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs ${
+                              copiedPrompt
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-purple-700 hover:bg-purple-800 text-white'
+                            }`}
                           >
-                            {preset}
+                            {copiedPrompt ? <Check size={14} /> : <Copy size={14} />}
+                            <span>{copiedPrompt ? 'Đã sao chép prompt!' : 'Sao chép Prompt gửi AI'}</span>
                           </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Prompt Box */}
-                    <div className="relative">
-                      <pre className="p-3 bg-slate-900 text-slate-100 dark:bg-black/80 rounded-xl text-[11px] font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto border border-purple-900/30">
-                        {generatedAiPrompt}
-                      </pre>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-                      <div className="text-[11px] text-purple-700 dark:text-purple-400">
-                        Sau khi AI trả lời, chỉ cần <strong>sao chép toàn bộ kết quả</strong> và dán vào ô nhập bên dưới.
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleCopyAiPrompt}
-                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs ${
-                            copiedPrompt
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-purple-700 hover:bg-purple-800 text-white'
-                          }`}
-                        >
-                          {copiedPrompt ? <Check size={14} /> : <Copy size={14} />}
-                          <span>{copiedPrompt ? 'Đã sao chép prompt!' : 'Sao chép Prompt gửi AI'}</span>
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
               <div>
