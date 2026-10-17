@@ -106,6 +106,7 @@ export default function AdminPage() {
   const userPageSize = 10;
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUserForModal, setSelectedUserForModal] = useState<User | null>(null);
+  const [workspaceSelectedUserId, setWorkspaceSelectedUserId] = useState<string | null>(null);
   const [userActionConfirm, setUserActionConfirm] = useState<{
     type: 'lock' | 'unlock' | 'role';
     targetUser: User;
@@ -2554,7 +2555,13 @@ export default function AdminPage() {
           )}
 
           {/* TAB 7: USER WORKSPACES EXPLORER */}
-          {activeTab === 'workspaces' && <AdminWorkspacesTab />}
+          {activeTab === 'workspaces' && (
+            <AdminWorkspacesTab
+              users={users}
+              initialSelectedUserId={workspaceSelectedUserId}
+              onSelectUser={(uId) => setWorkspaceSelectedUserId(uId)}
+            />
+          )}
 
           {/* TAB 9: SYSTEM SETTINGS */}
           {activeTab === 'settings' && <AdminSettingsTab />}
@@ -2627,6 +2634,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => {
+                setWorkspaceSelectedUserId(selectedUserForModal.id);
                 setSelectedUserForModal(null);
                 setActiveTab('workspaces');
               }}

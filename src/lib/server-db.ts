@@ -1032,9 +1032,57 @@ export interface UserWorkspaceData {
   settings: UserSettings;
 }
 
+export function syncUsersToServer(incomingUsers: User[]): void {
+  if (!Array.isArray(incomingUsers) || incomingUsers.length === 0) return;
+  const currentRecords = readJsonFile<StoredUserRecord[]>('users.json', []);
+  const recordMap = new Map<string, StoredUserRecord>();
+  for (const r of currentRecords) {
+    if (r.id) recordMap.set(r.id, r);
+  }
+
+  let hasChanges = false;
+  for (const u of incomingUsers) {
+    if (!u.id) continue;
+    const existing = recordMap.get(u.id);
+    if (!existing) {
+      recordMap.set(u.id, {
+        id: u.id,
+        name: u.name || u.email?.split('@')[0] || 'Học viên',
+        email: u.email || '',
+        role: u.role || 'user',
+        streakDays: u.streakDays || 0,
+        totalMastered: u.totalMastered || 0,
+        targetHsk: u.targetHsk || 3,
+        isLocked: !!u.isLocked,
+        createdAt: u.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        passwordHash: '',
+        salt: '',
+      });
+      hasChanges = true;
+    } else {
+      const updated: StoredUserRecord = {
+        ...existing,
+        name: u.name || existing.name,
+        email: u.email || existing.email,
+        role: u.role || existing.role,
+        streakDays: typeof u.streakDays === 'number' ? u.streakDays : existing.streakDays,
+        totalMastered: typeof u.totalMastered === 'number' ? u.totalMastered : existing.totalMastered,
+        targetHsk: typeof u.targetHsk === 'number' ? u.targetHsk : existing.targetHsk,
+        isLocked: typeof u.isLocked === 'boolean' ? u.isLocked : existing.isLocked,
+      };
+      recordMap.set(u.id, updated);
+      hasChanges = true;
+    }
+  }
+
+  if (hasChanges) {
+    writeJsonFile('users.json', Array.from(recordMap.values()));
+  }
+}
+
 export function getUserWorkspaceData(targetUserId: string): UserWorkspaceData {
-  const user = getUserRecordById(targetUserId);
-  if (!user) throw new Error('Không tìm thấy người dùng này.');
+  let user = getUserRecordById(targetUserId);
 
   const allCustom = readJsonFile<VocabItem[]>('custom_words.json', []);
   const userCustomWords = allCustom.filter((w) => w.userId === targetUserId);
@@ -1046,6 +1094,23 @@ export function getUserWorkspaceData(targetUserId: string): UserWorkspaceData {
     {}
   );
   const userProgress = allProgress[targetUserId] || {};
+
+  if (!user) {
+    user = {
+      id: targetUserId,
+      name: 'Học viên ' + (targetUserId.length > 6 ? targetUserId.slice(-4) : targetUserId),
+      email: '',
+      role: 'user',
+      streakDays: 0,
+      totalMastered: 0,
+      targetHsk: 3,
+      isLocked: false,
+      createdAt: userCustomWords[0]?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      passwordHash: '',
+      salt: '',
+    };
+  }
 
   let totalReviews = 0;
   let masteredCount = 0;
@@ -1092,11 +1157,73 @@ export function getAllUserWorkspacesSummary(): Array<{
     {}
   );
 
-  return users.map((u) => {
-    const wordsCount = allCustom.filter((w) => w.userId === u.id).length;
-    const hskCount = allGroups.filter((g) => g.ownerId === u.id).length;
-    const topicCount = allTopics.filter((t) => t.scope === 'user' && t.ownerId === u.id).length;
-    const userProgress = allProgress[u.id] || {};
+  const userMap = new Map<string, {
+    userId: string;
+    name: string;
+    email: string;
+    streakDays: number;
+    isLocked: boolean;
+    createdAt: string;
+  }>();
+
+  for (const u of users) {
+    if (u.id) {
+      userMap.set(u.id, {
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        streakDays: u.streakDays || 0,
+        isLocked: !!u.isLocked,
+        createdAt: u.createdAt || new Date().toISOString(),
+      });
+    }
+  }
+
+  // Also discover any user IDs from custom words, groups, topics, progress
+  for (const w of allCustom) {
+    if (w.userId && w.userId !== 'system' && !userMap.has(w.userId)) {
+      userMap.set(w.userId, {
+        userId: w.userId,
+        name: 'Học viên ' + (w.userId.length > 6 ? w.userId.slice(-4) : w.userId),
+        email: '',
+        streakDays: 0,
+        isLocked: false,
+        createdAt: w.createdAt || new Date().toISOString(),
+      });
+    }
+  }
+
+  for (const g of allGroups) {
+    if (g.ownerId && g.ownerId !== 'system' && !userMap.has(g.ownerId)) {
+      userMap.set(g.ownerId, {
+        userId: g.ownerId,
+        name: 'Học viên ' + (g.ownerId.length > 6 ? g.ownerId.slice(-4) : g.ownerId),
+        email: '',
+        streakDays: 0,
+        isLocked: false,
+        createdAt: g.createdAt || new Date().toISOString(),
+      });
+    }
+  }
+
+  for (const uId of Object.keys(allProgress)) {
+    if (uId && uId !== 'system' && !userMap.has(uId)) {
+      userMap.set(uId, {
+        userId: uId,
+        name: 'Học viên ' + (uId.length > 6 ? uId.slice(-4) : uId),
+        email: '',
+        streakDays: 0,
+        isLocked: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  return Array.from(userMap.values()).map((u) => {
+    const wordsCount = allCustom.filter((w) => w.userId === u.userId).length;
+    const hskCount = allGroups.filter((g) => g.ownerId === u.userId).length;
+    const topicCount = allTopics.filter((t) => t.scope === 'user' && t.ownerId === u.userId).length;
+    const userProgress = allProgress[u.userId] || {};
     let mastered = 0;
     for (const vId of Object.keys(userProgress)) {
       const p = userProgress[vId];
@@ -1104,7 +1231,7 @@ export function getAllUserWorkspacesSummary(): Array<{
     }
 
     return {
-      userId: u.id,
+      userId: u.userId,
       name: u.name,
       email: u.email,
       customWordsCount: wordsCount,
