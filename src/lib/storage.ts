@@ -1,7 +1,7 @@
 import { VocabItem, Deck, ColumnConfig } from '@/types/vocabulary';
 import { INITIAL_DECKS, isProtectedDeck } from '@/data/initial-decks';
 
-const STORAGE_KEY_VOCAB = 'hsk_vocab_data_v5';
+const STORAGE_KEY_VOCAB = 'hsk_vocab_data_v6';
 const STORAGE_KEY_DECKS_LEGACY = 'hsk_decks_data_v1';
 const STORAGE_KEY_COLUMNS = 'hsk_column_settings_v1';
 
@@ -27,13 +27,14 @@ export function getStoredVocab(userId?: string): VocabItem[] {
     localStorage.removeItem('hsk_vocab_data_v2');
     localStorage.removeItem('hsk_vocab_data_v3');
     localStorage.removeItem('hsk_vocab_data_v4');
+    localStorage.removeItem('hsk_vocab_data_v5');
 
     // 1. Check user-specific cache first
     if (userId) {
       const userRaw = localStorage.getItem(`hsk_vocab_user_${userId}`);
       if (userRaw) {
         const parsed = JSON.parse(userRaw);
-        if (Array.isArray(parsed) && parsed.length >= 11000) {
+        if (Array.isArray(parsed) && parsed.length >= 11000 && parsed[10]?.example) {
           // Strictly isolate: only system words OR words created by THIS user
           const filtered = parsed.filter(
             (item: VocabItem) => item.isSystem !== false || (item.userId && item.userId === userId)

@@ -207,8 +207,9 @@ function MainApp() {
         notes: '',
       }));
 
-    // Step 1: If system words in memory are fewer than 11,000, fetch fresh official system vocab
-    if (currentCleanSystemWords.length < 11000) {
+    // Step 1: If system words in memory are fewer than 11,000 or missing examples, fetch fresh official system vocab
+    const needsFreshVocab = currentCleanSystemWords.length < 11000 || !currentCleanSystemWords[10]?.example;
+    if (needsFreshVocab) {
       setIsLoadingVocab(true);
       try {
         const localRes = await fetch('/api/vocab');
