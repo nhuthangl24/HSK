@@ -170,7 +170,7 @@ export function Sidebar({
   };
 
   const renderContent = (isMobile = false) => (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors">
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-black text-slate-800 dark:text-zinc-200 transition-colors">
       {/* Header & Collapse toggle */}
       <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
@@ -750,7 +750,7 @@ export function Sidebar({
             className="fixed inset-0 bg-slate-950/60 z-40 md:hidden backdrop-blur-xs transition-opacity animate-fadeIn"
             onClick={onCloseMobile}
           />
-          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-slate-50 dark:bg-slate-900 z-50 md:hidden shadow-2xl flex flex-col border-r border-slate-200 dark:border-slate-800 animate-slideRight">
+          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-slate-50 dark:bg-black z-50 md:hidden shadow-2xl flex flex-col border-r border-slate-200 dark:border-zinc-800 animate-slideRight">
             {renderContent(true)}
           </aside>
         </>
@@ -760,7 +760,7 @@ export function Sidebar({
       <aside
         className={`hidden md:flex ${
           collapsed ? 'w-16' : 'w-64'
-        } bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] select-none`}
+        } bg-slate-50 dark:bg-black border-r border-slate-200 dark:border-zinc-800 flex-col shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] select-none`}
       >
         {collapsed ? (
           <div className="w-16 flex flex-col items-center py-3 gap-3 h-full animate-fadeIn">

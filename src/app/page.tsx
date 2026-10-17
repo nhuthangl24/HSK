@@ -837,7 +837,7 @@ function MainApp() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 select-text">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-100 dark:bg-black text-slate-900 dark:text-zinc-100 select-text">
       {/* 1. Top Global Header */}
       <Header
         currentDeck={currentDeck}
@@ -910,7 +910,7 @@ function MainApp() {
 
 
         {/* Central Spreadsheet Panel */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+        <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-black">
           {/* Table Toolbar */}
           <TableToolbar
             studyMode={studyMode}

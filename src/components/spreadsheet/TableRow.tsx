@@ -81,7 +81,7 @@ function TableRowComponent({
   const isHanziHidden = studyMode === 'hanzi_recall' && !isRevealedInRecall;
 
   return (
-    <tr className="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors duration-150 ease-out border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm group">
+    <tr className="hover:bg-slate-50/80 dark:hover:bg-zinc-900/60 transition-colors duration-150 ease-out border-b border-slate-200 dark:border-zinc-800/80 text-slate-800 dark:text-zinc-100 text-sm group">
       {columns
         .filter((col) => col.visible)
         .map((col) => {
@@ -91,7 +91,7 @@ function TableRowComponent({
                 <td
                   key={col.id}
                   style={{ width: `${col.width}px` }}
-                  className="px-2 py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 group-hover:bg-blue-50/50 dark:group-hover:bg-slate-800/60 sticky left-0 z-10 border-r border-slate-300 dark:border-slate-800 align-middle transition-colors duration-150 ease-out"
+                  className="px-2 py-2 text-center text-xs font-semibold text-slate-500 dark:text-zinc-400 bg-white dark:bg-black group-hover:bg-slate-50/80 dark:group-hover:bg-zinc-900/60 sticky left-0 z-10 border-r border-slate-300 dark:border-zinc-800 align-middle transition-colors duration-150 ease-out"
                 >
                   <div className="flex items-center justify-center gap-1">
                     <button

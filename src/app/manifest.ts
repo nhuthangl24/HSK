@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       'Nền tảng học và ôn tập từ vựng tiếng Trung HSK 1 - 9 phong cách bảng tính Excel / Google Sheets thông minh, hỗ trợ luyện nhớ chữ Hán, phát âm chuẩn pinyin, luyện dịch câu và thuật toán lặp lại ngắt quãng (SRS).',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0f172a',
+    background_color: '#000000',
     theme_color: '#059669',
     lang: 'vi',
     dir: 'ltr',

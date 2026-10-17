@@ -45,7 +45,7 @@ export function Header({
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs z-30 transition-colors">
+    <header className="bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs z-30 transition-colors">
       {/* Brand logo & Deck Info */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {onToggleSidebar && (
@@ -140,8 +140,8 @@ export function Header({
 
             {/* Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-1.5 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2.5 text-xs z-50 animate-scaleIn origin-top-right">
-                <div className="p-2 border-b border-slate-100 dark:border-slate-800 mb-1.5">
+              <div className="absolute right-0 top-full mt-1.5 w-60 bg-white dark:bg-black rounded-2xl shadow-xl border border-slate-200 dark:border-zinc-800 p-2.5 text-xs z-50 animate-scaleIn origin-top-right">
+                <div className="p-2 border-b border-slate-100 dark:border-zinc-800 mb-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900 dark:text-white truncate">{user.name}</span>
                     {user.targetHsk && (

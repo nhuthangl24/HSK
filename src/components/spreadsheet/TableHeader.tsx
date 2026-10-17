@@ -60,7 +60,7 @@ export function TableHeader({
   };
 
   return (
-    <thead className="sticky top-0 z-20 bg-[#e2f0d9] dark:bg-slate-800 select-none text-slate-800 dark:text-slate-100 text-xs font-bold uppercase tracking-wider shadow-xs transition-colors">
+    <thead className="sticky top-0 z-20 bg-[#e2f0d9] dark:bg-zinc-950 select-none text-slate-800 dark:text-zinc-100 text-xs font-bold uppercase tracking-wider shadow-xs transition-colors">
       <tr>
         {columns
           .filter((col) => col.visible)
@@ -74,8 +74,8 @@ export function TableHeader({
                 style={{ width: `${col.width}px`, minWidth: `${col.minWidth}px` }}
                 className={`relative px-3 py-2.5 text-${
                   col.align || 'left'
-                } border-r border-b border-slate-300 dark:border-slate-700 font-semibold text-slate-800 dark:text-slate-100 ${
-                  col.sticky ? 'sticky left-0 z-30 bg-[#e2f0d9] dark:bg-slate-800' : ''
+                } border-r border-b border-slate-300 dark:border-zinc-800 font-semibold text-slate-800 dark:text-zinc-100 ${
+                  col.sticky ? 'sticky left-0 z-30 bg-[#e2f0d9] dark:bg-zinc-950' : ''
                 }`}
               >
                 <div

@@ -89,10 +89,10 @@ export function TableToolbar({
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-col gap-2.5 shadow-2xs transition-colors">
+    <div className="bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 px-4 py-2.5 flex flex-col gap-2.5 shadow-2xs transition-colors">
       {/* Top row: Study modes tabs & primary study action */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto max-w-full scrollbar-none">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-x-auto max-w-full scrollbar-none">
           {studyModes.map((m) => {
             const isActive = studyMode === m.id;
             return (
@@ -102,8 +102,8 @@ export function TableToolbar({
                 onClick={() => onStudyModeChange(m.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   isActive
-                    ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 shadow-2xs font-semibold border border-slate-200/80 dark:border-slate-700'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                    ? 'bg-white dark:bg-zinc-950 text-emerald-800 dark:text-emerald-300 shadow-2xs font-semibold border border-slate-200/80 dark:border-zinc-700'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-zinc-800'
                 }`}
               >
                 {m.icon}
@@ -260,8 +260,8 @@ export function TableToolbar({
             </button>
 
             {showColMenu && (
-              <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 text-xs animate-scaleIn origin-top-right">
-                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-200">
+              <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-black border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 p-2 text-xs animate-scaleIn origin-top-right">
+                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 dark:border-zinc-800 font-semibold text-slate-700 dark:text-slate-200">
                   <span>Ẩn/Hiện cột</span>
                   <button
                     type="button"

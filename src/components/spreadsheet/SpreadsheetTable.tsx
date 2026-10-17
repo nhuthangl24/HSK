@@ -136,11 +136,11 @@ export function SpreadsheetTable({
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 w-full overflow-auto bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative select-text"
+      className="flex-1 min-h-0 w-full overflow-auto bg-white dark:bg-black border-t border-slate-200 dark:border-zinc-800 relative select-text"
       style={{ willChange: 'scroll-position' }}
     >
       {isLoading ? (
-        <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 select-none animate-fadeIn">
+        <div className="w-full h-full flex flex-col bg-white dark:bg-black select-none animate-fadeIn">
           {/* Subtle status loader banner */}
           <div className="flex items-center justify-between px-4 py-2 bg-emerald-50/80 dark:bg-emerald-950/40 border-b border-emerald-200/60 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300">
             <div className="flex items-center gap-2 font-medium">
@@ -161,7 +161,7 @@ export function SpreadsheetTable({
                 filterOptions={filterOptions}
                 onSortChange={onSortChange}
               />
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+              <tbody className="divide-y divide-slate-200 dark:divide-zinc-800 bg-white dark:bg-black">
                 {Array.from({ length: 14 }).map((_, rIdx) => (
                   <tr key={rIdx} className="border-b border-slate-200 dark:border-slate-800">
                     {columns
@@ -227,7 +227,7 @@ export function SpreadsheetTable({
             filterOptions={filterOptions}
             onSortChange={onSortChange}
           />
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+          <tbody className="divide-y divide-slate-200 dark:divide-zinc-800 bg-white dark:bg-black">
             {topSpacerHeight > 0 && (
               <tr style={{ height: `${topSpacerHeight}px` }} aria-hidden="true">
                 <td
