@@ -453,20 +453,26 @@ function MainApp() {
       toast.info('Vui lòng đăng nhập để tạo và lưu bộ từ vựng cá nhân của bạn.', 'Yêu cầu đăng nhập');
       return;
     }
+    const isSystemScope = (newDeck.scope === 'system' || newDeck.ownerId === 'system') && user.role === 'admin';
     const deckWithOwner: Deck = {
       ...newDeck,
-      ownerId: user.id,
-      userId: user.id,
-      scope: 'user',
+      ownerId: isSystemScope ? 'system' : user.id,
+      userId: isSystemScope ? 'system' : user.id,
+      scope: isSystemScope ? 'system' : 'user',
       isBuiltIn: false,
     };
     const next = [...decks, deckWithOwner];
     setDecks(next);
     saveStoredDecks(next, user.id);
     setCurrentDeckId(deckWithOwner.id);
-    toast.success(`Đã tạo bộ từ mới: "${deckWithOwner.name}"`, 'Tạo bộ từ');
+    toast.success(
+      isSystemScope
+        ? `Đã tạo thư mục hệ thống: "${deckWithOwner.name}" (đồng bộ toàn bộ học viên)`
+        : `Đã tạo bộ từ mới: "${deckWithOwner.name}"`,
+      'Tạo bộ từ'
+    );
     if (getFirebaseServices().isConfigured) {
-      saveDeckToFirestore(deckWithOwner, user.id).catch((err) =>
+      saveDeckToFirestore(deckWithOwner, deckWithOwner.userId).catch((err) =>
         console.error('Auto-sync deck to Firestore failed:', err)
       );
     }
@@ -481,11 +487,12 @@ function MainApp() {
       setIsAuthModalOpen(true);
       return;
     }
+    const isSystemScope = (updatedDeck.scope === 'system' || updatedDeck.ownerId === 'system') && user.role === 'admin';
     const deckWithOwner: Deck = {
       ...updatedDeck,
-      ownerId: user.id,
-      userId: user.id,
-      scope: 'user',
+      ownerId: isSystemScope ? 'system' : (updatedDeck.ownerId || user.id),
+      userId: isSystemScope ? 'system' : (updatedDeck.userId || user.id),
+      scope: isSystemScope ? 'system' : 'user',
     };
     const next = decks.map((d) => (d.id === updatedDeck.id ? deckWithOwner : d));
     setDecks(next);
@@ -493,7 +500,7 @@ function MainApp() {
     setEditingDeck(null);
     toast.success(`Đã cập nhật bộ từ "${updatedDeck.name}"!`, 'Cập nhật bộ từ');
     if (getFirebaseServices().isConfigured) {
-      saveDeckToFirestore(deckWithOwner, user.id).catch((err) =>
+      saveDeckToFirestore(deckWithOwner, deckWithOwner.userId).catch((err) =>
         console.warn('Auto-sync deck to Firestore notice:', err)
       );
     }

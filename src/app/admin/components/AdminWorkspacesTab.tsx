@@ -17,6 +17,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
+import { getClientAuthHeaders } from '@/lib/client-auth';
 import { UserWorkspaceData } from '@/lib/server-db';
 
 interface WorkspaceUserSummary {
@@ -34,6 +36,7 @@ interface WorkspaceUserSummary {
 
 export default function AdminWorkspacesTab() {
   const toast = useToast();
+  const { user } = useAuth();
   const [summaries, setSummaries] = useState<WorkspaceUserSummary[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [search, setSearch] = useState('');
@@ -48,9 +51,9 @@ export default function AdminWorkspacesTab() {
   const fetchSummaries = useCallback(async () => {
     setLoadingList(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/workspaces', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
@@ -66,7 +69,7 @@ export default function AdminWorkspacesTab() {
     } finally {
       setLoadingList(false);
     }
-  }, [selectedUserId]);
+  }, [user, selectedUserId]);
 
   useEffect(() => {
     fetchSummaries();
@@ -75,9 +78,9 @@ export default function AdminWorkspacesTab() {
   const fetchDetail = useCallback(async (userId: string) => {
     setLoadingDetail(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch(`/api/admin/workspaces/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
@@ -92,7 +95,7 @@ export default function AdminWorkspacesTab() {
     } finally {
       setLoadingDetail(false);
     }
-  }, [toast]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (selectedUserId) {

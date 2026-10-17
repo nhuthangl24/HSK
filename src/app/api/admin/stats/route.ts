@@ -10,8 +10,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
   }
 
-  const user = getUserRecordById(payload.userId);
-  if (!user || user.role !== 'admin' || user.isLocked) {
+  const caller = getUserRecordById(payload.userId);
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
     return NextResponse.json(
       { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
       { status: 403 }

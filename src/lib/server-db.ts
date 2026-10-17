@@ -24,17 +24,18 @@ export interface UserProgressRecord {
   updatedAt: string;
 }
 
-// Detect serverless environment (Vercel, AWS Lambda, Netlify)
+// Detect serverless environment (Vercel, AWS Lambda, Netlify, read-only docker)
 const IS_SERVERLESS = Boolean(
   process.env.VERCEL ||
   process.env.AWS_LAMBDA_FUNCTION_NAME ||
   process.env.LAMBDA_TASK_ROOT ||
-  process.env.NETLIFY
+  process.env.NETLIFY ||
+  (typeof process !== 'undefined' && process.cwd && process.cwd().startsWith('/var/task'))
 );
 
-// In serverless, /tmp is the only writable directory; in local/server, use .data
-const DATA_DIR = IS_SERVERLESS
-  ? path.join('/tmp', 'hsk_data')
+// In serverless or read-only environments, os.tmpdir() is the only writable directory; in local/server, use .data
+let DATA_DIR = IS_SERVERLESS
+  ? path.join(os.tmpdir(), 'hsk_data')
   : path.join(process.cwd(), '.data');
 
 // In-memory fallback cache so serverless functions never crash even on cold starts
@@ -42,11 +43,19 @@ const memoryStore = new Map<string, unknown>();
 
 function ensureDataDir(): string {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
   } catch {
-    // Graceful fallback if filesystem cannot be created
+    // If creating DATA_DIR failed (e.g. read-only filesystem), switch immediately to tmpdir
+    try {
+      DATA_DIR = path.join(os.tmpdir(), 'hsk_data');
+      if (!fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch {
+      // Memory store fallback
+    }
   }
   return DATA_DIR;
 }
@@ -60,7 +69,7 @@ function readJsonFile<T>(filename: string, defaultValue: T): T {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, filename);
 
-    if (!fs.existsSync(filePath)) {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
       memoryStore.set(filename, defaultValue);
       try {
         fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
@@ -87,7 +96,16 @@ function writeJsonFile<T>(filename: string, data: T): void {
     const filePath = path.join(DATA_DIR, filename);
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
-    console.warn(`[server-db] Notice writing ${filename} to disk:`, err);
+    // Fallback to os.tmpdir() if current DATA_DIR is read-only
+    try {
+      DATA_DIR = path.join(os.tmpdir(), 'hsk_data');
+      if (!fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      fs.writeFileSync(path.join(DATA_DIR, filename), JSON.stringify(data, null, 2), 'utf8');
+    } catch (fallbackErr) {
+      console.warn(`[server-db] InMemory state preserved, disk write notice for ${filename}:`, fallbackErr);
+    }
   }
 }
 

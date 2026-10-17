@@ -4,9 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Tag, Plus, Trash2, Edit2, RefreshCw, Sparkles, Filter, Search } from 'lucide-react';
 import { Topic } from '@/types/vocabulary';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
+import { getClientAuthHeaders } from '@/lib/client-auth';
 
 export default function AdminTopicsTab() {
   const toast = useToast();
+  const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(false);
   const [scopeFilter, setScopeFilter] = useState<'all' | 'system' | 'user'>('all');
@@ -21,9 +24,9 @@ export default function AdminTopicsTab() {
   const fetchTopics = useCallback(async () => {
     setLoading(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/topics?scope=all', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
@@ -36,7 +39,7 @@ export default function AdminTopicsTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchTopics();
@@ -66,17 +69,14 @@ export default function AdminTopicsTab() {
 
     setSaving(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const isNew = !editingTopic.id;
       const url = '/api/topics';
       const method = isNew ? 'POST' : 'PUT';
 
       const res = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
         body: JSON.stringify(editingTopic),
       });
 
@@ -99,10 +99,10 @@ export default function AdminTopicsTab() {
   const handleDeleteTopic = async () => {
     if (!deleteConfirm) return;
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch(`/api/topics?id=${deleteConfirm.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       const data = await res.json();
       if (data.success) {

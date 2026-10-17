@@ -19,8 +19,9 @@ export async function GET(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
-    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối.' }, { status: 403 });
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
+    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
 
   const words = getSystemVocabulary();
@@ -36,9 +37,12 @@ export async function POST(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
-    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối.' }, { status: 403 });
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
+    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
+
+  const callerEmail = caller?.email || payload.email;
 
   try {
     const body = await request.json();
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
     // Handle batch import for admin
     if (Array.isArray(batch) && batch.length > 0) {
       const count = batchSaveSystemVocabulary(batch);
-      addAuditLog('NHẬP_TỪ_VỰNG_HỆ_THỐNG', caller.email, 'Hệ thống', `Nhập ${count} từ vựng mới.`);
+      addAuditLog('NHẬP_TỪ_VỰNG_HỆ_THỐNG', callerEmail, 'Hệ thống', `Nhập ${count} từ vựng mới.`);
       return NextResponse.json({ success: true, count, message: `Đã nhập ${count} từ hệ thống.` });
     }
 
@@ -57,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     const saved = saveSystemVocabularyItem(item);
-    addAuditLog('THÊM_TỪ_HỆ_THỐNG', caller.email, saved.hanzi, `HSK ${saved.hskLevel} - ${saved.meaning}`);
+    addAuditLog('THÊM_TỪ_HỆ_THỐNG', callerEmail, saved.hanzi, `HSK ${saved.hskLevel} - ${saved.meaning}`);
 
     return NextResponse.json({ success: true, item: saved });
   } catch (err: unknown) {
@@ -75,9 +79,12 @@ export async function PUT(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
-    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối.' }, { status: 403 });
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
+    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
+
+  const callerEmail = caller?.email || payload.email;
 
   try {
     const item = (await request.json()) as VocabItem;
@@ -86,7 +93,7 @@ export async function PUT(request: Request) {
     }
 
     const saved = saveSystemVocabularyItem(item);
-    addAuditLog('SỬA_TỪ_HỆ_THỐNG', caller.email, saved.hanzi, `ID: ${saved.id}`);
+    addAuditLog('SỬA_TỪ_HỆ_THỐNG', callerEmail, saved.hanzi, `ID: ${saved.id}`);
 
     return NextResponse.json({ success: true, item: saved });
   } catch (err: unknown) {
@@ -104,9 +111,12 @@ export async function DELETE(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
-    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối.' }, { status: 403 });
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
+    return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
+
+  const callerEmail = caller?.email || payload.email;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -116,7 +126,7 @@ export async function DELETE(request: Request) {
     }
 
     deleteSystemVocabularyItem(id);
-    addAuditLog('XÓA_TỪ_HỆ_THỐNG', caller.email, id, 'Đã xóa khỏi hệ thống');
+    addAuditLog('XÓA_TỪ_HỆ_THỐNG', callerEmail, id, 'Đã xóa khỏi hệ thống');
 
     return NextResponse.json({ success: true, message: 'Đã xóa từ vựng hệ thống.' });
   } catch (err: unknown) {

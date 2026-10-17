@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Edit2 } from 'lucide-react';
+import { X, FolderPlus, Edit2, ShieldCheck, User as UserIcon } from 'lucide-react';
 import { Deck, HskLevel } from '@/types/vocabulary';
+import { useAuth } from '@/context/AuthContext';
 
 interface DeckModalProps {
   isOpen: boolean;
@@ -19,22 +20,27 @@ export function DeckModal({
   onUpdateDeck,
   deckToEdit,
 }: DeckModalProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const isEditing = !!deckToEdit;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [hskLevel, setHskLevel] = useState<HskLevel | 'custom' | 'all'>('custom');
+  const [scope, setScope] = useState<'system' | 'user'>('user');
 
   useEffect(() => {
     if (deckToEdit) {
       setName(deckToEdit.name || '');
       setDescription(deckToEdit.description || '');
       setHskLevel(deckToEdit.hskLevel || 'custom');
+      setScope(deckToEdit.scope === 'system' || deckToEdit.ownerId === 'system' ? 'system' : 'user');
     } else {
       setName('');
       setDescription('');
       setHskLevel('custom');
+      setScope(isAdmin ? 'system' : 'user');
     }
-  }, [deckToEdit, isOpen]);
+  }, [deckToEdit, isOpen, isAdmin]);
 
   if (!isOpen) return null;
 
@@ -42,12 +48,18 @@ export function DeckModal({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const chosenScope = isAdmin ? scope : (deckToEdit?.scope || 'user');
+    const isSystemScope = chosenScope === 'system';
+
     if (isEditing && deckToEdit && onUpdateDeck) {
       const updated: Deck = {
         ...deckToEdit,
         name: name.trim(),
         description: description.trim() || undefined,
         hskLevel,
+        scope: chosenScope,
+        ownerId: isSystemScope ? 'system' : (deckToEdit.ownerId || user?.id),
+        userId: isSystemScope ? 'system' : (deckToEdit.userId || user?.id),
         updatedAt: new Date().toISOString(),
       };
       onUpdateDeck(updated);
@@ -57,6 +69,9 @@ export function DeckModal({
         name: name.trim(),
         description: description.trim() || undefined,
         hskLevel,
+        scope: chosenScope,
+        ownerId: isSystemScope ? 'system' : user?.id,
+        userId: isSystemScope ? 'system' : user?.id,
         isBuiltIn: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -139,6 +154,47 @@ export function DeckModal({
               ))}
             </select>
           </div>
+
+          {isAdmin && (
+            <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60">
+              <label className="block font-semibold text-amber-900 dark:text-amber-300 mb-1.5 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-amber-600" />
+                Phạm vi áp dụng (Quyền Quản trị viên)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScope('system')}
+                  className={`px-2.5 py-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
+                    scope === 'system'
+                      ? 'bg-amber-600 text-white border-amber-700 shadow-xs font-semibold'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <ShieldCheck size={14} />
+                  <div>
+                    <div className="font-semibold text-xs leading-tight">Toàn Hệ Thống</div>
+                    <div className="text-[10px] opacity-80 leading-tight">Mọi học viên đều thấy</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope('user')}
+                  className={`px-2.5 py-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
+                    scope === 'user'
+                      ? 'bg-amber-600 text-white border-amber-700 shadow-xs font-semibold'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <UserIcon size={14} />
+                  <div>
+                    <div className="font-semibold text-xs leading-tight">Cá Nhân Admin</div>
+                    <div className="text-[10px] opacity-80 leading-tight">Chỉ mình bạn thấy</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
             <button

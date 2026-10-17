@@ -23,11 +23,14 @@ import {
   Edit2,
   Trash2,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { Deck, VocabItem } from '@/types/vocabulary';
 import { isItemDueForReview } from '@/lib/srs';
 import { isProtectedDeck } from '@/data/initial-decks';
 import { loadSystemConfigFromFirestore } from '@/lib/firebase-db';
+import { ZaloIcon } from '@/components/ui/ZaloIcon';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarProps {
   decks: Deck[];
@@ -64,6 +67,9 @@ export function Sidebar({
   onFilterQuick,
   isLoading = false,
 }: SidebarProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const getDeckIcon = (deck: Deck, isSelectedInCollapsed = false) => {
     const iconClass = isSelectedInCollapsed ? 'text-white' : undefined;
     const size = isSelectedInCollapsed ? 18 : 16;
@@ -512,17 +518,111 @@ export function Sidebar({
             );
           })}
 
-        {/* Custom Decks Section (Per-User) */}
-        {decks.some((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business') && (
+        {/* System Custom Decks Section (Synced to all users) */}
+        {decks.some((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && (d.scope === 'system' || d.ownerId === 'system')) && (
+          <div className="pt-2">
+            <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5 px-2.5 pt-2 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60">
+              <span className="flex items-center gap-1">
+                <ShieldCheck size={11} />
+                Thư mục hệ thống
+              </span>
+              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                {decks.filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && (d.scope === 'system' || d.ownerId === 'system')).length}
+              </span>
+            </div>
+            {decks
+              .filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && (d.scope === 'system' || d.ownerId === 'system'))
+              .map((deck) => {
+                const isSelected = currentDeckId === deck.id && !activeQuickFilter;
+                const count = getDeckCount(deck.id);
+
+                return (
+                  <div
+                    key={deck.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      onSelectDeck(deck.id);
+                      if (isMobile && onCloseMobile) onCloseMobile();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        onSelectDeck(deck.id);
+                        if (isMobile && onCloseMobile) onCloseMobile();
+                      }
+                    }}
+                    className={`group w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all select-none ${
+                      isSelected
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 font-semibold shadow-2xs border border-amber-200 dark:border-amber-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate min-w-0 pr-1">
+                      <span className="text-amber-600 dark:text-amber-400 shrink-0">
+                        <ShieldCheck size={14} />
+                      </span>
+                      <span className="truncate">{deck.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`text-[11px] px-1.5 py-0.5 rounded-full font-mono ${
+                          isSelected
+                            ? 'bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200'
+                            : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        {renderCount(count)}
+                      </span>
+
+                      {isAdmin && (
+                        <div className={`${isMobile ? 'flex' : 'hidden group-hover:flex'} items-center gap-0.5 animate-fadeIn`}>
+                          {onEditDeck && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditDeck(deck);
+                              }}
+                              title={`Sửa tên bộ từ "${deck.name}"`}
+                              className="p-1 rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/60 dark:hover:bg-blue-950/50 cursor-pointer transition-colors"
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                          )}
+                          {onDeleteDeck && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteDeck(deck);
+                              }}
+                              title={`Xóa bộ từ "${deck.name}"`}
+                              className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100/60 dark:hover:bg-rose-950/50 cursor-pointer transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+
+        {/* Personal Custom Decks Section (Per-User) */}
+        {decks.some((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && d.scope !== 'system' && d.ownerId !== 'system') && (
           <div className="pt-2">
             <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-2.5 pt-2 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60">
               <span>Bộ từ cá nhân</span>
               <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
-                {decks.filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business').length}
+                {decks.filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && d.scope !== 'system' && d.ownerId !== 'system').length}
               </span>
             </div>
             {decks
-              .filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business')
+              .filter((d) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && d.scope !== 'system' && d.ownerId !== 'system')
               .map((deck) => {
                 const isSelected = currentDeckId === deck.id && !activeQuickFilter;
                 const count = getDeckCount(deck.id);
@@ -610,9 +710,7 @@ export function Sidebar({
             title="Tham gia cộng đồng Zalo trao đổi học tập"
             className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 border border-blue-200/80 dark:border-blue-800/80 hover:border-blue-400 dark:hover:border-blue-500 transition-all group shadow-2xs cursor-pointer btn-press"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm shadow-blue-500/30 group-hover:scale-105 transition-transform">
-              Z
-            </div>
+            <ZaloIcon className="w-8 h-8 rounded-xl shrink-0 shadow-sm shadow-blue-500/30 group-hover:scale-105 transition-transform" />
             <div className="min-w-0 flex-1 text-left">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 <span className="truncate">{zaloConfig.title || 'Tham gia Cộng Đồng Zalo'}</span>
@@ -776,9 +874,9 @@ export function Sidebar({
                   target="_blank"
                   rel="noopener noreferrer"
                   title={`${zaloConfig.title || 'Tham gia Cộng Đồng Zalo'} - ${zaloConfig.description || 'Hỏi đáp & cùng luyện thi HSK'}`}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white font-black text-xs shadow-sm hover:scale-110 cursor-pointer transition-all btn-press"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl shadow-sm hover:scale-110 cursor-pointer transition-all btn-press"
                 >
-                  Z
+                  <ZaloIcon className="w-10 h-10 rounded-xl" />
                 </a>
               </div>
             )}

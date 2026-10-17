@@ -212,25 +212,46 @@ export default function AdminPage() {
   const fetchVocab = useCallback(async () => {
     setLoadingVocab(true);
     try {
-      const res = await fetch('/api/vocab');
+      const authHeaders = getClientAuthHeaders(user);
+      const res = await fetch('/api/admin/vocab', {
+        headers: authHeaders,
+      });
+      let baseWords: VocabItem[] = [];
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.words) && data.words.length > 0) {
-          setVocabList(data.words);
-          setVocabPage(1);
-          return;
+          baseWords = data.words;
         }
       }
-      const all = await loadWordsFromFirestore();
-      const sys = all.filter((w) => w.isSystem !== false || w.userId === 'system');
-      setVocabList(sys);
+
+      // If /api/admin/vocab didn't return, fallback to /api/vocab (which returns data.items)
+      if (baseWords.length === 0) {
+        const fallbackRes = await fetch('/api/vocab');
+        if (fallbackRes.ok) {
+          const fbData = await fallbackRes.json();
+          if (fbData.success && Array.isArray(fbData.items)) {
+            baseWords = fbData.items;
+          }
+        }
+      }
+
+      // Merge any new dynamic system words stored in Cloud Firestore
+      const firestoreWords = await loadWordsFromFirestore();
+      const wordMap = new Map<string, VocabItem>();
+      baseWords.forEach((w) => wordMap.set(w.id, w));
+      firestoreWords
+        .filter((w) => w.isSystem !== false || w.userId === 'system')
+        .forEach((w) => wordMap.set(w.id, { ...wordMap.get(w.id), ...w }));
+
+      const allSys = Array.from(wordMap.values());
+      setVocabList(allSys);
       setVocabPage(1);
     } catch (err) {
       console.error('Fetch vocab error:', err);
     } finally {
       setLoadingVocab(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchLogs = useCallback(async () => {
     setLoadingLogs(true);
@@ -394,6 +415,14 @@ export default function AdminPage() {
         return;
       }
 
+      // Sync to Server API
+      const authHeaders = getClientAuthHeaders(user);
+      fetch('/api/admin/vocab', {
+        method: isEditingNew ? 'POST' : 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify(itemToSave),
+      }).catch((e) => console.warn('API vocab notice:', e));
+
       await addAuditLogToFirestore(
         isEditingNew ? 'THÊM_TỪ_HỆ_THỐNG' : 'SỬA_TỪ_HỆ_THỐNG',
         adminEmail,
@@ -426,6 +455,13 @@ export default function AdminPage() {
         toast.error('Không thể xóa từ trong Firestore.');
         return;
       }
+
+      // Sync to Server API
+      const authHeaders = getClientAuthHeaders(user);
+      fetch(`/api/admin/vocab?id=${item.id}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      }).catch((e) => console.warn('API vocab delete notice:', e));
 
       await addAuditLogToFirestore('XÓA_TỪ_HỆ_THỐNG', adminEmail, item.hanzi, `HSK ${item.hskLevel}`);
       toast.success(`Đã xóa từ ${item.hanzi} khỏi hệ thống.`, 'Đã xóa');
@@ -961,7 +997,7 @@ export default function AdminPage() {
             >
               <div className="flex items-center gap-3">
                 <Layers size={16} className="shrink-0" />
-                {!adminSidebarCollapsed && <span>Quản lý cấp độ HSK</span>}
+                {!adminSidebarCollapsed && <span>HSK & Thư mục hệ thống</span>}
               </div>
               {!adminSidebarCollapsed && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">

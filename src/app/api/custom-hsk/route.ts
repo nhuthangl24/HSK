@@ -5,6 +5,7 @@ import {
   createCustomHskGroup,
   updateCustomHskGroup,
   deleteCustomHskGroup,
+  getUserRecordById,
 } from '@/lib/server-db';
 import { CustomHskGroup } from '@/types/vocabulary';
 
@@ -16,8 +17,11 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const scope = url.searchParams.get('scope');
 
+  const caller = userId ? getUserRecordById(userId) : null;
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload?.role === 'admin';
+
   let targetUserId = userId;
-  if (scope === 'all' && payload?.role === 'admin') {
+  if (scope === 'all' && isCallerAdmin) {
     targetUserId = 'all';
   }
 

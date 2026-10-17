@@ -17,6 +17,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { getClientAuthHeaders } from '@/lib/client-auth';
 import { saveSystemConfigToFirestore, loadSystemConfigFromFirestore } from '@/lib/firebase-db';
+import { ZaloIcon } from '@/components/ui/ZaloIcon';
 
 export default function AdminSettingsTab() {
   const toast = useToast();
@@ -129,9 +130,7 @@ export default function AdminSettingsTab() {
           <div className="bg-white p-6 rounded-2xl border border-blue-200 shadow-2xs space-y-4 ring-1 ring-blue-100">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0068FF] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  Z
-                </div>
+                <ZaloIcon className="w-6 h-6 rounded-lg shadow-xs" />
                 Cấu hình Nút Cộng Đồng Zalo (Sidebar)
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
@@ -227,9 +226,7 @@ export default function AdminSettingsTab() {
                 </div>
                 <div className="p-3 bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-emerald-500/10 border border-blue-200 dark:border-blue-800 rounded-2xl max-w-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-blue-500/25">
-                      Z
-                    </div>
+                    <ZaloIcon className="w-9 h-9 rounded-xl shadow-md shadow-blue-500/25 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                         <span>{config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo'}</span>

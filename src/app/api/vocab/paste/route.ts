@@ -6,6 +6,7 @@ import {
   getUserPersonalWords,
   saveUserPersonalWord,
   getSystemConfig,
+  getUserRecordById,
   addAuditLog,
 } from '@/lib/server-db';
 import { VocabItem, HskLevel } from '@/types/vocabulary';
@@ -75,7 +76,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const isAdmin = payload.role === 'admin';
+    const caller = payload.userId ? getUserRecordById(payload.userId) : null;
+    const isAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
 
     // Authorization check
     if (targetScope === 'system' && !isAdmin) {

@@ -5,6 +5,7 @@ import {
   createTopic,
   updateTopic,
   deleteTopic,
+  getUserRecordById,
 } from '@/lib/server-db';
 import { Topic } from '@/types/vocabulary';
 
@@ -16,8 +17,11 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const scope = url.searchParams.get('scope');
 
+  const caller = userId ? getUserRecordById(userId) : null;
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload?.role === 'admin';
+
   let targetUserId = userId;
-  if (scope === 'all' && payload?.role === 'admin') {
+  if (scope === 'all' && isCallerAdmin) {
     targetUserId = 'all';
   } else if (scope === 'system') {
     targetUserId = undefined;
@@ -35,8 +39,9 @@ export async function POST(request: Request) {
   }
 
   try {
+    const caller = getUserRecordById(payload.userId);
+    const asAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
     const body = (await request.json()) as Partial<Topic>;
-    const asAdmin = payload.role === 'admin';
     const topic = createTopic(payload.userId, body, asAdmin);
     return NextResponse.json({ success: true, topic });
   } catch (err: unknown) {
@@ -58,7 +63,8 @@ export async function PUT(request: Request) {
     if (!id) {
       return NextResponse.json({ success: false, message: 'Thiếu topic ID.' }, { status: 400 });
     }
-    const asAdmin = payload.role === 'admin';
+    const caller = getUserRecordById(payload.userId);
+    const asAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
     const updated = updateTopic(payload.userId, id, data, asAdmin);
     return NextResponse.json({ success: true, topic: updated });
   } catch (err: unknown) {
@@ -80,7 +86,8 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ success: false, message: 'Thiếu topic ID.' }, { status: 400 });
     }
-    const asAdmin = payload.role === 'admin';
+    const caller = getUserRecordById(payload.userId);
+    const asAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
     const result = deleteTopic(payload.userId, id, asAdmin);
     return NextResponse.json({
       success: true,
