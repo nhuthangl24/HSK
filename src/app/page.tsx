@@ -490,7 +490,7 @@ function MainApp() {
 
   const handleUpdateDeck = (updatedDeck: Deck) => {
     if (isProtectedDeck(updatedDeck.id)) {
-      toast.error('Các cấp độ HSK 1 - HSK 6 và Tất cả từ vựng là cố định của hệ thống, không thể chỉnh sửa.', 'Không thể sửa');
+      toast.error('Các cấp độ HSK 1 - HSK 7-9 và Tất cả từ vựng là cố định của hệ thống, không thể chỉnh sửa.', 'Không thể sửa');
       return;
     }
     if (isGuest || !user) {
@@ -522,7 +522,7 @@ function MainApp() {
     const targetName = deletingDeck.name;
 
     if (isProtectedDeck(targetId)) {
-      toast.error('Các cấp độ HSK 1 - HSK 6 và Tất cả từ vựng là cố định của hệ thống, không thể xóa.', 'Không thể xóa');
+      toast.error('Các cấp độ HSK 1 - HSK 7-9 và Tất cả từ vựng là cố định của hệ thống, không thể xóa.', 'Không thể xóa');
       setDeletingDeck(null);
       return;
     }

@@ -144,7 +144,7 @@ const structuredData = {
       "@id": `${siteUrl}/#course`,
       name: "Lộ Trình Từ Vựng Tiếng Trung HSK 1 - HSK 9 Chuẩn Quốc Tế",
       description:
-        "Lộ trình học và ghi nhớ toàn diện hơn 2,500 từ vựng tiếng Trung từ sơ cấp HSK 1 đến cao cấp HSK 6 và HSK 7-9.",
+        "Lộ trình học và ghi nhớ toàn diện trọn bộ 11,000 từ vựng tiếng Trung chuẩn HSK 3.0 từ sơ cấp HSK 1 đến cao cấp HSK 7-9.",
       provider: {
         "@type": "Organization",
         name: "HSK Master",

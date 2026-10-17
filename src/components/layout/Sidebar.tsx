@@ -86,6 +86,10 @@ export function Sidebar({
         return <GraduationCap size={size} className={iconClass || 'text-purple-600 dark:text-purple-400'} />;
       case 6:
         return <Sparkles size={size} className={iconClass || 'text-rose-600 dark:text-rose-400'} />;
+      case 7:
+      case 8:
+      case 9:
+        return <ShieldCheck size={size} className={iconClass || 'text-indigo-600 dark:text-indigo-400'} />;
       default:
         if (deck.id === 'deck-business') {
           return <Briefcase size={size} className={iconClass || 'text-teal-600 dark:text-teal-400'} />;

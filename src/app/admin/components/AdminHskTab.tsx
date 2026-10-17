@@ -117,7 +117,7 @@ export default function AdminHskTab({
 
   const handleOpenEdit = (d: Deck) => {
     if (isProtectedDeck(d.id)) {
-      toast.info('Các cấp độ HSK 1 - HSK 6 mặc định được bảo vệ, không thể chỉnh sửa.');
+      toast.info('Các cấp độ HSK 1 - HSK 7-9 mặc định được bảo vệ, không thể chỉnh sửa.');
       return;
     }
     setEditingDeck(d);
@@ -215,9 +215,7 @@ export default function AdminHskTab({
     { level: 4, title: 'HSK 4 (Trung cấp 2)', color: 'from-orange-500 to-red-500', badge: 'bg-orange-500/10 text-orange-700 border-orange-200' },
     { level: 5, title: 'HSK 5 (Cao cấp 1)', color: 'from-rose-500 to-pink-600', badge: 'bg-rose-500/10 text-rose-700 border-rose-200' },
     { level: 6, title: 'HSK 6 (Cao cấp 2)', color: 'from-purple-500 to-violet-600', badge: 'bg-purple-500/10 text-purple-700 border-purple-200' },
-    { level: 7, title: 'HSK 7 (Chuyên sâu)', color: 'from-indigo-600 to-slate-800', badge: 'bg-indigo-500/10 text-indigo-700 border-indigo-200' },
-    { level: 8, title: 'HSK 8 (Nâng cao)', color: 'from-slate-700 to-slate-900', badge: 'bg-slate-500/10 text-slate-700 border-slate-200' },
-    { level: 9, title: 'HSK 9 (Bậc thầy)', color: 'from-amber-600 to-red-800', badge: 'bg-red-500/10 text-red-700 border-red-200' },
+    { level: 7, title: 'HSK 7 - 9 (Chuyên sâu & Bậc thầy)', color: 'from-indigo-600 to-slate-800', badge: 'bg-indigo-500/10 text-indigo-700 border-indigo-200' },
   ];
 
   const customDecks = decks.filter((d) => !isProtectedDeck(d.id));
@@ -267,7 +265,7 @@ export default function AdminHskTab({
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            9 Cấp Độ Chuẩn HSK 3.0 Của Hệ Thống
+            Các Cấp Độ Chuẩn HSK 3.0 Của Hệ Thống (HSK 1 - HSK 7-9)
           </h3>
           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             Tổng cộng {vocabList.length.toLocaleString()} từ chuẩn
@@ -286,7 +284,7 @@ export default function AdminHskTab({
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${meta.badge}`}>
-                    HSK {meta.level}
+                    {meta.level === 7 ? 'HSK 7-9' : `HSK ${meta.level}`}
                   </span>
                   <BookOpen size={15} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
                 </div>

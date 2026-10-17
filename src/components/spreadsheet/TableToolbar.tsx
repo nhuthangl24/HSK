@@ -181,6 +181,7 @@ export function TableToolbar({
             <option value="4">HSK 4</option>
             <option value="5">HSK 5</option>
             <option value="6">HSK 6</option>
+            <option value="7">HSK 7-9</option>
           </select>
 
           {/* Status Filter */}
