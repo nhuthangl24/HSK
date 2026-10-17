@@ -1,26 +1,17 @@
 import { NextResponse } from 'next/server';
-import { extractToken, verifyToken } from '@/lib/server-auth';
 import {
   getSystemVocabulary,
   saveSystemVocabularyItem,
   deleteSystemVocabularyItem,
   batchSaveSystemVocabulary,
-  getUserRecordById,
   addAuditLog,
+  authenticateAdmin,
 } from '@/lib/server-db';
 import { VocabItem } from '@/types/vocabulary';
 
 export async function GET(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
 
@@ -29,20 +20,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin, email: callerEmail } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
-
-  const callerEmail = caller?.email || payload.email;
 
   try {
     const body = await request.json();
@@ -71,20 +52,10 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin, email: callerEmail } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
-
-  const callerEmail = caller?.email || payload.email;
 
   try {
     const item = (await request.json()) as VocabItem;
@@ -103,20 +74,10 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin, email: callerEmail } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json({ success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' }, { status: 403 });
   }
-
-  const callerEmail = caller?.email || payload.email;
 
   try {
     const { searchParams } = new URL(request.url);

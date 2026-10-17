@@ -54,6 +54,23 @@ export function createToken(user: User, expiresInSeconds = 7 * 24 * 3600): strin
 /**
  * Verify and decode an HMAC-signed token
  */
+export const ADMIN_EMAILS = [
+  process.env.ADMIN_EMAIL,
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+  'luunhuthang2402@gmail.com',
+]
+  .filter(Boolean)
+  .map((e) => (e as string).toLowerCase().trim());
+
+export function isUserAdmin(email?: string, role?: string): boolean {
+  if (role === 'admin') return true;
+  if (email && ADMIN_EMAILS.includes(email.toLowerCase().trim())) return true;
+  return false;
+}
+
+/**
+ * Verify and decode an HMAC-signed token
+ */
 export function verifyToken(token: string): TokenPayload | null {
   try {
     const [payloadB64, signature] = token.split('.');
@@ -71,6 +88,11 @@ export function verifyToken(token: string): TokenPayload | null {
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8')) as TokenPayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null; // Expired
+    }
+
+    // Auto-elevate if email is authorized admin
+    if (isUserAdmin(payload.email, payload.role)) {
+      payload.role = 'admin';
     }
 
     return payload;
@@ -105,7 +127,8 @@ export function extractToken(request: Request): string | null {
   if (userId && userId.trim()) {
     const cleanId = userId.trim();
     const cleanEmail = (request.headers.get('x-user-email') || '').trim().toLowerCase();
-    const cleanRole = (request.headers.get('x-user-role') as UserRole) || 'user';
+    const rawRole = (request.headers.get('x-user-role') as UserRole) || 'user';
+    const cleanRole: UserRole = isUserAdmin(cleanEmail, rawRole) ? 'admin' : rawRole;
     return createToken({
       id: cleanId,
       email: cleanEmail,
@@ -119,3 +142,4 @@ export function extractToken(request: Request): string | null {
 
   return null;
 }
+

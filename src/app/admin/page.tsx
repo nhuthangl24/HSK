@@ -160,6 +160,19 @@ export default function AdminPage() {
   }, [timePeriodFilter]);
 
   const fetchUsers = useCallback(async () => {
+    // 1. Instant load from local cache if available
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('hsk_admin_users_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUsers(parsed);
+          }
+        }
+      } catch {}
+    }
+
     setLoadingUsers(true);
     try {
       const authHeaders = getClientAuthHeaders(user);
@@ -201,6 +214,9 @@ export default function AdminPage() {
       }));
 
       setUsers(combined);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hsk_admin_users_cache', JSON.stringify(combined));
+      }
       setUserPage(1);
     } catch (err) {
       console.error('Fetch users error:', err);
@@ -208,6 +224,7 @@ export default function AdminPage() {
       setLoadingUsers(false);
     }
   }, [user]);
+
 
   const fetchVocab = useCallback(async () => {
     setLoadingVocab(true);
@@ -310,6 +327,15 @@ export default function AdminPage() {
     try {
       if (type === 'lock' || type === 'unlock') {
         const newStatus = type === 'lock';
+        // Optimistic UI update
+        setUsers((prev) => {
+          const next = prev.map((u) => (u.id === targetUser.id ? { ...u, isLocked: newStatus } : u));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('hsk_admin_users_cache', JSON.stringify(next));
+          }
+          return next;
+        });
+
         await fetch('/api/admin/users', {
           method: 'PATCH',
           headers: authHeaders,
@@ -329,6 +355,15 @@ export default function AdminPage() {
           'Quản lý tài khoản'
         );
       } else if (type === 'role' && newRole) {
+        // Optimistic UI update
+        setUsers((prev) => {
+          const next = prev.map((u) => (u.id === targetUser.id ? { ...u, role: newRole } : u));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('hsk_admin_users_cache', JSON.stringify(next));
+          }
+          return next;
+        });
+
         await fetch('/api/admin/users', {
           method: 'PATCH',
           headers: authHeaders,
@@ -351,6 +386,7 @@ export default function AdminPage() {
 
       fetchUsers();
       fetchStats();
+
       if (selectedUserForModal && selectedUserForModal.id === targetUser.id) {
         setSelectedUserForModal((prev) =>
           prev

@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
-import { extractToken, verifyToken } from '@/lib/server-auth';
-import { getAllUsers, getUserRecordById, updateUser, addAuditLog } from '@/lib/server-db';
+import { getAllUsers, updateUser, addAuditLog, authenticateAdmin } from '@/lib/server-db';
 import { UserRole } from '@/types/auth';
 
 export async function GET(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin, userId, email, role: callerRole } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json(
       { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
       { status: 403 }
@@ -27,12 +18,12 @@ export async function GET(request: Request) {
   let users = getAllUsers();
 
   // If local list is empty on serverless cold start, ensure caller admin is present
-  if (users.length === 0 && payload.role === 'admin') {
+  if (users.length === 0 && (callerRole === 'admin' || isAdmin)) {
     users = [
       {
-        id: payload.userId,
-        email: payload.email,
-        name: payload.email.split('@')[0] || 'Quản trị viên',
+        id: userId,
+        email: email,
+        name: email.split('@')[0] || 'Quản trị viên',
         role: 'admin',
         streakDays: 1,
         totalMastered: 0,
@@ -45,8 +36,7 @@ export async function GET(request: Request) {
     users = users.filter(
       (u) =>
         (u.name && u.name.toLowerCase().includes(q)) ||
-        (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.id && u.id.toLowerCase().includes(q))
+        (u.email && u.email.toLowerCase().includes(q))
     );
   }
 
@@ -58,16 +48,8 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, message: 'Yêu cầu đăng nhập.' }, { status: 401 });
-  }
-
-  const caller = getUserRecordById(payload.userId);
-  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  if (!isCallerAdmin) {
+  const { isAdmin, userId, email: callerEmail } = authenticateAdmin(request);
+  if (!isAdmin) {
     return NextResponse.json(
       { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
       { status: 403 }
@@ -86,11 +68,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, message: 'Thiếu ID người dùng.' }, { status: 400 });
     }
 
-    const callerId = caller?.id || payload.userId;
-    const callerEmail = caller?.email || payload.email;
-
     // Safety: Admin cannot lock their own account
-    if (targetUserId === callerId && isLocked === true) {
+    if (targetUserId === userId && isLocked === true) {
       return NextResponse.json(
         { success: false, message: 'Bạn không thể tự khóa tài khoản của chính mình.' },
         { status: 400 }

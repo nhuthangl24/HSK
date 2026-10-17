@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
-import { hashPassword, verifyPassword } from './server-auth';
+import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
 
 interface StoredUserRecord extends User {
@@ -215,7 +215,23 @@ export function updateUser(id: string, updates: Partial<User>): User {
   const users = readJsonFile<StoredUserRecord[]>('users.json', []);
   const index = users.findIndex((u) => u.id === id);
   if (index === -1) {
-    throw new Error('Không tìm thấy người dùng.');
+    // If user is from Firebase Auth and not yet in local users.json, upsert record cleanly
+    const newUser: StoredUserRecord = {
+      id,
+      name: updates.name || updates.email?.split('@')[0] || 'Học viên',
+      email: updates.email ? updates.email.trim().toLowerCase() : '',
+      role: updates.role || 'user',
+      streakDays: updates.streakDays || 0,
+      totalMastered: updates.totalMastered || 0,
+      targetHsk: updates.targetHsk || 3,
+      isLocked: !!updates.isLocked,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...updates,
+    };
+    users.push(newUser);
+    writeJsonFile('users.json', users);
+    return toPublicUser(newUser);
   }
 
   const current = users[index];
@@ -232,6 +248,33 @@ export function updateUser(id: string, updates: Partial<User>): User {
 
   return toPublicUser(updated);
 }
+
+export function authenticateAdmin(request: Request): {
+  isAdmin: boolean;
+  userId: string;
+  email: string;
+  role: UserRole;
+} {
+  const token = extractToken(request);
+  const payload = token ? verifyToken(token) : null;
+  if (!payload?.userId) {
+    return { isAdmin: false, userId: '', email: '', role: 'user' };
+  }
+
+  const caller = getUserRecordById(payload.userId);
+  const email = (caller?.email || payload.email || '').trim().toLowerCase();
+  const role = caller?.role || payload.role;
+  const isLocked = caller?.isLocked ?? false;
+
+  const isAdmin = !isLocked && (role === 'admin' || isUserAdmin(email, role));
+  return {
+    isAdmin,
+    userId: payload.userId,
+    email: email || 'admin@system.local',
+    role: isAdmin ? 'admin' : role,
+  };
+}
+
 
 
 // -------------------------------------------------------------

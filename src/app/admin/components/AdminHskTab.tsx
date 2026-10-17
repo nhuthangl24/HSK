@@ -26,6 +26,7 @@ import {
 } from '@/lib/firebase-db';
 import { getFirebaseServices } from '@/lib/firebase';
 import { INITIAL_DECKS, isProtectedDeck } from '@/data/initial-decks';
+import { saveStoredDecks, getStoredDecks } from '@/lib/storage';
 
 interface AdminHskTabProps {
   stats: AdminStats | null;
@@ -79,23 +80,26 @@ export default function AdminHskTab({
   };
 
   const fetchDecks = useCallback(async () => {
+    const localDecks = getStoredDecks(user?.id);
+    if (localDecks && localDecks.length > 0) {
+      setDecks(localDecks);
+    }
     setLoading(true);
     try {
       if (getFirebaseServices().isConfigured) {
         const remoteDecks = await loadDecksForUser(user?.id || 'admin');
         if (remoteDecks && remoteDecks.length > 0) {
           setDecks(remoteDecks);
+          saveStoredDecks(remoteDecks, user?.id);
           return;
         }
       }
-      setDecks(INITIAL_DECKS);
     } catch (err) {
-      console.error('Fetch decks error:', err);
-      toast.error('Không thể tải danh sách thư mục.');
+      console.warn('Fetch decks notice:', err);
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     fetchDecks();
@@ -153,13 +157,16 @@ export default function AdminHskTab({
         await saveDeckToFirestore(deckToSave, deckToSave.userId);
       }
 
-      setDecks((prev) => {
-        const exists = prev.some((d) => d.id === deckToSave.id);
+      const nextDecks = (() => {
+        const exists = decks.some((d) => d.id === deckToSave.id);
         if (exists) {
-          return prev.map((d) => (d.id === deckToSave.id ? deckToSave : d));
+          return decks.map((d) => (d.id === deckToSave.id ? deckToSave : d));
         }
-        return [...prev, deckToSave];
-      });
+        return [...decks, deckToSave];
+      })();
+
+      setDecks(nextDecks);
+      saveStoredDecks(nextDecks, user?.id);
 
       toast.success(
         editingDeck
@@ -190,13 +197,16 @@ export default function AdminHskTab({
       if (getFirebaseServices().isConfigured) {
         await deleteDeckFromFirestore(id);
       }
-      setDecks((prev) => prev.filter((d) => d.id !== id));
+      const nextDecks = decks.filter((d) => d.id !== id);
+      setDecks(nextDecks);
+      saveStoredDecks(nextDecks, user?.id);
       toast.success(`Đã xóa thư mục "${name}" thành công.`);
     } catch (err) {
       console.error('Delete deck error:', err);
       toast.error('Không thể xóa thư mục.');
     }
   };
+
 
   const HSK_LEVEL_META = [
     { level: 1, title: 'HSK 1 (Sơ cấp 1)', color: 'from-blue-500 to-indigo-600', badge: 'bg-blue-500/10 text-blue-700 border-blue-200' },

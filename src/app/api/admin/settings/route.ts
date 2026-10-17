@@ -1,20 +1,9 @@
 import { NextResponse } from 'next/server';
-import { extractToken, verifyToken } from '@/lib/server-auth';
-import { getSystemConfig, saveSystemConfig, getUserRecordById } from '@/lib/server-db';
+import { getSystemConfig, saveSystemConfig, authenticateAdmin } from '@/lib/server-db';
 import { SystemConfig } from '@/types/auth';
 
-function checkIsAdmin(request: Request): { isAdmin: boolean; email: string } {
-  const token = extractToken(request);
-  const payload = token ? verifyToken(token) : null;
-  if (!payload) return { isAdmin: false, email: '' };
-
-  const caller = payload.userId ? getUserRecordById(payload.userId) : null;
-  const isAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
-  return { isAdmin, email: caller?.email || payload.email || 'admin@system.local' };
-}
-
 export async function GET(request: Request) {
-  const { isAdmin } = checkIsAdmin(request);
+  const { isAdmin } = authenticateAdmin(request);
   if (!isAdmin) {
     return NextResponse.json(
       { success: false, message: 'Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
@@ -27,7 +16,7 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const { isAdmin, email } = checkIsAdmin(request);
+  const { isAdmin, email } = authenticateAdmin(request);
   if (!isAdmin) {
     return NextResponse.json(
       { success: false, message: 'Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },

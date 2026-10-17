@@ -39,8 +39,29 @@ export default function AdminSettingsTab() {
   const [saving, setSaving] = useState(false);
 
   const fetchConfig = useCallback(async () => {
+    // 1. Instant local load
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('hsk_system_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          setConfig((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch {}
+    }
+
     setLoading(true);
     try {
+      // 2. Cloud Firestore (primary cloud persistence)
+      const firestoreConfig = await loadSystemConfigFromFirestore();
+      if (firestoreConfig) {
+        setConfig((prev) => ({ ...prev, ...firestoreConfig }));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hsk_system_config', JSON.stringify(firestoreConfig));
+        }
+      }
+
+      // 3. Server API fallback
       const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/settings', {
         headers: authHeaders,
@@ -49,15 +70,13 @@ export default function AdminSettingsTab() {
         const data = await res.json();
         if (data.success && data.config) {
           setConfig((prev) => ({ ...prev, ...data.config }));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('hsk_system_config', JSON.stringify(data.config));
+          }
         }
       }
-      // Firestore fallback
-      const firestoreConfig = await loadSystemConfigFromFirestore();
-      if (firestoreConfig) {
-        setConfig((prev) => ({ ...prev, ...firestoreConfig }));
-      }
     } catch (err) {
-      console.error('Fetch system config error:', err);
+      console.warn('Fetch system config notice:', err);
     } finally {
       setLoading(false);
     }
@@ -71,29 +90,49 @@ export default function AdminSettingsTab() {
     e.preventDefault();
     setSaving(true);
     try {
+      const now = new Date().toISOString();
+      const updatedConfig = { ...config, updatedAt: now };
+      setConfig(updatedConfig);
+
+      // 1. Save immediately to localStorage (instant persistence on current browser)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hsk_system_config', JSON.stringify(updatedConfig));
+        // Broadcast to Sidebar and all active components immediately
+        window.dispatchEvent(
+          new CustomEvent('hsk_system_config_updated', { detail: updatedConfig })
+        );
+      }
+
+      // 2. Save directly to Cloud Firestore (primary cross-device persistence)
+      await saveSystemConfigToFirestore(updatedConfig as unknown as Record<string, unknown>);
+
+      // 3. Save to server API
       const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: authHeaders,
-        body: JSON.stringify(config),
+        body: JSON.stringify(updatedConfig),
       });
-      const data = await res.json();
 
-      // Sync directly to Firestore for serverless persistence
-      await saveSystemConfigToFirestore(config as unknown as Record<string, unknown>);
-
-      if (data.success && data.config) {
-        setConfig((prev) => ({ ...prev, ...data.config }));
-        toast.success('Đã lưu cấu hình hệ thống thành công!', 'Cài đặt nền tảng');
-      } else {
-        toast.success('Đã lưu cấu hình lên cơ sở dữ liệu Cloud!', 'Cài đặt nền tảng');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.config) {
+          setConfig((prev) => ({ ...prev, ...data.config }));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('hsk_system_config', JSON.stringify(data.config));
+          }
+        }
       }
-    } catch {
-      toast.error('Lỗi khi gửi yêu cầu cập nhật.');
+
+      toast.success('Đã lưu cấu hình hệ thống & liên kết Zalo thành công!', 'Cài đặt nền tảng');
+    } catch (err) {
+      console.error('Save system config error:', err);
+      toast.error('Có lỗi khi lưu cấu hình.');
     } finally {
       setSaving(false);
     }
   };
+
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

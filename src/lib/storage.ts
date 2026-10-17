@@ -111,29 +111,49 @@ export function getStoredDecks(userId?: string): Deck[] {
       localStorage.removeItem(STORAGE_KEY_DECKS_LEGACY);
     }
 
-    if (!userId) {
-      // Guests ONLY get official system decks
-      return INITIAL_DECKS;
+    // 1. Load any system decks created by admin
+    const systemDecks: Deck[] = [];
+    const rawSys = localStorage.getItem('hsk_system_decks');
+    if (rawSys) {
+      try {
+        const parsedSys = JSON.parse(rawSys);
+        if (Array.isArray(parsedSys)) {
+          parsedSys.forEach((d: Deck) => {
+            if (!isProtectedDeck(d.id) && (d.scope === 'system' || d.ownerId === 'system' || d.userId === 'system')) {
+              systemDecks.push({ ...d, scope: 'system' });
+            }
+          });
+        }
+      } catch {}
     }
 
-    const key = `hsk_decks_user_${userId}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      return INITIAL_DECKS;
+    // 2. Load user personal decks
+    const userCustomDecks: Deck[] = [];
+    if (userId) {
+      const key = `hsk_decks_user_${userId}`;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((d: Deck) => {
+              if (!isProtectedDeck(d.id) && d.id !== 'deck-business') {
+                if (d.scope === 'system' || d.ownerId === 'system' || d.userId === 'system') {
+                  systemDecks.push({ ...d, scope: 'system' });
+                } else if (d.ownerId === userId || d.userId === userId) {
+                  userCustomDecks.push({ ...d, ownerId: userId, userId, scope: 'user' });
+                }
+              }
+            });
+          }
+        } catch {}
+      }
     }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return INITIAL_DECKS;
-    }
-
-    // Filter to strictly ensure only this user's custom decks
-    const userCustomDecks = parsed.filter(
-      (d: Deck) => !isProtectedDeck(d.id) && d.id !== 'deck-business' && (d.ownerId === userId || d.userId === userId)
-    );
 
     const map = new Map<string, Deck>();
     INITIAL_DECKS.forEach((d) => map.set(d.id, d));
-    userCustomDecks.forEach((d) => map.set(d.id, { ...d, ownerId: userId, userId, scope: 'user' }));
+    systemDecks.forEach((d) => map.set(d.id, d));
+    userCustomDecks.forEach((d) => map.set(d.id, d));
 
     return Array.from(map.values());
   } catch (e) {
@@ -148,21 +168,34 @@ export function saveStoredDecks(decks: Deck[], userId?: string): void {
     // Purge legacy key
     localStorage.removeItem(STORAGE_KEY_DECKS_LEGACY);
 
-    if (!userId) {
-      // Do not persist custom decks for unauthenticated guests
-      return;
+    // Save system decks to shared key so all users and guests can view admin-created folders
+    const systemDecks = decks.filter(
+      (d) => isProtectedDeck(d.id) || d.scope === 'system' || d.ownerId === 'system' || d.userId === 'system'
+    );
+    localStorage.setItem('hsk_system_decks', JSON.stringify(systemDecks));
+
+    if (userId) {
+      const key = `hsk_decks_user_${userId}`;
+      const sanitized = decks.filter(
+        (d) =>
+          isProtectedDeck(d.id) ||
+          d.id === 'deck-business' ||
+          d.scope === 'system' ||
+          d.ownerId === 'system' ||
+          d.userId === 'system' ||
+          d.ownerId === userId ||
+          d.userId === userId
+      );
+      localStorage.setItem(key, JSON.stringify(sanitized));
     }
 
-    const key = `hsk_decks_user_${userId}`;
-    // Sanitize: store only system decks and this user's custom decks
-    const sanitized = decks.filter(
-      (d) => isProtectedDeck(d.id) || d.id === 'deck-business' || d.ownerId === userId || d.userId === userId
-    );
-    localStorage.setItem(key, JSON.stringify(sanitized));
+    // Broadcast update to all components in current page & other tabs
+    window.dispatchEvent(new CustomEvent('hsk_decks_updated', { detail: decks }));
   } catch (e) {
     console.error('Failed to save decks to localStorage:', e);
   }
 }
+
 
 export function getStoredColumns(): ColumnConfig[] {
   if (typeof window === 'undefined') return DEFAULT_COLUMNS;

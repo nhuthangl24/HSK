@@ -177,7 +177,17 @@ function MainApp() {
         })
         .catch((err) => console.warn('Deck sync notice:', err));
     }
+
+    const handleDecksUpdated = () => {
+      const refreshed = getStoredDecks(currentUserId);
+      setDecks(refreshed);
+    };
+    window.addEventListener('hsk_decks_updated', handleDecksUpdated);
+    return () => {
+      window.removeEventListener('hsk_decks_updated', handleDecksUpdated);
+    };
   }, [currentUserId]);
+
 
   const itemsRef = React.useRef(items);
   itemsRef.current = items;

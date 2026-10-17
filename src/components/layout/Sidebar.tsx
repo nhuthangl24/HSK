@@ -127,8 +127,43 @@ export function Sidebar({
 
   useEffect(() => {
     let isMounted = true;
+
+    // 1. Instant synchronous load from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('hsk_system_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed.zaloCommunityEnabled !== 'undefined') {
+            setZaloConfig({
+              enabled: parsed.zaloCommunityEnabled ?? true,
+              url: parsed.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+              title: parsed.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
+              description: parsed.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
+            });
+          }
+        }
+      } catch {}
+    }
+
     const fetchZaloConfig = async () => {
       try {
+        // 2. Cloud Firestore (true cloud setting)
+        const fsConfig = await loadSystemConfigFromFirestore();
+        if (fsConfig && isMounted) {
+          setZaloConfig({
+            enabled: (fsConfig.zaloCommunityEnabled as boolean) ?? true,
+            url: (fsConfig.zaloCommunityUrl as string) || 'https://zalo.me/g/vtdrsq845',
+            title: (fsConfig.zaloCommunityTitle as string) || 'Tham gia Cộng Đồng Zalo',
+            description: (fsConfig.zaloCommunityDescription as string) || 'Hỏi đáp & cùng luyện thi HSK',
+          });
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('hsk_system_config', JSON.stringify(fsConfig));
+          }
+          return;
+        }
+
+        // 3. Server API fallback
         const res = await fetch('/api/system-config');
         if (res.ok) {
           const data = await res.json();
@@ -139,28 +174,36 @@ export function Sidebar({
               title: data.config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
               description: data.config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
             });
-            return;
           }
-        }
-        // Fallback to Firestore
-        const fsConfig = await loadSystemConfigFromFirestore();
-        if (fsConfig && isMounted) {
-          setZaloConfig({
-            enabled: (fsConfig.zaloCommunityEnabled as boolean) ?? true,
-            url: (fsConfig.zaloCommunityUrl as string) || 'https://zalo.me/g/vtdrsq845',
-            title: (fsConfig.zaloCommunityTitle as string) || 'Tham gia Cộng Đồng Zalo',
-            description: (fsConfig.zaloCommunityDescription as string) || 'Hỏi đáp & cùng luyện thi HSK',
-          });
         }
       } catch (err) {
         console.warn('Load Zalo config notice:', err);
       }
     };
+
     fetchZaloConfig();
+
+    // 4. Real-time event listener when admin updates settings in Admin tab
+    const handleConfigUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const c = customEvent.detail;
+      if (c && isMounted) {
+        setZaloConfig({
+          enabled: c.zaloCommunityEnabled ?? true,
+          url: c.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+          title: c.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
+          description: c.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
+        });
+      }
+    };
+    window.addEventListener('hsk_system_config_updated', handleConfigUpdated);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('hsk_system_config_updated', handleConfigUpdated);
     };
   }, []);
+
 
   const renderCount = (count: number) => {
     if (isLoading && items.length === 0) {
