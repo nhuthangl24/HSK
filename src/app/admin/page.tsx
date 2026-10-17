@@ -347,7 +347,7 @@ export default function AdminPage() {
           newStatus ? 'KHÓA_TÀI_KHOẢN' : 'MỞ_KHÓA_TÀI_KHOẢN',
           adminEmail,
           targetUser.email,
-          `Trạng thái: ${newStatus ? 'Đã khóa tài khoản' : 'Đang hoạt động'}`
+          `Trạng thái: ${newStatus ? 'Đã khóa tài khoản' : 'Tài khoản bình thường (Đã mở khóa)'}`
         );
 
         toast.success(
@@ -1754,9 +1754,9 @@ export default function AdminPage() {
                     }}
                     className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl cursor-pointer text-slate-700 font-medium"
                   >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="active">🟢 Đang hoạt động</option>
-                    <option value="locked">🔴 Đã bị khóa</option>
+                    <option value="all">Tất cả tài khoản</option>
+                    <option value="active">Tài khoản bình thường</option>
+                    <option value="locked">Tài khoản đã khóa</option>
                   </select>
 
                   {/* Role Filter */}
@@ -1860,12 +1860,12 @@ export default function AdminPage() {
                             </td>
                             <td className="px-4 py-3">
                               {u.isLocked ? (
-                                <span className="text-rose-600 font-bold flex items-center gap-1 text-[11px]">
+                                <span className="text-rose-600 font-semibold flex items-center gap-1 text-[11px]">
                                   <Lock size={12} /> Đã khóa
                                 </span>
                               ) : (
-                                <span className="text-emerald-600 font-medium flex items-center gap-1 text-[11px]">
-                                  <CheckCircle2 size={12} /> Hoạt động
+                                <span className="text-slate-700 font-medium flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={12} className="text-emerald-600" /> Bình thường
                                 </span>
                               )}
                             </td>
@@ -2604,8 +2604,16 @@ export default function AdminPage() {
               </div>
               <div className="flex justify-between">
                 <span>Trạng thái tài khoản:</span>
-                <span className={selectedUserForModal.isLocked ? 'font-bold text-rose-600' : 'font-bold text-emerald-600'}>
-                  {selectedUserForModal.isLocked ? '🔴 Đã bị khóa' : '🟢 Đang hoạt động'}
+                <span className={selectedUserForModal.isLocked ? 'font-bold text-rose-600' : 'font-semibold text-slate-800'}>
+                  {selectedUserForModal.isLocked ? 'Đã bị khóa' : 'Bình thường'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Đăng nhập gần nhất:</span>
+                <span className="font-medium text-slate-700">
+                  {selectedUserForModal.lastLoginAt
+                    ? new Date(selectedUserForModal.lastLoginAt).toLocaleString('vi-VN')
+                    : 'Chưa có thông tin'}
                 </span>
               </div>
               <div className="flex justify-between">
