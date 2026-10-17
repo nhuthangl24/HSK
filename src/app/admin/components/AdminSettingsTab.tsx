@@ -19,33 +19,52 @@ import { getClientAuthHeaders } from '@/lib/client-auth';
 import { saveSystemConfigToFirestore, loadSystemConfigFromFirestore } from '@/lib/firebase-db';
 import { ZaloIcon } from '@/components/ui/ZaloIcon';
 
+const DEFAULT_CONFIG: SystemConfig = {
+  platformName: 'HSK Interactive Sheet',
+  platformDescription: 'Nền tảng học và ôn tập từ vựng tiếng Trung đa tương tác chuẩn HSK 1 - 9',
+  allowRegistration: true,
+  maintenanceMode: false,
+  maxImportBatchSize: 500,
+  defaultTargetHsk: 3,
+  zaloCommunityEnabled: true,
+  zaloCommunityUrl: 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
+  zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
+  zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
+  updatedAt: '2026-10-17T00:00:00.000Z',
+};
+
 export default function AdminSettingsTab() {
   const toast = useToast();
   const { user } = useAuth();
-  const [config, setConfig] = useState<SystemConfig>({
-    platformName: 'HSK Interactive Sheet',
-    platformDescription: 'Nền tảng học và ôn tập từ vựng tiếng Trung đa tương tác chuẩn HSK 1 - 9',
-    allowRegistration: true,
-    maintenanceMode: false,
-    maxImportBatchSize: 500,
-    defaultTargetHsk: 3,
-    zaloCommunityEnabled: true,
-    zaloCommunityUrl: 'https://zalo.me/g/vtdrsq845',
-    zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
-    zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
-    updatedAt: new Date().toISOString(),
-  });
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const fetchConfig = useCallback(async () => {
-    // 1. Instant local load
+  const [config, setConfig] = useState<SystemConfig>(() => {
     if (typeof window !== 'undefined') {
       try {
         const local = localStorage.getItem('hsk_system_config');
         if (local) {
           const parsed = JSON.parse(local);
-          setConfig((prev) => ({ ...prev, ...parsed }));
+          if (parsed && typeof parsed === 'object') {
+            return { ...DEFAULT_CONFIG, ...parsed };
+          }
+        }
+      } catch {}
+    }
+    return DEFAULT_CONFIG;
+  });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchConfig = useCallback(async () => {
+    // 1. Instant local read
+    let currentConfig = DEFAULT_CONFIG;
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('hsk_system_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object') {
+            currentConfig = { ...DEFAULT_CONFIG, ...parsed };
+            setConfig(currentConfig);
+          }
         }
       } catch {}
     }
@@ -53,27 +72,47 @@ export default function AdminSettingsTab() {
     setLoading(true);
     try {
       // 2. Cloud Firestore (primary cloud persistence)
-      const firestoreConfig = await loadSystemConfigFromFirestore();
-      if (firestoreConfig) {
-        setConfig((prev) => ({ ...prev, ...firestoreConfig }));
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('hsk_system_config', JSON.stringify(firestoreConfig));
-        }
-      }
+      const firestoreConfig = (await loadSystemConfigFromFirestore()) as Partial<SystemConfig> | null;
 
       // 3. Server API fallback
       const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch('/api/admin/settings', {
-        headers: authHeaders,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.config) {
-          setConfig((prev) => ({ ...prev, ...data.config }));
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('hsk_system_config', JSON.stringify(data.config));
+      let serverConfig: Partial<SystemConfig> | null = null;
+      try {
+        const res = await fetch('/api/admin/settings', { headers: authHeaders });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.config) {
+            serverConfig = data.config;
           }
         }
+      } catch {}
+
+      // 4. Timestamp-based resolution: Newer data ALWAYS wins!
+      // Never allow an older server or firestore snapshot to wipe out newer user edits!
+      const localTime = currentConfig.updatedAt ? new Date(currentConfig.updatedAt).getTime() : 0;
+      const fsTime = firestoreConfig?.updatedAt ? new Date(firestoreConfig.updatedAt).getTime() : 0;
+      const serverTime = serverConfig?.updatedAt ? new Date(serverConfig.updatedAt).getTime() : 0;
+
+      let winningConfig = currentConfig;
+      if (fsTime > localTime && fsTime >= serverTime && firestoreConfig) {
+        winningConfig = { ...DEFAULT_CONFIG, ...firestoreConfig };
+      } else if (serverTime > localTime && serverTime > fsTime && serverConfig) {
+        winningConfig = { ...DEFAULT_CONFIG, ...serverConfig };
+      }
+
+      setConfig(winningConfig);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hsk_system_config', JSON.stringify(winningConfig));
+      }
+
+      // If local state has newer changes than remote, re-sync remote in the background
+      if (localTime > fsTime || localTime > serverTime) {
+        saveSystemConfigToFirestore(winningConfig as unknown as Record<string, unknown>).catch(() => {});
+        fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: authHeaders,
+          body: JSON.stringify(winningConfig),
+        }).catch(() => {});
       }
     } catch (err) {
       console.warn('Fetch system config notice:', err);
@@ -91,7 +130,7 @@ export default function AdminSettingsTab() {
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const updatedConfig = { ...config, updatedAt: now };
+      const updatedConfig: SystemConfig = { ...config, updatedAt: now };
       setConfig(updatedConfig);
 
       // 1. Save immediately to localStorage (instant persistence on current browser)
@@ -117,9 +156,10 @@ export default function AdminSettingsTab() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.config) {
-          setConfig((prev) => ({ ...prev, ...data.config }));
+          const finalConfig = { ...updatedConfig, ...data.config };
+          setConfig(finalConfig);
           if (typeof window !== 'undefined') {
-            localStorage.setItem('hsk_system_config', JSON.stringify(data.config));
+            localStorage.setItem('hsk_system_config', JSON.stringify(finalConfig));
           }
         }
       }
@@ -132,6 +172,7 @@ export default function AdminSettingsTab() {
       setSaving(false);
     }
   };
+
 
 
   return (

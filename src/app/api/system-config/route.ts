@@ -11,7 +11,7 @@ export async function GET() {
       allowRegistration: config.allowRegistration,
       maintenanceMode: config.maintenanceMode,
       zaloCommunityEnabled: config.zaloCommunityEnabled ?? true,
-      zaloCommunityUrl: config.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+      zaloCommunityUrl: config.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
       zaloCommunityTitle: config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
       zaloCommunityDescription: config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
     },

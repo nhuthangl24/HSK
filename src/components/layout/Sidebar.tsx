@@ -118,11 +118,29 @@ export function Sidebar({
     url: string;
     title: string;
     description: string;
-  }>({
-    enabled: true,
-    url: 'https://zalo.me/g/vtdrsq845',
-    title: 'Tham gia Cộng Đồng Zalo',
-    description: 'Hỏi đáp & cùng luyện thi HSK',
+  }>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = localStorage.getItem('hsk_system_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed.zaloCommunityEnabled !== 'undefined') {
+            return {
+              enabled: parsed.zaloCommunityEnabled ?? true,
+              url: parsed.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
+              title: parsed.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
+              description: parsed.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
+            };
+          }
+        }
+      } catch {}
+    }
+    return {
+      enabled: true,
+      url: 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
+      title: 'Tham gia Cộng Đồng Zalo',
+      description: 'Hỏi đáp & cùng luyện thi HSK',
+    };
   });
 
   useEffect(() => {
@@ -137,7 +155,7 @@ export function Sidebar({
           if (parsed && typeof parsed.zaloCommunityEnabled !== 'undefined') {
             setZaloConfig({
               enabled: parsed.zaloCommunityEnabled ?? true,
-              url: parsed.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+              url: parsed.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
               title: parsed.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
               description: parsed.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
             });
@@ -153,7 +171,7 @@ export function Sidebar({
         if (fsConfig && isMounted) {
           setZaloConfig({
             enabled: (fsConfig.zaloCommunityEnabled as boolean) ?? true,
-            url: (fsConfig.zaloCommunityUrl as string) || 'https://zalo.me/g/vtdrsq845',
+            url: (fsConfig.zaloCommunityUrl as string) || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
             title: (fsConfig.zaloCommunityTitle as string) || 'Tham gia Cộng Đồng Zalo',
             description: (fsConfig.zaloCommunityDescription as string) || 'Hỏi đáp & cùng luyện thi HSK',
           });
@@ -170,7 +188,7 @@ export function Sidebar({
           if (data.success && data.config && isMounted) {
             setZaloConfig({
               enabled: data.config.zaloCommunityEnabled ?? true,
-              url: data.config.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+              url: data.config.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
               title: data.config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
               description: data.config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
             });
@@ -190,7 +208,7 @@ export function Sidebar({
       if (c && isMounted) {
         setZaloConfig({
           enabled: c.zaloCommunityEnabled ?? true,
-          url: c.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+          url: c.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
           title: c.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
           description: c.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
         });
@@ -203,6 +221,7 @@ export function Sidebar({
       window.removeEventListener('hsk_system_config_updated', handleConfigUpdated);
     };
   }, []);
+
 
 
   const renderCount = (count: number) => {

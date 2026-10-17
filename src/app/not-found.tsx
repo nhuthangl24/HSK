@@ -77,7 +77,7 @@ export default function NotFound() {
           </Link>
           <span>•</span>
           <a
-            href="https://zalo.me/g/vtdrsq845"
+            href="https://zalo.me/g/urwxu6t93bwfnjkzeuok"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1"

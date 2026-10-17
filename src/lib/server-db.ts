@@ -68,26 +68,40 @@ function readJsonFile<T>(filename: string, defaultValue: T): T {
   try {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, filename);
+    const repoFilePath = path.join(process.cwd(), '.data', filename);
 
-    if (!fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
-      memoryStore.set(filename, defaultValue);
-      try {
-        fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
-      } catch {
-        // Safe ignore on read-only environments
-      }
-      return defaultValue;
+    // 1. Check DATA_DIR (runtime directory)
+    if (fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const parsed = JSON.parse(raw) as T;
+      memoryStore.set(filename, parsed);
+      return parsed;
     }
 
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw) as T;
-    memoryStore.set(filename, parsed);
-    return parsed;
+    // 2. Check repository .data directory (committed defaults & data on serverless)
+    if (fs.existsSync(/*turbopackIgnore: true*/ repoFilePath)) {
+      const raw = fs.readFileSync(repoFilePath, 'utf8');
+      const parsed = JSON.parse(raw) as T;
+      memoryStore.set(filename, parsed);
+      try {
+        fs.writeFileSync(filePath, raw, 'utf8');
+      } catch {}
+      return parsed;
+    }
+
+    memoryStore.set(filename, defaultValue);
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
+    } catch {
+      // Safe ignore on read-only environments
+    }
+    return defaultValue;
   } catch {
     memoryStore.set(filename, defaultValue);
     return defaultValue;
   }
 }
+
 
 function writeJsonFile<T>(filename: string, data: T): void {
   memoryStore.set(filename, data);
@@ -971,11 +985,12 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   maxImportBatchSize: 500,
   defaultTargetHsk: 3,
   zaloCommunityEnabled: true,
-  zaloCommunityUrl: 'https://zalo.me/g/vtdrsq845',
+  zaloCommunityUrl: 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
   zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
   zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
   updatedAt: new Date().toISOString(),
 };
+
 
 export function getSystemConfig(): SystemConfig {
   return readJsonFile<SystemConfig>('system_config.json', DEFAULT_SYSTEM_CONFIG);
