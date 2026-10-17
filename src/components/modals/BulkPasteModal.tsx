@@ -16,6 +16,10 @@ import {
   Check,
   Edit2,
   Trash2,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -78,6 +82,45 @@ export function BulkPasteModal({
   const [step, setStep] = useState<'input' | 'preview' | 'result'>('input');
   const [rawText, setRawText] = useState('');
   const [parsedLines, setParsedLines] = useState<ParsedPasteLine[]>([]);
+
+  // AI Prompt Box State
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [aiPromptTopic, setAiPromptTopic] = useState('20 từ vựng HSK 3 thông dụng nhất kèm ví dụ thực tế');
+
+  const generatedAiPrompt = useMemo(() => {
+    return `Hãy đóng vai một chuyên gia giáo dục tiếng Trung Quốc. Hãy tạo cho tôi danh sách từ vựng theo định dạng phân tách bằng dấu gạch đứng " | " để nhập trực tiếp vào hệ thống học từ vựng HSK.
+
+Yêu cầu định dạng bắt buộc:
+1. Mỗi từ vựng nằm trên ĐÚNG 1 dòng riêng biệt.
+2. Mỗi dòng gồm đúng 6 trường thông tin, ngăn cách bằng ký tự " | " (dấu cách - gạch đứng - dấu cách):
+Từ mới (Chữ Hán) | Phiên âm Pinyin (có dấu thanh điệu chuẩn) | Nghĩa tiếng Việt | Câu ví dụ (Chữ Hán) | Phiên âm câu ví dụ | Dịch câu ví dụ tiếng Việt
+
+3. QUY TẮC CẦN TUÂN THỦ NGHIÊM NGẶT:
+- KHÔNG đánh số thứ tự đầu dòng (không dùng 1., 2., 3., - hoặc *).
+- KHÔNG tạo bảng markdown (|---|---|), KHÔNG dùng code block phức tạp.
+- KHÔNG viết lời chào, lời mở đầu hoặc kết luận. CHỈ XUẤT RA CÁC DÒNG DỮ LIỆU THÔ.
+
+Ví dụ mẫu chuẩn:
+爱 | ài | Yêu, thương | 爸爸爱妈妈。 | Bàba ài māma. | Bố yêu mẹ.
+八 | bā | Số tám (8) | 他买了八个苹果。 | Tā mǎile bā gè píngguǒ. | Anh ấy đã mua 8 quả táo.
+白天 | báitiān | Ban ngày | 你白天还要去上课。 | Nǐ báitiān hái yào qù shàngkè. | Ban ngày bạn còn phải đi học.
+安排 | ānpái | Sắp xếp, bố trí | 我已经安排好了明天的会议。 | Wǒ yǐjīng ānpái hǎole míngtiān de huìyì. | Tôi đã sắp xếp xong cuộc họp ngày mai.
+
+Chủ đề / Yêu cầu cụ thể của tôi:
+${aiPromptTopic.trim() || '20 từ vựng tiếng Trung thông dụng kèm câu ví dụ thực tế'}`;
+  }, [aiPromptTopic]);
+
+  const handleCopyAiPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedAiPrompt);
+      setCopiedPrompt(true);
+      toast.success('Đã sao chép Prompt! Hãy dán vào ChatGPT / Claude / Gemini / DeepSeek.');
+      setTimeout(() => setCopiedPrompt(false), 2500);
+    } catch {
+      toast.error('Không thể sao chép tự động. Vui lòng chọn văn bản và copy thủ công.');
+    }
+  };
 
   // Target Destination
   const [targetScope, setTargetScope] = useState<'personal' | 'system' | 'user_workspace'>(
@@ -493,6 +536,111 @@ export function BulkPasteModal({
                   • <strong>Bắt buộc tối thiểu 3 trường:</strong> Chữ Hán | Phiên âm | Nghĩa tiếng Việt.<br />
                   • <strong>Hỗ trợ sao chép từ Excel:</strong> Tự động nhận diện Tab hoặc dấu gạch đứng <code className="bg-emerald-100/60 dark:bg-emerald-900/60 px-1 rounded">|</code>. Có thể dán thêm cột Cấp HSK ở đầu nếu muốn.
                 </div>
+              </div>
+
+              {/* COLLAPSIBLE AI PROMPT BOX */}
+              <div className="border border-purple-200 dark:border-purple-800/70 rounded-2xl overflow-hidden bg-purple-50/40 dark:bg-purple-950/20 shadow-2xs transition-all">
+                <button
+                  type="button"
+                  onClick={() => setShowAiPrompt((prev) => !prev)}
+                  className="w-full p-3.5 flex items-center justify-between text-left cursor-pointer hover:bg-purple-100/50 dark:hover:bg-purple-900/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 border border-purple-200 dark:border-purple-800">
+                      <Bot size={16} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
+                          Sao chép câu lệnh Prompt gửi AI (ChatGPT, Claude, Gemini, DeepSeek...)
+                        </span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-purple-200/80 dark:bg-purple-800/80 text-purple-800 dark:text-purple-200">
+                          Tiện ích
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-purple-700/80 dark:text-purple-400 mt-0.5">
+                        Dùng câu lệnh này để AI tự tạo danh sách từ vựng chuẩn 100% định dạng, chỉ cần sao chép kết quả và dán vào ô bên dưới.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300">
+                      {showAiPrompt ? 'Thu gọn' : 'Mở xem prompt'}
+                    </span>
+                    {showAiPrompt ? (
+                      <ChevronUp size={16} className="text-purple-700 dark:text-purple-300" />
+                    ) : (
+                      <ChevronDown size={16} className="text-purple-700 dark:text-purple-300" />
+                    )}
+                  </div>
+                </button>
+
+                {showAiPrompt && (
+                  <div className="p-4 pt-1 border-t border-purple-200/70 dark:border-purple-800/60 space-y-3 animate-fadeIn">
+                    {/* Topic Customizer */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 mb-1">
+                        Chủ đề hoặc số lượng từ bạn muốn AI tạo:
+                      </label>
+                      <input
+                        type="text"
+                        value={aiPromptTopic}
+                        onChange={(e) => setAiPromptTopic(e.target.value)}
+                        placeholder="Ví dụ: 30 từ HSK 3 chủ đề đi du lịch, 50 từ vựng kinh doanh..."
+                        className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-800 dark:text-slate-200 font-medium"
+                      />
+                      {/* Quick Preset Pills */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[10px]">
+                        <span className="text-purple-700 dark:text-purple-400 font-semibold">Gợi ý nhanh:</span>
+                        {[
+                          '20 từ HSK 1-2 cơ bản hàng ngày',
+                          '30 từ HSK 3 chủ đề Du lịch & Khách sạn',
+                          '30 từ HSK 4 chủ đề Ẩm thực & Mua sắm',
+                          '25 từ chủ đề Phỏng vấn & Công sở',
+                          '20 từ chủ đề Sức khỏe & Y tế',
+                        ].map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setAiPromptTopic(preset)}
+                            className="px-2 py-0.5 rounded-lg bg-purple-100/70 dark:bg-purple-900/40 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-300 cursor-pointer transition-colors"
+                          >
+                            {preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Prompt Box */}
+                    <div className="relative">
+                      <pre className="p-3 bg-slate-900 text-slate-100 dark:bg-black/80 rounded-xl text-[11px] font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto border border-purple-900/30">
+                        {generatedAiPrompt}
+                      </pre>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                      <div className="text-[11px] text-purple-700 dark:text-purple-400">
+                        Sau khi AI trả lời, chỉ cần <strong>sao chép toàn bộ kết quả</strong> và dán vào ô nhập bên dưới.
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCopyAiPrompt}
+                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs ${
+                            copiedPrompt
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-purple-700 hover:bg-purple-800 text-white'
+                          }`}
+                        >
+                          {copiedPrompt ? <Check size={14} /> : <Copy size={14} />}
+                          <span>{copiedPrompt ? 'Đã sao chép prompt!' : 'Sao chép Prompt gửi AI'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
