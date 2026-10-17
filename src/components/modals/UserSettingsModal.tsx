@@ -14,6 +14,7 @@ import {
   Type,
   AlertCircle,
   Save,
+  RefreshCw,
 } from 'lucide-react';
 import { useTheme, ThemeMode, FontSize } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -53,10 +54,11 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const [tempAutoPronounce, setTempAutoPronounce] = useState<boolean>(autoPronounce);
   const [tempFontSize, setTempFontSize] = useState<FontSize>(fontSize);
   const [targetHsk, setTargetHsk] = useState<number>(user?.targetHsk || 3);
+  const [isPlayingTest, setIsPlayingTest] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
-  // Initialize modal state when opened - NEVER blindly call setTheme here!
+  // Initialize modal state when opened
   useEffect(() => {
     if (!isOpen) return;
 
@@ -67,17 +69,21 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
     setTtsRate(tts.getRate());
     setGenderChoice(tts.getCurrentGender());
 
-    const voiceList = tts.getAvailableVoices();
-    setVoices(voiceList);
-    const currVoice = tts.getCurrentVoiceName();
-    if (currVoice) {
-      setSelectedVoiceName(currVoice);
-    } else if (voiceList.length > 0) {
-      const def = voiceList.find((v) => v.isChinese) || voiceList[0];
-      setSelectedVoiceName(def.name);
-    }
+    const updateVoiceList = (voiceList: AvailableVoice[]) => {
+      setVoices(voiceList);
+      const currVoice = tts.getCurrentVoiceName();
+      if (currVoice) {
+        setSelectedVoiceName(currVoice);
+      } else if (voiceList.length > 0) {
+        const def = voiceList.find((v) => v.isChinese) || voiceList[0];
+        setSelectedVoiceName(def.name);
+      }
+    };
 
-    // Only populate form fields from server if logged in, WITHOUT triggering active theme flips
+    updateVoiceList(tts.getAvailableVoices());
+    const unsubscribe = tts.onVoicesChanged(updateVoiceList);
+
+    // Only populate form fields from server if logged in
     if (isAuthenticated) {
       fetch('/api/user/settings', {
         headers: getClientAuthHeaders(user),
@@ -86,9 +92,17 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
         .then((data) => {
           if (data?.success && data.settings) {
             const s = data.settings;
-            if (s.ttsVoiceName) setSelectedVoiceName(s.ttsVoiceName);
-            if (s.ttsVoiceGender) setGenderChoice(s.ttsVoiceGender);
-            if (typeof s.ttsRate === 'number') setTtsRate(s.ttsRate);
+            if (s.ttsVoiceName) {
+              setSelectedVoiceName(s.ttsVoiceName);
+              tts.setVoiceByName(s.ttsVoiceName);
+            }
+            if (s.ttsVoiceGender) {
+              setGenderChoice(s.ttsVoiceGender);
+            }
+            if (typeof s.ttsRate === 'number') {
+              setTtsRate(s.ttsRate);
+              tts.setRate(s.ttsRate);
+            }
             if (typeof s.autoPronounce === 'boolean') setTempAutoPronounce(s.autoPronounce);
             if (s.fontSize) setTempFontSize(s.fontSize);
             if (s.targetHsk) setTargetHsk(s.targetHsk);
@@ -96,7 +110,11 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
         })
         .catch(() => {});
     }
-  }, [isOpen]); // Only depends on isOpen to avoid circular re-render loops!
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -134,20 +152,31 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
     tts.setVoiceByGender(val);
     const active = tts.getCurrentVoiceName();
     if (active) setSelectedVoiceName(active);
+    tts.speak(
+      val === 'female' ? '你好，这是女声发音。' : val === 'male' ? '你好，这是男声发音。' : '你好，这是系统默认发音。',
+      { rate: ttsRate }
+    );
   };
 
   // Handle Specific Voice Change
   const handleVoiceChange = (voiceName: string) => {
     setSelectedVoiceName(voiceName);
     tts.setVoiceByName(voiceName);
+    setGenderChoice(tts.getCurrentGender());
+    tts.speak('你好，这是发音测试。', {
+      voiceName,
+      rate: ttsRate,
+    });
   };
 
   // Test Speech Playback
   const handleTestSpeech = () => {
+    setIsPlayingTest(true);
     tts.speak('你好！欢迎使用汉语学习词汇平台。祝你学业进步！', {
       voiceName: selectedVoiceName || undefined,
       rate: ttsRate,
     });
+    setTimeout(() => setIsPlayingTest(false), 2400);
   };
 
   // Reset to Defaults
@@ -165,13 +194,16 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // 1. Apply to runtime & localStorage
+      // 1. Apply to runtime & localStorage without overwriting each other
       setTheme(selectedTheme);
       setFontSize(tempFontSize);
       setAutoPronounce(tempAutoPronounce);
-      if (selectedVoiceName) tts.setVoiceByName(selectedVoiceName);
-      tts.setVoiceByGender(genderChoice);
       tts.setRate(ttsRate);
+      if (selectedVoiceName) {
+        tts.setVoiceByName(selectedVoiceName);
+      } else {
+        tts.setVoiceByGender(genderChoice);
+      }
 
       // 2. Persist to server if logged in
       if (isAuthenticated) {
@@ -348,21 +380,37 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
           {activeTab === 'tts' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                  Lựa chọn giọng đọc
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Lựa chọn giọng đọc
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      tts.initVoices();
+                      const list = tts.getAvailableVoices();
+                      setVoices(list);
+                      toast.info(`Đã quét lại ${list.length} giọng đọc từ hệ thống.`);
+                    }}
+                    className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  >
+                    <RefreshCw size={11} />
+                    <span>Làm mới danh sách voice</span>
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'default' as const, label: 'Mặc định hệ thống', sub: 'Chuẩn tự nhiên' },
+                    { id: 'default' as const, label: 'Mặc định', sub: 'Tự động tối ưu' },
                     {
                       id: 'female' as const,
                       label: 'Giọng Nữ',
-                      sub: femaleVoices.length > 0 ? `${femaleVoices.length} giọng có sẵn` : 'Tự động gán',
+                      sub: femaleVoices.length > 0 ? `${femaleVoices.length} giọng có sẵn` : 'Chuẩn tự nhiên',
                     },
                     {
                       id: 'male' as const,
                       label: 'Giọng Nam',
-                      sub: maleVoices.length > 0 ? `${maleVoices.length} giọng có sẵn` : 'Tự động gán',
+                      sub: maleVoices.length > 0 ? `${maleVoices.length} giọng có sẵn` : 'Chuẩn tự nhiên',
                     },
                   ].map((g) => {
                     const isSelected = genderChoice === g.id;
@@ -389,15 +437,15 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
               </div>
 
               {/* Exact Voice Dropdown */}
-              {chineseVoices.length > 0 ? (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Gói giọng nói cụ thể (Web Speech API)
-                  </label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Gói giọng nói cụ thể ({chineseVoices.length > 0 ? `${chineseVoices.length} giọng tiếng Trung` : `${voices.length} giọng hệ thống`})
+                </label>
+                {chineseVoices.length > 0 ? (
                   <select
                     value={selectedVoiceName}
                     onChange={(e) => handleVoiceChange(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200 cursor-pointer font-medium"
                   >
                     {chineseVoices.map((v) => (
                       <option key={v.name} value={v.name}>
@@ -405,15 +453,27 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
                       </option>
                     ))}
                   </select>
-                </div>
-              ) : (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600" />
-                  <span>
-                    Trình duyệt chưa tải kịp danh sách voice của hệ điều hành. Hệ thống sẽ sử dụng giọng đọc tiếng Trung mặc định của thiết bị.
-                  </span>
-                </div>
-              )}
+                ) : voices.length > 0 ? (
+                  <select
+                    value={selectedVoiceName}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200 cursor-pointer font-medium"
+                  >
+                    {voices.map((v) => (
+                      <option key={v.name} value={v.name}>
+                        {v.name} ({v.lang})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                    <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600" />
+                    <span>
+                      Trình duyệt đang tải gói giọng đọc của hệ điều hành. Hệ thống sẽ phát âm tự động theo chuẩn tiếng Trung (zh-CN).
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Speech Rate Slider */}
               <div>
@@ -446,10 +506,15 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
                 <button
                   type="button"
                   onClick={handleTestSpeech}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                  disabled={isPlayingTest}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-75 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs"
                 >
-                  <Play size={13} className="fill-white" />
-                  <span>Nghe thử phát âm mẫu</span>
+                  {isPlayingTest ? (
+                    <Volume2 size={14} className="animate-pulse text-white" />
+                  ) : (
+                    <Play size={13} className="fill-white" />
+                  )}
+                  <span>{isPlayingTest ? 'Đang phát âm thử...' : 'Nghe thử phát âm mẫu'}</span>
                 </button>
               </div>
             </div>

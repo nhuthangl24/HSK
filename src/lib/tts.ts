@@ -10,6 +10,8 @@ export interface AvailableVoice {
   voiceURI: string;
 }
 
+type VoicesChangedListener = (voices: AvailableVoice[]) => void;
+
 class ChineseTTS {
   private synth: SpeechSynthesis | null = null;
   private currentVoice: SpeechSynthesisVoice | null = null;
@@ -17,6 +19,8 @@ class ChineseTTS {
   private rate = 0.85;
   private gender: 'male' | 'female' | 'default' = 'default';
   private isInitialized = false;
+  private listeners: VoicesChangedListener[] = [];
+  private activeUtterance: SpeechSynthesisUtterance | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -37,17 +41,139 @@ class ChineseTTS {
       if ('speechSynthesis' in window) {
         this.synth = window.speechSynthesis;
         this.initVoices();
+
+        const handleVoicesChanged = () => {
+          this.initVoices();
+        };
+
         if (this.synth.onvoiceschanged !== undefined) {
-          this.synth.onvoiceschanged = () => this.initVoices();
+          this.synth.onvoiceschanged = handleVoicesChanged;
         }
+        try {
+          window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+        } catch {}
+
+        // Multi-stage polling for asynchronous browser voice initialization (Chrome / Safari / Edge)
+        setTimeout(() => this.initVoices(), 150);
+        setTimeout(() => this.initVoices(), 500);
+        setTimeout(() => this.initVoices(), 1200);
       }
     }
   }
 
-  private initVoices() {
-    if (!this.synth) return;
-    this.voices = this.synth.getVoices();
+  public onVoicesChanged(callback: VoicesChangedListener): () => void {
+    this.listeners.push(callback);
+    // If voices are already loaded, notify immediately
     if (this.voices.length > 0) {
+      callback(this.getAvailableVoices());
+    }
+    return () => {
+      this.listeners = this.listeners.filter((cb) => cb !== callback);
+    };
+  }
+
+  private notifyListeners() {
+    const list = this.getAvailableVoices();
+    for (const listener of this.listeners) {
+      try {
+        listener(list);
+      } catch (err) {
+        console.error('Error in voice change listener:', err);
+      }
+    }
+  }
+
+  public isChineseVoice(v: SpeechSynthesisVoice): boolean {
+    const lang = (v.lang || '').toLowerCase().replace(/_/g, '-');
+    const name = (v.name || '').toLowerCase();
+    return (
+      lang.startsWith('zh') ||
+      lang.includes('cmn') ||
+      lang.includes('chinese') ||
+      name.includes('chinese') ||
+      name.includes('mandarin') ||
+      name.includes('cantonese') ||
+      name.includes('putonghua') ||
+      /[\u4e00-\u9fa5]/.test(v.name)
+    );
+  }
+
+  public detectGender(v: SpeechSynthesisVoice): 'male' | 'female' | 'default' {
+    const lower = (v.name + ' ' + (v.voiceURI || '')).toLowerCase();
+
+    // Female voice markers across Apple, Microsoft, Google, Edge, Android
+    if (
+      lower.includes('female') ||
+      lower.includes('woman') ||
+      lower.includes('girl') ||
+      lower.includes('tingting') ||
+      lower.includes('ting-ting') ||
+      lower.includes('xiaoxiao') ||
+      lower.includes('xiao-xiao') ||
+      lower.includes('xiaoyi') ||
+      lower.includes('xiao-yi') ||
+      lower.includes('yaoyao') ||
+      lower.includes('yao-yao') ||
+      lower.includes('sinji') ||
+      lower.includes('sin-ji') ||
+      lower.includes('meijia') ||
+      lower.includes('mei-jia') ||
+      lower.includes('huihui') ||
+      lower.includes('hui-hui') ||
+      lower.includes('yating') ||
+      lower.includes('ya-ting') ||
+      lower.includes('hiu-gaam') ||
+      lower.includes('hiugaam') ||
+      lower.includes('hiu-man') ||
+      lower.includes('hiuman') ||
+      lower.includes('zhiyu') ||
+      lower.includes('xiaoxuan') ||
+      lower.includes('xiaoxue') ||
+      lower.includes('xiaoyan') ||
+      lower.includes('lili') ||
+      lower.includes('li-li') ||
+      lower.includes('samantha') ||
+      lower.includes('kyoko') ||
+      lower.includes('siri female') ||
+      lower.includes('siri (female)')
+    ) {
+      return 'female';
+    }
+
+    // Male voice markers
+    if (
+      lower.includes('male') ||
+      lower.includes('man') ||
+      lower.includes('boy') ||
+      lower.includes('kangkang') ||
+      lower.includes('kang-kang') ||
+      lower.includes('yunyang') ||
+      lower.includes('yun-yang') ||
+      lower.includes('yunxi') ||
+      lower.includes('yun-xi') ||
+      lower.includes('yunye') ||
+      lower.includes('yun-ye') ||
+      lower.includes('zhiwei') ||
+      lower.includes('zhi-wei') ||
+      lower.includes('danny') ||
+      lower.includes('george') ||
+      lower.includes('wanlung') ||
+      lower.includes('wan-lung') ||
+      lower.includes('siri male') ||
+      lower.includes('siri (male)')
+    ) {
+      return 'male';
+    }
+
+    return 'default';
+  }
+
+  public initVoices() {
+    if (!this.synth) return;
+    const loaded = this.synth.getVoices();
+    if (loaded && loaded.length > 0) {
+      const prevCount = this.voices.length;
+      this.voices = loaded;
       this.isInitialized = true;
 
       // Try restoring saved voice name
@@ -59,22 +185,39 @@ class ChineseTTS {
       } catch {}
 
       if (savedVoiceName) {
-        const found = this.voices.find((v) => v.name === savedVoiceName);
+        const found = this.voices.find(
+          (v) => v.name === savedVoiceName || v.voiceURI === savedVoiceName
+        );
         if (found) {
           this.currentVoice = found;
-          return;
+          this.gender = this.detectGender(found);
         }
       }
 
-      // Default to best mainland Chinese voice if not yet selected
+      // If no valid voice selected yet, default to best mainland Chinese voice
       if (!this.currentVoice) {
-        const zhVoice =
-          this.voices.find((v) => v.lang === 'zh-CN') ||
-          this.voices.find((v) => v.lang.startsWith('zh')) ||
-          this.voices.find((v) => v.lang.includes('cmn'));
-        if (zhVoice) {
-          this.currentVoice = zhVoice;
+        const zhVoices = this.voices.filter((v) => this.isChineseVoice(v));
+        if (zhVoices.length > 0) {
+          // If a gender preference was saved, try matching it
+          if (this.gender !== 'default') {
+            const genderMatch = zhVoices.find((v) => this.detectGender(v) === this.gender);
+            if (genderMatch) {
+              this.currentVoice = genderMatch;
+            }
+          }
+          if (!this.currentVoice) {
+            const zhDefault =
+              zhVoices.find((v) => (v.lang || '').toLowerCase() === 'zh-cn') ||
+              zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) ||
+              zhVoices[0];
+            this.currentVoice = zhDefault;
+          }
         }
+      }
+
+      // Notify listeners if voices count changed or first load
+      if (prevCount !== this.voices.length) {
+        this.notifyListeners();
       }
     }
   }
@@ -85,55 +228,29 @@ class ChineseTTS {
       this.voices = this.synth.getVoices();
     }
 
-    return this.voices.map((v) => {
-      const lower = (v.name + ' ' + v.voiceURI).toLowerCase();
-      let gender: 'male' | 'female' | 'default' = 'default';
-
-      if (
-        lower.includes('female') ||
-        lower.includes('woman') ||
-        lower.includes('tingting') ||
-        lower.includes('xiaoxiao') ||
-        lower.includes('xiaoyi') ||
-        lower.includes('yaoyao') ||
-        lower.includes('sinji') ||
-        lower.includes('meijia') ||
-        lower.includes('huihui') ||
-        lower.includes('yating')
-      ) {
-        gender = 'female';
-      } else if (
-        lower.includes('male') ||
-        lower.includes('man') ||
-        lower.includes('kangkang') ||
-        lower.includes('yunyang') ||
-        lower.includes('yunxi') ||
-        lower.includes('zhiwei') ||
-        lower.includes('danny') ||
-        lower.includes('george')
-      ) {
-        gender = 'male';
-      }
-
-      return {
-        name: v.name,
-        lang: v.lang,
-        gender,
-        isChinese: v.lang.startsWith('zh') || v.lang.includes('cmn'),
-        voiceURI: v.voiceURI,
-      };
-    });
+    return this.voices.map((v) => ({
+      name: v.name,
+      lang: v.lang,
+      gender: this.detectGender(v),
+      isChinese: this.isChineseVoice(v),
+      voiceURI: v.voiceURI,
+    }));
   }
 
   public setVoiceByName(voiceName: string): boolean {
     if (!this.synth) return false;
     this.initVoices();
-    const found = this.voices.find((v) => v.name === voiceName);
+    const found = this.voices.find(
+      (v) => v.name === voiceName || v.voiceURI === voiceName
+    );
     if (found) {
       this.currentVoice = found;
+      const detected = this.detectGender(found);
+      this.gender = detected;
       try {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('hsk_tts_voice_name', voiceName);
+          localStorage.setItem('hsk_tts_voice_name', found.name);
+          localStorage.setItem('hsk_tts_voice_gender', detected);
         }
       } catch {}
       return true;
@@ -159,8 +276,15 @@ class ChineseTTS {
 
     if (!this.synth) return false;
     this.initVoices();
+
+    const zhVoices = this.voices.filter((v) => this.isChineseVoice(v));
+    if (zhVoices.length === 0) return false;
+
     if (gender === 'default') {
-      const zhDefault = this.voices.find((v) => v.lang === 'zh-CN') || this.voices.find((v) => v.lang.startsWith('zh'));
+      const zhDefault =
+        zhVoices.find((v) => (v.lang || '').toLowerCase() === 'zh-cn') ||
+        zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) ||
+        zhVoices[0];
       if (zhDefault) {
         this.currentVoice = zhDefault;
         try {
@@ -173,20 +297,29 @@ class ChineseTTS {
       return false;
     }
 
-    const available = this.getAvailableVoices().filter((v) => v.isChinese);
-    const target = available.find((v) => v.gender === gender);
+    const target = zhVoices.find((v) => this.detectGender(v) === gender);
     if (target) {
-      const actual = this.voices.find((v) => v.name === target.name);
-      if (actual) {
-        this.currentVoice = actual;
-        try {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('hsk_tts_voice_name', actual.name);
-          }
-        } catch {}
-        return true;
-      }
+      this.currentVoice = target;
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hsk_tts_voice_name', target.name);
+        }
+      } catch {}
+      return true;
     }
+
+    // Fallback to first available Chinese voice
+    const fallback = zhVoices[0];
+    if (fallback) {
+      this.currentVoice = fallback;
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hsk_tts_voice_name', fallback.name);
+        }
+      } catch {}
+      return true;
+    }
+
     return false;
   }
 
@@ -218,41 +351,79 @@ class ChineseTTS {
   ): void {
     if (!this.synth) return;
 
-    this.synth.cancel();
+    try {
+      this.synth.cancel();
+      if (this.synth.paused) {
+        this.synth.resume();
+      }
+    } catch {}
 
-    if (!this.isInitialized) {
+    if (!this.isInitialized || this.voices.length === 0) {
       this.initVoices();
     }
 
     const opts = typeof options === 'number' ? { rate: options } : options;
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = opts?.lang || (this.currentVoice ? this.currentVoice.lang : 'zh-CN');
-    utterance.rate = opts?.rate || this.rate;
-    utterance.pitch = opts?.pitch || 1.0;
+    const chosenRate = opts?.rate ?? this.rate;
+    utterance.rate = Math.min(Math.max(chosenRate, 0.5), 2.0);
+    utterance.pitch = opts?.pitch ?? 1.0;
 
+    let targetVoice: SpeechSynthesisVoice | null = null;
     if (opts?.voiceName) {
-      const explicit = this.voices.find((v) => v.name === opts.voiceName);
-      if (explicit) {
-        utterance.voice = explicit;
-      }
-    } else if (this.currentVoice) {
-      utterance.voice = this.currentVoice;
+      targetVoice =
+        this.voices.find(
+          (v) => v.name === opts.voiceName || v.voiceURI === opts.voiceName
+        ) || null;
     }
 
-    this.synth.speak(utterance);
+    if (!targetVoice && this.currentVoice) {
+      targetVoice = this.currentVoice;
+    }
+
+    if (!targetVoice && this.voices.length > 0) {
+      targetVoice = this.voices.find((v) => this.isChineseVoice(v)) || null;
+    }
+
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+      utterance.lang = targetVoice.lang || 'zh-CN';
+    } else {
+      utterance.lang = opts?.lang || 'zh-CN';
+    }
+
+    // Retain reference on instance to prevent Chrome garbage-collection bug during playback
+    this.activeUtterance = utterance;
+    utterance.onend = () => {
+      if (this.activeUtterance === utterance) {
+        this.activeUtterance = null;
+      }
+    };
+    utterance.onerror = () => {
+      if (this.activeUtterance === utterance) {
+        this.activeUtterance = null;
+      }
+    };
+
+    try {
+      this.synth.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis speak error:', e);
+    }
   }
 
   public testSpeech(voiceName?: string, rate?: number): void {
-    this.speak('你好！欢迎使用汉语学习词汇平台。', {
-      voiceName,
+    this.speak('你好！欢迎使用汉语学习词汇平台。祝你学业进步！', {
+      voiceName: voiceName || this.getCurrentVoiceName(),
       rate: rate || this.rate,
     });
   }
 
   public stop(): void {
     if (this.synth) {
-      this.synth.cancel();
+      try {
+        this.synth.cancel();
+      } catch {}
     }
   }
 }
