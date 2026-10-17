@@ -1,26 +1,249 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --sheet-header-bg: #e2f0d9; /* Classic Excel pale green */
+  --sheet-header-text: #1b4d24;
+  --sheet-border: #d1d5db;
+  --sheet-cell-selected: #ebf5ff;
+
+  /* Font scaling variables for spreadsheet & learning */
+  --hanzi-size: 1.125rem;
+  --pinyin-size: 0.875rem;
+  --meaning-size: 0.875rem;
+  --example-size: 0.8125rem;
+  --table-row-py: 0.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html[data-font-size="large"] {
+  --hanzi-size: 1.375rem;
+  --pinyin-size: 1rem;
+  --meaning-size: 1rem;
+  --example-size: 0.9375rem;
+  --table-row-py: 0.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html[data-font-size="xlarge"] {
+  --hanzi-size: 1.625rem;
+  --pinyin-size: 1.125rem;
+  --meaning-size: 1.125rem;
+  --example-size: 1.0625rem;
+  --table-row-py: 1rem;
+}
+
+.dark {
+  --background: #090d16;
+  --foreground: #f1f5f9;
+  --sheet-header-bg: #132e1e;
+  --sheet-header-text: #86efac;
+  --sheet-border: #1e293b;
+  --sheet-cell-selected: #1e3a5f;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+  overflow-x: hidden;
+}
+
+/* Hanzi font utility for optimal clarity */
+.font-hanzi {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Noto Sans SC", "SimSun", sans-serif;
+}
+
+/* Pinyin font utility for clear tone marks */
+.font-pinyin {
+  font-family: "Lucida Sans Unicode", "Segoe UI", Arial, sans-serif;
+}
+
+/* Custom compact scrollbar for data-dense spreadsheet */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Clear cell grid lines like Excel */
+.sheet-grid-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sheet-grid-table th,
+.sheet-grid-table td {
+  border-right: 1px solid var(--sheet-border);
+  border-bottom: 1px solid var(--sheet-border);
+}
+
+.sheet-grid-table th:first-child,
+.sheet-grid-table td:first-child {
+  border-left: 1px solid var(--sheet-border);
+}
+
+.sheet-grid-table tr:first-child th {
+  border-top: 1px solid var(--sheet-border);
+}
+
+/* Spreadsheet cell focus state */
+.sheet-cell-focus:focus-within {
+  outline: 2px solid #2563eb;
+  outline-offset: -1px;
+  z-index: 10;
+}
+
+/* ==========================================================================
+   SMOOTH SYSTEM ANIMATIONS & TRANSITIONS
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation Utility Classes */
+.animate-fadeIn {
+  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideRight {
+  animation: slideRight 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-popIn {
+  animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Micro-interaction utilities */
+.btn-press {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+.card-lift {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.card-lift:hover {
+  transform: translateY(-2px);
 }

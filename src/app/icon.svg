@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="hskBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="goldStar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="hskShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Rounded Background -->
+  <rect width="512" height="512" rx="112" fill="url(#hskBg)" />
+  
+  <!-- Subtle Highlight Border -->
+  <rect x="10" y="10" width="492" height="492" rx="102" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="8" />
+
+  <!-- Background Decorative Watermark (Hanzi) -->
+  <text x="256" y="195" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif" font-size="110" font-weight="900" fill="#ffffff" fill-opacity="0.12" text-anchor="middle" dominant-baseline="central">汉语</text>
+
+  <!-- Main HSK Typography -->
+  <text x="256" y="280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="180" font-weight="900" letter-spacing="-3" fill="#ffffff" text-anchor="middle" dominant-baseline="central" filter="url(#hskShadow)">HSK</text>
+
+  <!-- Golden Star Emblem -->
+  <g transform="translate(390, 125) scale(0.65)" filter="url(#hskShadow)">
+    <polygon points="25,1 32,17 49,17 35,27 40,44 25,33 10,44 15,27 1,17 18,17" fill="url(#goldStar)" />
+  </g>
+
+  <!-- Level 1 - 9 Badge -->
+  <rect x="171" y="385" width="170" height="40" rx="20" fill="#ffffff" fill-opacity="0.22" />
+  <text x="256" y="405" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" letter-spacing="3" fill="#ffffff" text-anchor="middle" dominant-baseline="central">LEVEL 1-9</text>
+</svg>
