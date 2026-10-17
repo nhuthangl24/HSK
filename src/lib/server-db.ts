@@ -3,6 +3,7 @@ import path from 'path';
 import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { hashPassword, verifyPassword } from './server-auth';
+import bundledSystemVocab from '@/data/system_vocab.json';
 
 interface StoredUserRecord extends User {
   passwordHash?: string;
@@ -181,9 +182,18 @@ export function updateUser(id: string, updates: Partial<User>): User {
 // -------------------------------------------------------------
 
 export function getSystemVocabulary(): VocabItem[] {
-  const defaultList: VocabItem[] = [];
-  const stored = readJsonFile<VocabItem[]>('system_vocab.json', defaultList);
-  return stored.map((v) => ({ ...v, isSystem: true }));
+  const stored = readJsonFile<VocabItem[]>('system_vocab.json', []);
+  if (stored && stored.length > 0) {
+    return stored.map((v) => ({ ...v, isSystem: true }));
+  }
+
+  // Fallback to bundled data if file not yet created in .data or when hosted on serverless/cloud
+  try {
+    writeJsonFile('system_vocab.json', bundledSystemVocab as VocabItem[]);
+  } catch {
+    // Read-only filesystem in serverless environments
+  }
+  return (bundledSystemVocab as VocabItem[]).map((v) => ({ ...v, isSystem: true }));
 }
 
 export function saveSystemVocabularyItem(item: VocabItem): VocabItem {
