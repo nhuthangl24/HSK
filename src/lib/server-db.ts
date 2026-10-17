@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { hashPassword, verifyPassword } from './server-auth';
@@ -23,33 +24,71 @@ export interface UserProgressRecord {
   updatedAt: string;
 }
 
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Detect serverless environment (Vercel, AWS Lambda, Netlify)
+const IS_SERVERLESS = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  process.env.NETLIFY
+);
 
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+// In serverless, /tmp is the only writable directory; in local/server, use .data
+const DATA_DIR = IS_SERVERLESS
+  ? path.join('/tmp', 'hsk_data')
+  : path.join(process.cwd(), '.data');
+
+// In-memory fallback cache so serverless functions never crash even on cold starts
+const memoryStore = new Map<string, unknown>();
+
+function ensureDataDir(): string {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {
+    // Graceful fallback if filesystem cannot be created
   }
+  return DATA_DIR;
 }
 
 function readJsonFile<T>(filename: string, defaultValue: T): T {
-  ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
-    return defaultValue;
+  if (memoryStore.has(filename)) {
+    return memoryStore.get(filename) as T;
   }
+
   try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, filename);
+
+    if (!fs.existsSync(filePath)) {
+      memoryStore.set(filename, defaultValue);
+      try {
+        fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf8');
+      } catch {
+        // Safe ignore on read-only environments
+      }
+      return defaultValue;
+    }
+
     const raw = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(raw) as T;
+    const parsed = JSON.parse(raw) as T;
+    memoryStore.set(filename, parsed);
+    return parsed;
   } catch {
+    memoryStore.set(filename, defaultValue);
     return defaultValue;
   }
 }
 
 function writeJsonFile<T>(filename: string, data: T): void {
-  ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  memoryStore.set(filename, data);
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, filename);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.warn(`[server-db] Notice writing ${filename} to disk:`, err);
+  }
 }
 
 export function toPublicUser(record: StoredUserRecord): User {
