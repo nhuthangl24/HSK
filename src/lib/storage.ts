@@ -1,7 +1,7 @@
 import { VocabItem, Deck, ColumnConfig } from '@/types/vocabulary';
 import { INITIAL_DECKS, isProtectedDeck } from '@/data/initial-decks';
 
-const STORAGE_KEY_VOCAB = 'hsk_vocab_data_v3';
+const STORAGE_KEY_VOCAB = 'hsk_vocab_data_v5';
 const STORAGE_KEY_DECKS_LEGACY = 'hsk_decks_data_v1';
 const STORAGE_KEY_COLUMNS = 'hsk_column_settings_v1';
 
@@ -25,21 +25,22 @@ export function getStoredVocab(userId?: string): VocabItem[] {
   try {
     localStorage.removeItem('hsk_vocab_data_v1');
     localStorage.removeItem('hsk_vocab_data_v2');
+    localStorage.removeItem('hsk_vocab_data_v3');
+    localStorage.removeItem('hsk_vocab_data_v4');
 
     // 1. Check user-specific cache first
     if (userId) {
       const userRaw = localStorage.getItem(`hsk_vocab_user_${userId}`);
       if (userRaw) {
         const parsed = JSON.parse(userRaw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.length >= 11000) {
           // Strictly isolate: only system words OR words created by THIS user
           const filtered = parsed.filter(
             (item: VocabItem) => item.isSystem !== false || (item.userId && item.userId === userId)
           );
-          if (filtered.length !== parsed.length) {
-            localStorage.setItem(`hsk_vocab_user_${userId}`, JSON.stringify(filtered));
-          }
           return filtered;
+        } else {
+          localStorage.removeItem(`hsk_vocab_user_${userId}`);
         }
       }
     }
@@ -48,7 +49,7 @@ export function getStoredVocab(userId?: string): VocabItem[] {
     const raw = localStorage.getItem(STORAGE_KEY_VOCAB);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length >= 11000) {
         // Strip out any custom words (isSystem === false) AND any user practice results
         const cleanSystemOnly = parsed
           .filter((item: VocabItem) => item.isSystem !== false)
@@ -61,8 +62,9 @@ export function getStoredVocab(userId?: string): VocabItem[] {
             favorite: false,
             notes: '',
           }));
-        localStorage.setItem(STORAGE_KEY_VOCAB, JSON.stringify(cleanSystemOnly));
         return cleanSystemOnly;
+      } else {
+        localStorage.removeItem(STORAGE_KEY_VOCAB);
       }
     }
     return [];

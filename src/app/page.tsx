@@ -207,14 +207,14 @@ function MainApp() {
         notes: '',
       }));
 
-    // Step 1: If system words not in memory yet (first visit on clean browser), fetch fast system vocab
-    if (currentCleanSystemWords.length === 0) {
+    // Step 1: If system words in memory are fewer than 11,000, fetch fresh official system vocab
+    if (currentCleanSystemWords.length < 11000) {
       setIsLoadingVocab(true);
       try {
         const localRes = await fetch('/api/vocab');
         if (localRes.ok) {
           const localData = await localRes.json();
-          if (localData.items && localData.items.length > 0) {
+          if (localData.items && localData.items.length >= 11000) {
             currentCleanSystemWords = localData.items
               .filter((w: VocabItem) => w.isSystem !== false)
               .map((w: VocabItem) => ({
@@ -227,7 +227,7 @@ function MainApp() {
                 notes: '',
               }));
             setItems(currentCleanSystemWords);
-            saveStoredVocab(currentCleanSystemWords);
+            saveStoredVocab(currentCleanSystemWords, uid);
             setFirestoreError(null);
           }
         }
@@ -238,19 +238,6 @@ function MainApp() {
 
     // If guest (logged out), strictly show ONLY clean unlearned system words
     if (!uid) {
-      if (getFirebaseServices().isConfigured) {
-        try {
-          const res = await loadVocabularyForUser(undefined, currentCleanSystemWords);
-          if (!res.error && res.items && res.items.length > 0) {
-            const cleanGuests = res.items.filter((w) => w.isSystem !== false);
-            setItems(cleanGuests);
-            setIsLoadingVocab(false);
-            return;
-          }
-        } catch (err) {
-          console.warn('Guest Firestore sync notice:', err);
-        }
-      }
       setItems(currentCleanSystemWords);
       setIsLoadingVocab(false);
       return;
@@ -260,7 +247,7 @@ function MainApp() {
     if (getFirebaseServices().isConfigured) {
       try {
         const res = await loadVocabularyForUser(uid, currentCleanSystemWords);
-        if (!res.error && res.items && res.items.length > 0) {
+        if (!res.error && res.items && res.items.length >= currentCleanSystemWords.length) {
           // Strictly isolate: only system words or this user's custom words
           const sanitized = res.items.filter((w) => w.isSystem !== false || w.userId === uid);
           setFirestoreError(null);
@@ -277,7 +264,7 @@ function MainApp() {
         const res = await fetch('/api/vocab', { headers: authHeaders });
         if (res.ok) {
           const data = await res.json();
-          if (data.items && data.items.length > 0) {
+          if (data.items && data.items.length >= 11000) {
             const sanitized = data.items.filter((w: VocabItem) => w.isSystem !== false || w.userId === uid);
             setFirestoreError(null);
             setItems(sanitized);
