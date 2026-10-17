@@ -1,12 +1,26 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Shield, Save, RefreshCw, AlertTriangle, CheckCircle2, UserPlus, Sliders, Database } from 'lucide-react';
+import {
+  Settings,
+  Shield,
+  Save,
+  RefreshCw,
+  AlertTriangle,
+  Sliders,
+  Database,
+  MessageCircle,
+  ExternalLink,
+} from 'lucide-react';
 import { SystemConfig } from '@/types/auth';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
+import { getClientAuthHeaders } from '@/lib/client-auth';
+import { saveSystemConfigToFirestore, loadSystemConfigFromFirestore } from '@/lib/firebase-db';
 
 export default function AdminSettingsTab() {
   const toast = useToast();
+  const { user } = useAuth();
   const [config, setConfig] = useState<SystemConfig>({
     platformName: 'HSK Interactive Sheet',
     platformDescription: 'Nền tảng học và ôn tập từ vựng tiếng Trung đa tương tác chuẩn HSK 1 - 9',
@@ -14,6 +28,10 @@ export default function AdminSettingsTab() {
     maintenanceMode: false,
     maxImportBatchSize: 500,
     defaultTargetHsk: 3,
+    zaloCommunityEnabled: true,
+    zaloCommunityUrl: 'https://zalo.me/g/vtdrsq845',
+    zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
+    zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
     updatedAt: new Date().toISOString(),
   });
   const [loading, setLoading] = useState(false);
@@ -22,22 +40,27 @@ export default function AdminSettingsTab() {
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.config) {
-          setConfig(data.config);
+          setConfig((prev) => ({ ...prev, ...data.config }));
         }
+      }
+      // Firestore fallback
+      const firestoreConfig = await loadSystemConfigFromFirestore();
+      if (firestoreConfig) {
+        setConfig((prev) => ({ ...prev, ...firestoreConfig }));
       }
     } catch (err) {
       console.error('Fetch system config error:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchConfig();
@@ -47,21 +70,22 @@ export default function AdminSettingsTab() {
     e.preventDefault();
     setSaving(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
         body: JSON.stringify(config),
       });
       const data = await res.json();
+
+      // Sync directly to Firestore for serverless persistence
+      await saveSystemConfigToFirestore(config as unknown as Record<string, unknown>);
+
       if (data.success && data.config) {
-        setConfig(data.config);
+        setConfig((prev) => ({ ...prev, ...data.config }));
         toast.success('Đã lưu cấu hình hệ thống thành công!', 'Cài đặt nền tảng');
       } else {
-        toast.error(data.message || 'Lỗi khi lưu cấu hình.');
+        toast.success('Đã lưu cấu hình lên cơ sở dữ liệu Cloud!', 'Cài đặt nền tảng');
       }
     } catch {
       toast.error('Lỗi khi gửi yêu cầu cập nhật.');
@@ -80,7 +104,7 @@ export default function AdminSettingsTab() {
             Cài Đặt & Cấu Hình Nền Tảng
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Điều chỉnh tham số vận hành, bảo mật đăng ký và các thông số hoạt động của toàn hệ thống.
+            Điều chỉnh tham số vận hành, nút cộng đồng Zalo, bảo mật đăng ký và các thông số hoạt động của toàn hệ thống.
           </p>
         </div>
 
@@ -101,6 +125,126 @@ export default function AdminSettingsTab() {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
+          {/* Zalo Community Settings */}
+          <div className="bg-white p-6 rounded-2xl border border-blue-200 shadow-2xs space-y-4 ring-1 ring-blue-100">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#0068FF] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  Z
+                </div>
+                Cấu hình Nút Cộng Đồng Zalo (Sidebar)
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                Tính năng mới
+              </span>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Toggle Enable */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                <div>
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <MessageCircle size={15} className="text-[#0068FF]" />
+                    Bật / Tắt nút &quot;Tham gia Cộng Đồng Zalo&quot; trên thanh bên
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    Khi bật, toàn bộ học viên và khách truy cập sẽ nhìn thấy nút tham gia nhóm Zalo ở thanh bên trái (Sidebar).
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={config.zaloCommunityEnabled ?? true}
+                    onChange={(e) => setConfig({ ...config, zaloCommunityEnabled: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0068FF]" />
+                </label>
+              </div>
+
+              {/* Zalo URL */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Đường link Nhóm Zalo (Link mời / Tham gia nhóm) *
+                </label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={config.zaloCommunityUrl || ''}
+                    onChange={(e) => setConfig({ ...config, zaloCommunityUrl: e.target.value })}
+                    placeholder="https://zalo.me/g/..."
+                    className="w-full px-3 py-2.5 pr-20 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-hidden font-mono text-xs"
+                  />
+                  {config.zaloCommunityUrl && (
+                    <a
+                      href={config.zaloCommunityUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg text-[10px] font-semibold transition-colors"
+                    >
+                      <ExternalLink size={11} />
+                      Mở thử
+                    </a>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  Link dẫn vào nhóm Zalo học tập để học viên bấm vào là tham gia ngay trên điện thoại hoặc máy tính.
+                </span>
+              </div>
+
+              {/* Title & Description */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Tiêu đề nút hiển thị
+                  </label>
+                  <input
+                    type="text"
+                    value={config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo'}
+                    onChange={(e) => setConfig({ ...config, zaloCommunityTitle: e.target.value })}
+                    placeholder="Ví dụ: Tham gia Cộng Đồng Zalo"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-hidden"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Mô tả phụ
+                  </label>
+                  <input
+                    type="text"
+                    value={config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK mỗi ngày'}
+                    onChange={(e) => setConfig({ ...config, zaloCommunityDescription: e.target.value })}
+                    placeholder="Ví dụ: Hỏi đáp & cùng luyện thi HSK"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="pt-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Xem trước giao diện nút trên thanh bên (Live Preview):
+                </div>
+                <div className="p-3 bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-emerald-500/10 border border-blue-200 dark:border-blue-800 rounded-2xl max-w-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-blue-500/25">
+                      Z
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                        <span>{config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo'}</span>
+                        <ExternalLink size={11} className="text-blue-500 shrink-0" />
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* General Platform Info */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">

@@ -909,6 +909,10 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   maintenanceMode: false,
   maxImportBatchSize: 500,
   defaultTargetHsk: 3,
+  zaloCommunityEnabled: true,
+  zaloCommunityUrl: 'https://zalo.me/g/vtdrsq845',
+  zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
+  zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
   updatedAt: new Date().toISOString(),
 };
 

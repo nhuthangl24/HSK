@@ -527,6 +527,8 @@ export async function getUserFromFirestore(userId: string): Promise<User | null>
 // ADMIN OPERATIONS (Directly in Cloud Firestore)
 // ----------------------------------------------------------------------
 
+const COLLECTION_CONFIG = 'system_config';
+
 export async function loadAllUsersFromFirestore(): Promise<User[]> {
   const { db, isConfigured } = getFirebaseServices();
   if (!db || !isConfigured) return [];
@@ -536,7 +538,21 @@ export async function loadAllUsersFromFirestore(): Promise<User[]> {
     const snap = await getDocs(colRef);
     const users: User[] = [];
     snap.forEach((d) => {
-      users.push(d.data() as User);
+      const data = d.data() as Partial<User>;
+      const email = data.email || '';
+      const name = (data.name && data.name.trim()) ? data.name.trim() : (email.split('@')[0] || 'Người dùng');
+      users.push({
+        id: data.id || d.id,
+        email: email,
+        name: name,
+        role: data.role || 'user',
+        targetHsk: typeof data.targetHsk === 'number' ? data.targetHsk : 3,
+        streakDays: typeof data.streakDays === 'number' ? data.streakDays : 0,
+        totalMastered: typeof data.totalMastered === 'number' ? data.totalMastered : 0,
+        isLocked: !!data.isLocked,
+        createdAt: data.createdAt || new Date().toISOString(),
+        ...data,
+      } as User);
     });
     return users;
   } catch (err) {
@@ -555,6 +571,43 @@ export async function updateUserInFirestore(userId: string, updates: Partial<Use
     return true;
   } catch (err) {
     console.error('Error updating user in Firestore:', err);
+    return false;
+  }
+}
+
+/**
+ * Load system configuration from Firestore
+ */
+export async function loadSystemConfigFromFirestore(): Promise<Record<string, unknown> | null> {
+  const { db, isConfigured } = getFirebaseServices();
+  if (!db || !isConfigured) return null;
+
+  try {
+    const docRef = doc(db, COLLECTION_CONFIG, 'global');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data() as Record<string, unknown>;
+    }
+    return null;
+  } catch (err) {
+    console.warn('Notice loading system config from Firestore:', err);
+    return null;
+  }
+}
+
+/**
+ * Save system configuration to Firestore
+ */
+export async function saveSystemConfigToFirestore(config: Record<string, unknown>): Promise<boolean> {
+  const { db, isConfigured } = getFirebaseServices();
+  if (!db || !isConfigured) return false;
+
+  try {
+    const docRef = doc(db, COLLECTION_CONFIG, 'global');
+    await setDoc(docRef, { ...config, updatedAt: new Date().toISOString() }, { merge: true });
+    return true;
+  } catch (err) {
+    console.error('Error saving system config to Firestore:', err);
     return false;
   }
 }

@@ -69,6 +69,10 @@ export interface SystemConfig {
   maintenanceMode: boolean;
   maxImportBatchSize: number;
   defaultTargetHsk: number;
+  zaloCommunityEnabled?: boolean;
+  zaloCommunityUrl?: string;
+  zaloCommunityTitle?: string;
+  zaloCommunityDescription?: string;
   updatedAt?: string;
   updatedBy?: string;
 }

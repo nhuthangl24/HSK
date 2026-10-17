@@ -12,7 +12,8 @@ export async function GET(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
     return NextResponse.json(
       { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
       { status: 403 }
@@ -25,12 +26,27 @@ export async function GET(request: Request) {
 
   let users = getAllUsers();
 
+  // If local list is empty on serverless cold start, ensure caller admin is present
+  if (users.length === 0 && payload.role === 'admin') {
+    users = [
+      {
+        id: payload.userId,
+        email: payload.email,
+        name: payload.email.split('@')[0] || 'Quản trị viên',
+        role: 'admin',
+        streakDays: 1,
+        totalMastered: 0,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+  }
+
   if (q) {
     users = users.filter(
       (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q)
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.id && u.id.toLowerCase().includes(q))
     );
   }
 
@@ -50,7 +66,8 @@ export async function PATCH(request: Request) {
   }
 
   const caller = getUserRecordById(payload.userId);
-  if (!caller || caller.role !== 'admin' || caller.isLocked) {
+  const isCallerAdmin = caller ? caller.role === 'admin' && !caller.isLocked : payload.role === 'admin';
+  if (!isCallerAdmin) {
     return NextResponse.json(
       { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
       { status: 403 }
@@ -69,8 +86,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, message: 'Thiếu ID người dùng.' }, { status: 400 });
     }
 
+    const callerId = caller?.id || payload.userId;
+    const callerEmail = caller?.email || payload.email;
+
     // Safety: Admin cannot lock their own account
-    if (targetUserId === caller.id && isLocked === true) {
+    if (targetUserId === callerId && isLocked === true) {
       return NextResponse.json(
         { success: false, message: 'Bạn không thể tự khóa tài khoản của chính mình.' },
         { status: 400 }
@@ -90,7 +110,7 @@ export async function PATCH(request: Request) {
           ? 'KHÓA_TÀI_KHOẢN'
           : 'MỞ_KHÓA_TÀI_KHOẢN'
         : 'CẬP_NHẬT_QUYỀN',
-      caller.email,
+      callerEmail,
       updatedUser.email,
       `Cập nhật: ${JSON.stringify(updates)}`
     );

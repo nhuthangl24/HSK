@@ -40,6 +40,7 @@ import { User, AdminStats, AuditLog, UserRole } from '@/types/auth';
 import { VocabItem, HskLevel } from '@/types/vocabulary';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
+import { getClientAuthHeaders } from '@/lib/client-auth';
 import {
   loadAdminStatsFromFirestore,
   loadAllUsersFromFirestore,
@@ -136,9 +137,9 @@ export default function AdminPage() {
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch(`/api/admin/stats?timeWindow=${timePeriodFilter}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const json = await res.json();
@@ -161,27 +162,52 @@ export default function AdminPage() {
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
+      let serverUsers: User[] = [];
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.users)) {
-          setUsers(data.users);
-          setUserPage(1);
-          return;
+          serverUsers = data.users;
         }
       }
-      const allUsers = await loadAllUsersFromFirestore();
-      setUsers(allUsers);
+      const firestoreUsers = await loadAllUsersFromFirestore();
+
+      // Combine & deduplicate by user.id or email
+      const userMap = new Map<string, User>();
+      for (const u of serverUsers) {
+        if (u.id) userMap.set(u.id, u);
+      }
+      for (const u of firestoreUsers) {
+        if (u.id) {
+          const existing = userMap.get(u.id);
+          userMap.set(u.id, { ...existing, ...u });
+        }
+      }
+
+      // If current admin is logged in but not in list, add admin to list
+      if (user && user.id && !userMap.has(user.id)) {
+        userMap.set(user.id, user);
+      }
+
+      const combined = Array.from(userMap.values()).map((u) => ({
+        ...u,
+        name: (u.name && u.name.trim()) ? u.name.trim() : (u.email ? u.email.split('@')[0] : 'Học viên'),
+        email: u.email || '',
+        role: u.role || 'user',
+        isLocked: !!u.isLocked,
+      }));
+
+      setUsers(combined);
       setUserPage(1);
     } catch (err) {
       console.error('Fetch users error:', err);
     } finally {
       setLoadingUsers(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchVocab = useCallback(async () => {
     setLoadingVocab(true);
@@ -209,9 +235,9 @@ export default function AdminPage() {
   const fetchLogs = useCallback(async () => {
     setLoadingLogs(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+      const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/admin/logs', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
       if (res.ok) {
         const json = await res.json();
@@ -258,17 +284,14 @@ export default function AdminPage() {
   const executeUserAction = async () => {
     if (!userActionConfirm) return;
     const { type, targetUser, newRole } = userActionConfirm;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('hsk_auth_token') || '' : '';
+    const authHeaders = getClientAuthHeaders(user);
 
     try {
       if (type === 'lock' || type === 'unlock') {
         const newStatus = type === 'lock';
         await fetch('/api/admin/users', {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
+          headers: authHeaders,
           body: JSON.stringify({ targetUserId: targetUser.id, isLocked: newStatus }),
         });
         await updateUserInFirestore(targetUser.id, { isLocked: newStatus });
@@ -287,10 +310,7 @@ export default function AdminPage() {
       } else if (type === 'role' && newRole) {
         await fetch('/api/admin/users', {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
+          headers: authHeaders,
           body: JSON.stringify({ targetUserId: targetUser.id, role: newRole }),
         });
         await updateUserInFirestore(targetUser.id, { role: newRole });
@@ -562,8 +582,11 @@ export default function AdminPage() {
 
     result.sort((a, b) => {
       switch (userSortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name, 'vi');
+        case 'name': {
+          const nameA = (a.name || a.email || '').trim();
+          const nameB = (b.name || b.email || '').trim();
+          return nameA.localeCompare(nameB, 'vi');
+        }
         case 'targetHsk':
           return (b.targetHsk || 1) - (a.targetHsk || 1);
         case 'streak':
@@ -1734,12 +1757,12 @@ export default function AdminPage() {
                                 title="Nhấn để xem chi tiết hồ sơ"
                               >
                                 <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-emerald-100 group-hover:text-emerald-800 transition-colors">
-                                  {u.name.charAt(0).toUpperCase()}
+                                  {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                                 </div>
-                                <span className="font-semibold underline-offset-2 group-hover:underline">{u.name}</span>
+                                <span className="font-semibold underline-offset-2 group-hover:underline">{u.name || u.email || 'Học viên'}</span>
                               </button>
                             </td>
-                            <td className="px-4 py-3 text-slate-600 font-mono text-[11px]">{u.email}</td>
+                            <td className="px-4 py-3 text-slate-600 font-mono text-[11px]">{u.email || 'Chưa có email'}</td>
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
@@ -2480,10 +2503,10 @@ export default function AdminPage() {
 
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-base">
-                {selectedUserForModal.name.charAt(0).toUpperCase()}
+                {(selectedUserForModal.name || selectedUserForModal.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">{selectedUserForModal.name}</h3>
+                <h3 className="text-base font-bold text-slate-900">{selectedUserForModal.name || selectedUserForModal.email || 'Học viên'}</h3>
                 <p className="text-xs text-slate-400 font-mono">{selectedUserForModal.email}</p>
               </div>
             </div>

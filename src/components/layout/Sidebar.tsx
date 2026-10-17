@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layers,
   BookOpen,
@@ -22,10 +22,12 @@ import {
   X,
   Edit2,
   Trash2,
+  ExternalLink,
 } from 'lucide-react';
 import { Deck, VocabItem } from '@/types/vocabulary';
 import { isItemDueForReview } from '@/lib/srs';
 import { isProtectedDeck } from '@/data/initial-decks';
+import { loadSystemConfigFromFirestore } from '@/lib/firebase-db';
 
 interface SidebarProps {
   decks: Deck[];
@@ -104,6 +106,55 @@ export function Sidebar({
       i.translationStatus === 'correct' ||
       !!(i.hanziPracticeInput && i.hanziPracticeInput.trim())
   ).length;
+
+  const [zaloConfig, setZaloConfig] = useState<{
+    enabled: boolean;
+    url: string;
+    title: string;
+    description: string;
+  }>({
+    enabled: true,
+    url: 'https://zalo.me/g/vtdrsq845',
+    title: 'Tham gia Cộng Đồng Zalo',
+    description: 'Hỏi đáp & cùng luyện thi HSK',
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchZaloConfig = async () => {
+      try {
+        const res = await fetch('/api/system-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.config && isMounted) {
+            setZaloConfig({
+              enabled: data.config.zaloCommunityEnabled ?? true,
+              url: data.config.zaloCommunityUrl || 'https://zalo.me/g/vtdrsq845',
+              title: data.config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
+              description: data.config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK',
+            });
+            return;
+          }
+        }
+        // Fallback to Firestore
+        const fsConfig = await loadSystemConfigFromFirestore();
+        if (fsConfig && isMounted) {
+          setZaloConfig({
+            enabled: (fsConfig.zaloCommunityEnabled as boolean) ?? true,
+            url: (fsConfig.zaloCommunityUrl as string) || 'https://zalo.me/g/vtdrsq845',
+            title: (fsConfig.zaloCommunityTitle as string) || 'Tham gia Cộng Đồng Zalo',
+            description: (fsConfig.zaloCommunityDescription as string) || 'Hỏi đáp & cùng luyện thi HSK',
+          });
+        }
+      } catch (err) {
+        console.warn('Load Zalo config notice:', err);
+      }
+    };
+    fetchZaloConfig();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const renderCount = (count: number) => {
     if (isLoading && items.length === 0) {
@@ -549,6 +600,32 @@ export function Sidebar({
         )}
       </div>
 
+      {/* Zalo Community Widget if enabled */}
+      {zaloConfig.enabled && zaloConfig.url && (
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800">
+          <a
+            href={zaloConfig.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Tham gia cộng đồng Zalo trao đổi học tập"
+            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 border border-blue-200/80 dark:border-blue-800/80 hover:border-blue-400 dark:hover:border-blue-500 transition-all group shadow-2xs cursor-pointer btn-press"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm shadow-blue-500/30 group-hover:scale-105 transition-transform">
+              Z
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <span className="truncate">{zaloConfig.title || 'Tham gia Cộng Đồng Zalo'}</span>
+                <ExternalLink size={12} className="text-blue-500 shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                {zaloConfig.description || 'Hỏi đáp & cùng luyện thi HSK'}
+              </div>
+            </div>
+          </a>
+        </div>
+      )}
+
       {/* Add new custom deck button */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800">
         <button
@@ -690,6 +767,21 @@ export function Sidebar({
                   );
                 })}
             </div>
+
+            {/* Zalo Community in Collapsed Mode */}
+            {zaloConfig.enabled && zaloConfig.url && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 w-full flex justify-center">
+                <a
+                  href={zaloConfig.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${zaloConfig.title || 'Tham gia Cộng Đồng Zalo'} - ${zaloConfig.description || 'Hỏi đáp & cùng luyện thi HSK'}`}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-[#0068FF] to-[#0091FF] text-white font-black text-xs shadow-sm hover:scale-110 cursor-pointer transition-all btn-press"
+                >
+                  Z
+                </a>
+              </div>
+            )}
 
             {/* Add Deck Button in Collapsed Mode */}
             <div className="pt-2 border-t border-slate-200 dark:border-slate-800 w-full flex justify-center">
