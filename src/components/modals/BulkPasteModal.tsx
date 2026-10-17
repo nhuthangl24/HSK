@@ -319,7 +319,8 @@ export function BulkPasteModal({
 
         // Sync added items to Firestore so they are persistently loaded on user reload
         if (getFirebaseServices().isConfigured && data.items && data.items.length > 0 && user) {
-          batchSaveWordsToFirestore(data.items, user.id).catch((err) =>
+          const syncUserId = targetScope === 'system' ? 'system' : user.id;
+          batchSaveWordsToFirestore(data.items, syncUserId).catch((err) =>
             console.error('Auto-sync paste to Firestore notice:', err)
           );
         }

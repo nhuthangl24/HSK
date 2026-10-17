@@ -228,6 +228,19 @@ function MainApp() {
 
     // If guest (logged out), strictly show ONLY clean unlearned system words
     if (!uid) {
+      if (getFirebaseServices().isConfigured) {
+        try {
+          const res = await loadVocabularyForUser(undefined, currentCleanSystemWords);
+          if (!res.error && res.items && res.items.length > 0) {
+            const cleanGuests = res.items.filter((w) => w.isSystem !== false);
+            setItems(cleanGuests);
+            setIsLoadingVocab(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('Guest Firestore sync notice:', err);
+        }
+      }
       setItems(currentCleanSystemWords);
       setIsLoadingVocab(false);
       return;

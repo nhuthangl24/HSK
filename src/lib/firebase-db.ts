@@ -44,11 +44,14 @@ export async function loadVocabularyForUser(
 
   try {
     const customWords: VocabItem[] = [];
+    const cloudSystemWords: VocabItem[] = [];
 
-    // 1. Fetch only custom words belonging to this user
-    if (userId) {
-      try {
-        const vocabCol = collection(db, COLLECTION_VOCAB);
+    // 1. Fetch custom words belonging to this user + any system words added to Firestore
+    try {
+      const vocabCol = collection(db, COLLECTION_VOCAB);
+
+      // Fetch user's personal custom words
+      if (userId) {
         const q = query(vocabCol, where('userId', '==', userId));
         const snapshot = await getDocs(q);
         snapshot.forEach((docSnap) => {
@@ -58,9 +61,18 @@ export async function loadVocabularyForUser(
             customWords.push(data);
           }
         });
-      } catch (err) {
-        console.warn('Could not query custom words for user:', err);
       }
+
+      // Fetch official system words added dynamically to Cloud Firestore
+      const qSys = query(vocabCol, where('isSystem', '==', true));
+      const sysSnapshot = await getDocs(qSys);
+      sysSnapshot.forEach((docSnap) => {
+        const data = docSnap.data() as VocabItem;
+        if (!data.id) data.id = docSnap.id;
+        cloudSystemWords.push(data);
+      });
+    } catch (err) {
+      console.warn('Could not query custom/system words from Firestore:', err);
     }
 
     // 2. Combine with base system words (deduplicating by id)
@@ -93,6 +105,30 @@ export async function loadVocabularyForUser(
           },
         });
       });
+
+    // Add any official system words stored in Cloud Firestore
+    cloudSystemWords.forEach((w) => {
+      wordMap.set(w.id, {
+        ...w,
+        isSystem: true,
+        hanziPracticeInput: '',
+        hanziStatus: 'unlearned',
+        translationPracticeInput: '',
+        translationStatus: 'unanswered',
+        favorite: false,
+        notes: '',
+        srs: {
+          repetition: 0,
+          interval: 0,
+          easeFactor: 2.5,
+          dueDate: todayStr,
+          totalReviews: 0,
+          correctCount: 0,
+          wrongCount: 0,
+          history: [],
+        },
+      });
+    });
 
     // Insert only THIS user's custom words
     customWords
@@ -186,21 +222,26 @@ export async function batchSaveWordsToFirestore(items: VocabItem[], userId = 'de
   if (!db || !isConfigured || items.length === 0) return false;
 
   try {
-    const batch = writeBatch(db);
+    const BATCH_SIZE = 450; // Firestore maximum batch limit is 500
     const now = new Date().toISOString();
-    for (const item of items) {
-      const docRef = doc(db, COLLECTION_VOCAB, item.id);
-      batch.set(
-        docRef,
-        {
-          ...item,
-          userId: item.userId || userId,
-          updatedAt: now,
-        },
-        { merge: true }
-      );
+
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const chunk = items.slice(i, i + BATCH_SIZE);
+      const batch = writeBatch(db);
+      for (const item of chunk) {
+        const docRef = doc(db, COLLECTION_VOCAB, item.id);
+        batch.set(
+          docRef,
+          {
+            ...item,
+            userId: item.userId || userId,
+            updatedAt: now,
+          },
+          { merge: true }
+        );
+      }
+      await batch.commit();
     }
-    await batch.commit();
     return true;
   } catch (err) {
     console.error('Error batch saving words to Firestore:', err);
@@ -390,22 +431,27 @@ export async function batchSaveUserProgressToFirestore(
   if (!db || !isConfigured || !userId || records.length === 0) return false;
 
   try {
-    const batch = writeBatch(db);
+    const BATCH_SIZE = 450; // Firestore maximum batch limit is 500
     const now = new Date().toISOString();
-    for (const rec of records) {
-      const docId = `${userId}_${rec.vocabId}`;
-      const docRef = doc(db, COLLECTION_PROGRESS, docId);
-      batch.set(
-        docRef,
-        {
-          userId,
-          ...rec,
-          updatedAt: now,
-        },
-        { merge: true }
-      );
+
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      const chunk = records.slice(i, i + BATCH_SIZE);
+      const batch = writeBatch(db);
+      for (const rec of chunk) {
+        const docId = `${userId}_${rec.vocabId}`;
+        const docRef = doc(db, COLLECTION_PROGRESS, docId);
+        batch.set(
+          docRef,
+          {
+            userId,
+            ...rec,
+            updatedAt: now,
+          },
+          { merge: true }
+        );
+      }
+      await batch.commit();
     }
-    await batch.commit();
     return true;
   } catch (err) {
     console.error('Error batch saving progress to Firestore:', err);
