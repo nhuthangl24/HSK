@@ -19,6 +19,9 @@ import {
   Maximize2,
   Sliders,
   AlignJustify,
+  PenTool,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { VocabItem, Deck } from '@/types/vocabulary';
 import { useToast } from '@/context/ToastContext';
@@ -30,6 +33,14 @@ interface HanziWorksheetModalProps {
   allDeckItems: VocabItem[];
   currentDeck: Deck;
   preselectedItem?: VocabItem | null;
+}
+
+export interface WorksheetWordItem {
+  id: string;
+  hanzi: string;
+  pinyin: string;
+  meaning: string;
+  hskLevel: number;
 }
 
 interface PracticeRow {
@@ -55,12 +66,16 @@ export function HanziWorksheetModal({
 }: HanziWorksheetModalProps) {
   const toast = useToast();
 
-  // 1. Scope & Quantity Settings
-  const [scope, setScope] = useState<'filtered' | 'all' | 'favorites' | 'single'>(
+  // 1. Scope & Custom Input Settings
+  const [scope, setScope] = useState<'filtered' | 'all' | 'favorites' | 'custom' | 'single'>(
     preselectedItem ? 'single' : 'filtered'
   );
+  const [customRawInput, setCustomRawInput] = useState<string>(
+    '你好 | nǐhǎo | Xin chào\n谢谢 | xièxie | Cảm ơn\n再见 | zàijiàn | Tạm biệt\n学习 | xuéxí | Học tập'
+  );
+
   const [maxWords, setMaxWords] = useState<number>(24);
-  const [isAllWords, setIsAllWords] = useState<boolean>(false);
+  const [isAllWords, setIsAllWords] = useState<boolean>(true);
   const [customWordCount, setCustomWordCount] = useState<string>('24');
   const [practiceMode, setPracticeMode] = useState<'character' | 'word'>('character');
 
@@ -185,10 +200,85 @@ export function HanziWorksheetModal({
     }
   }, [rowsPerPage]);
 
+  // Quick lookup dictionary from allDeckItems to auto-enrich Pinyin and Meaning when user enters Hanzi
+  const deckLookupMap = useMemo(() => {
+    const map = new Map<string, VocabItem>();
+    allDeckItems.forEach((item) => {
+      if (item.hanzi) {
+        map.set(item.hanzi.trim(), item);
+      }
+    });
+    return map;
+  }, [allDeckItems]);
+
+  // Parse custom raw input text into WorksheetWordItems
+  const customParsedItems = useMemo<WorksheetWordItem[]>(() => {
+    if (!customRawInput || !customRawInput.trim()) return [];
+
+    const lines = customRawInput.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const parsed: WorksheetWordItem[] = [];
+
+    lines.forEach((line, lineIdx) => {
+      // 1. If line has delimiter (|, tab, ;, or -)
+      if (line.includes('|') || line.includes('\t') || line.includes(';') || line.includes(' - ')) {
+        const parts = line.split(/[|\t;]|\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+        const hanzi = parts[0] || '';
+        let pinyin = parts[1] || '';
+        let meaning = parts[2] || '';
+
+        // Auto-lookup if pinyin/meaning not provided
+        if (hanzi && (!pinyin || !meaning)) {
+          const match = deckLookupMap.get(hanzi);
+          if (match) {
+            if (!pinyin) pinyin = match.pinyin;
+            if (!meaning) meaning = match.meaning;
+          }
+        }
+
+        if (hanzi) {
+          parsed.push({
+            id: `custom-${lineIdx}-${hanzi}`,
+            hanzi,
+            pinyin,
+            meaning,
+            hskLevel: 1,
+          });
+        }
+      } else {
+        // 2. Line might be space-separated words, or comma-separated, or single word/sentence
+        // e.g. "你好 谢谢 老师" or "你好, 谢谢, 老师"
+        const tokens = line.split(/[\s,，、]+/).map((t) => t.trim()).filter(Boolean);
+
+        tokens.forEach((token, tIdx) => {
+          let pinyin = '';
+          let meaning = '';
+          const match = deckLookupMap.get(token);
+          if (match) {
+            pinyin = match.pinyin;
+            meaning = match.meaning;
+          }
+
+          parsed.push({
+            id: `custom-${lineIdx}-${tIdx}-${token}`,
+            hanzi: token,
+            pinyin,
+            meaning,
+            hskLevel: match?.hskLevel || 1,
+          });
+        });
+      }
+    });
+
+    return parsed;
+  }, [customRawInput, deckLookupMap]);
+
   // Filter items based on selected scope
-  const targetWords = useMemo(() => {
+  const targetWords = useMemo<WorksheetWordItem[]>(() => {
     if (scope === 'single' && preselectedItem) {
       return [preselectedItem];
+    }
+    if (scope === 'custom') {
+      return isAllWords ? customParsedItems : customParsedItems.slice(0, maxWords);
     }
     let sourceList: VocabItem[] = [];
     if (scope === 'filtered') sourceList = filteredItems;
@@ -199,7 +289,7 @@ export function HanziWorksheetModal({
       return sourceList;
     }
     return sourceList.slice(0, maxWords);
-  }, [scope, preselectedItem, filteredItems, allDeckItems, maxWords, isAllWords]);
+  }, [scope, preselectedItem, filteredItems, allDeckItems, maxWords, isAllWords, customParsedItems]);
 
   // Expand into practice entries (each Hanzi character gets a row, supporting multiple rows per char)
   const practiceRows = useMemo(() => {
@@ -327,7 +417,7 @@ export function HanziWorksheetModal({
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Tùy chỉnh mật độ A4 ({rowsPerPage} dòng/trang, {cellsPerRow} ô/hàng) • Lưới Mễ điền (米字格) sắc nét • Đầy trang không bỏ phí giấy.
+                  Tùy chỉnh mật độ A4 ({rowsPerPage} dòng/trang, {cellsPerRow} ô/hàng) • Lưới Mễ điền (米字格) sắc nét • Hỗ trợ tự nhập từ ngoài.
                 </p>
               </div>
             </div>
@@ -357,7 +447,7 @@ export function HanziWorksheetModal({
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             
             {/* LEFT COLUMN: CUSTOMIZATION SETTINGS PANEL */}
-            <div className="w-full md:w-84 lg:w-96 border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 p-5 overflow-y-auto space-y-5 shrink-0 scrollbar-thin">
+            <div className="w-full md:w-88 lg:w-98 border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 p-5 overflow-y-auto space-y-5 shrink-0 scrollbar-thin">
               
               {/* SECTION 1: Scope Selection */}
               <div className="space-y-2">
@@ -403,17 +493,125 @@ export function HanziWorksheetModal({
                       setScope('favorites');
                       setIsAllWords(false);
                     }}
-                    className={`col-span-2 px-3 py-2 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
                       scope === 'favorites'
                         ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/20'
                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <div className="font-bold flex items-center gap-1.5">
-                      <span>⭐ Chỉ các từ yêu thích đã đánh dấu ({allDeckItems.filter(i => i.favorite).length} từ)</span>
+                    <div className="font-bold">⭐ Từ yêu thích</div>
+                    <div className="text-[10.5px] opacity-75">{allDeckItems.filter((i) => i.favorite).length} từ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScope('custom');
+                      setIsAllWords(true);
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
+                      scope === 'custom'
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center gap-1">
+                      <span>✍️ Tự nhập từ ngoài</span>
+                    </div>
+                    <div className="text-[10.5px] opacity-75">
+                      {customParsedItems.length > 0 ? `${customParsedItems.length} từ nhận diện` : 'Dán chữ Hán tùy ý'}
                     </div>
                   </button>
                 </div>
+
+                {/* DEDICATED CUSTOM INPUT TEXTAREA (When scope === 'custom') */}
+                {scope === 'custom' && (
+                  <div className="mt-3 p-3.5 bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/50 rounded-2xl space-y-2.5 animate-fadeIn">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                      <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
+                        <PenTool size={13} />
+                        Nhập hoặc dán chữ Hán / từ vựng:
+                      </span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-200">
+                        {customParsedItems.length} từ
+                      </span>
+                    </div>
+
+                    <textarea
+                      rows={5}
+                      value={customRawInput}
+                      onChange={(e) => setCustomRawInput(e.target.value)}
+                      placeholder={`Dán chữ Hán vào đây, ví dụ:\n你好 谢谢 再见 老师 苹果\nHoặc định dạng: Chữ | Pinyin | Nghĩa\n学习 | xuéxí | Học tập\n朋友 | péngyou | Bạn bè`}
+                      className="w-full p-2.5 text-xs font-sans bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-none text-slate-800 dark:text-slate-100 placeholder:text-slate-400 resize-none leading-relaxed"
+                    />
+
+                    {/* Quick Sample Presets Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="text-[10px] text-slate-400 font-medium">Mẫu nhanh:</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomRawInput(
+                            '你好 | nǐhǎo | Xin chào\n谢谢 | xièxie | Cảm ơn\n再见 | zàijiàn | Tạm biệt\n对不起 | duìbuqǐ | Xin lỗi\n没关系 | méiguānxi | Không sao\n早上好 | zǎoshang hǎo | Chào buổi sáng'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      >
+                        Giao tiếp
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomRawInput(
+                            '一 | yī | Số 1\n二 | èr | Số 2\n三 | sān | Số 3\n四 | sì | Số 4\n五 | wǔ | Số 5\n六 | liù | Số 6\n七 | qī | Số 7\n八 | bā | Số 8\n九 | jiǔ | Số 9\n十 | shí | Số 10'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      >
+                        Số đếm (1-10)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomRawInput(
+                            '爸爸 | bàba | Bố\n妈妈 | māma | Mẹ\n哥哥 | gēge | Anh trai\n姐姐 | jiějie | Chị gái\n弟弟 | dìdi | Em trai\n妹妹 | mèimei | Em gái'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      >
+                        Gia đình
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomRawInput(
+                            '一心一意 | yī xīn yī yì | Toàn tâm toàn ý\n万事如意 | wàn shì rú yì | Vạn sự như ý\n马到成功 | mǎ dào chéng gōng | Mã đáo thành công\n自强不息 | zì qiáng bù xī | Tự lực tự cường'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-400 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                      >
+                        Thành ngữ 4 chữ
+                      </button>
+
+                      {customRawInput && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomRawInput('')}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-medium text-rose-600 dark:text-rose-400 hover:underline cursor-pointer ml-auto"
+                        >
+                          Xóa hết
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                      💡 Mẹo: Hệ thống sẽ tự động tra cứu từ điển HSK để điền Pinyin & Nghĩa nếu bạn chỉ dán chữ Hán!
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* SECTION 2: Quantity Selection & Custom Word Count */}
@@ -481,7 +679,41 @@ export function HanziWorksheetModal({
                 </div>
               )}
 
-              {/* SECTION 3: Rows Density & Layout (The key solution for "1 tờ như này là ít quá") */}
+              {/* SECTION 3: Practice Mode (Single Chars vs Compound Words) */}
+              <div className="space-y-1.5 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                  <span>Chế độ phân tách từ vựng:</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPracticeMode('character')}
+                    className={`p-2 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
+                      practiceMode === 'character'
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <div className="font-bold">Từng chữ đơn</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Tách từng chữ Hán để rèn nét</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPracticeMode('word')}
+                    className={`p-2 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
+                      practiceMode === 'word'
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <div className="font-bold">Cả từ ghép</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Giữ nguyên từ ghép 2-4 chữ</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* SECTION 4: Rows Density & Layout */}
               <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
                 <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <AlignJustify size={14} className="text-rose-600" />
@@ -598,7 +830,7 @@ export function HanziWorksheetModal({
                 </div>
               </div>
 
-              {/* SECTION 4: Grid Style & Color Theme */}
+              {/* SECTION 5: Grid Style & Color Theme */}
               <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
                 <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Grid size={14} className="text-rose-600" />
@@ -687,7 +919,7 @@ export function HanziWorksheetModal({
                 </div>
               </div>
 
-              {/* SECTION 5: Content Display Toggles */}
+              {/* SECTION 6: Content Display Toggles */}
               <div className="space-y-2.5 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
                 <span className="block text-xs font-bold text-slate-900 dark:text-white">
                   Thông tin hiển thị trên phiếu:
@@ -735,7 +967,7 @@ export function HanziWorksheetModal({
                 </div>
               </div>
 
-              {/* SECTION 6: Title Customization */}
+              {/* SECTION 7: Title Customization */}
               <div className="space-y-2 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
                 <label className="block text-xs font-bold text-slate-900 dark:text-white">
                   Tiêu đề phiếu in:
@@ -805,7 +1037,7 @@ export function HanziWorksheetModal({
                       )}
 
                       {/* Character Rows Table */}
-                      <div className={`space-y-1 mt-1 flex flex-col justify-between`}>
+                      <div className="space-y-1 mt-1 flex flex-col justify-between">
                         {pageRows.map((row) => (
                           <div
                             key={row.id}
