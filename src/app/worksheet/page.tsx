@@ -1099,7 +1099,7 @@ function WorksheetStudioContent() {
               LEFT INSPECTOR PANEL (STUDIO CONTROLS)
              ===================================================================== */}
           <aside
-            className={`w-full sm:w-[410px] lg:w-[430px] border-r flex flex-col shrink-0 z-20 transition-all duration-300 ${
+            className={`w-full sm:w-[420px] lg:w-[440px] xl:w-[450px] border-r flex flex-col shrink-0 z-20 transition-all duration-300 ${
               canvasTheme === 'dark'
                 ? 'bg-[#111827] border-slate-800 text-slate-200'
                 : canvasTheme === 'paper'
@@ -1107,20 +1107,21 @@ function WorksheetStudioContent() {
                 : 'bg-white border-slate-200 text-slate-900'
             } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full sm:relative'}`}
           >
-            {/* Inspector Navigation Tabs */}
-            <div className="flex items-center border-b border-slate-200 dark:border-slate-800 px-3 pt-2 gap-1 overflow-x-auto scrollbar-none shrink-0">
+            {/* Inspector Navigation Tabs (Grid 4 columns - never clips) */}
+            <div className="grid grid-cols-4 border-b border-slate-200 dark:border-slate-800 px-2 pt-2 gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('source')}
-                className={`px-3 py-2 text-xs font-bold border-b-2 cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`pb-2.5 pt-1 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center justify-center gap-1 min-w-0 ${
                   activeTab === 'source'
                     ? 'border-red-500 text-red-600 dark:text-red-400'
                     : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
+                title="Quản lý nguồn từ vựng đưa vào phiếu"
               >
-                <BookOpen size={14} />
-                <span>Từ vựng</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">
+                <BookOpen size={13} className="shrink-0" />
+                <span className="truncate">Từ vựng</span>
+                <span className="text-[9px] px-1 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono shrink-0">
                   {targetWords.length}
                 </span>
               </button>
@@ -1128,40 +1129,43 @@ function WorksheetStudioContent() {
               <button
                 type="button"
                 onClick={() => setActiveTab('style')}
-                className={`px-3 py-2 text-xs font-bold border-b-2 cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`pb-2.5 pt-1 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center justify-center gap-1 min-w-0 ${
                   activeTab === 'style'
                     ? 'border-red-500 text-red-600 dark:text-red-400'
                     : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
+                title="Kiểu ô kẻ & Bảng màu truyền thống"
               >
-                <Grid size={14} />
-                <span>Ô & Màu</span>
+                <Grid size={13} className="shrink-0" />
+                <span className="truncate">Kiểu ô</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('layout')}
-                className={`px-3 py-2 text-xs font-bold border-b-2 cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`pb-2.5 pt-1 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center justify-center gap-1 min-w-0 ${
                   activeTab === 'layout'
                     ? 'border-red-500 text-red-600 dark:text-red-400'
                     : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
+                title="Bố cục dòng & Mẫu tô nét"
               >
-                <Layers size={14} />
-                <span>Bố cục & Nét</span>
+                <Layers size={13} className="shrink-0" />
+                <span className="truncate">Bố cục</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('header')}
-                className={`px-3 py-2 text-xs font-bold border-b-2 cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`pb-2.5 pt-1 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center justify-center gap-1 min-w-0 ${
                   activeTab === 'header'
                     ? 'border-red-500 text-red-600 dark:text-red-400'
                     : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
+                title="Tiêu đề & Thông tin học viên"
               >
-                <Settings2 size={14} />
-                <span>Tiêu đề</span>
+                <Settings2 size={13} className="shrink-0" />
+                <span className="truncate">Tiêu đề</span>
               </button>
             </div>
 
