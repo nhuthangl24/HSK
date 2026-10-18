@@ -14,7 +14,6 @@ import {
   Moon,
   Sparkles,
   ClipboardPaste,
-  PenLine,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -110,16 +109,6 @@ export function Header({
         >
           {effectiveTheme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
         </button>
-
-        {/* Quick Link to Worksheet Studio */}
-        <Link
-          href="/worksheet"
-          className="p-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 transition-all cursor-pointer shrink-0 hidden md:flex items-center gap-1.5 text-xs font-semibold"
-          title="Xưởng Tạo Phiếu Tập Viết Chữ Hán (Khổ A4, Mễ Điền, Điền Tự, Hồi Tự)"
-        >
-          <PenLine size={14} className="text-rose-600 dark:text-rose-400" />
-          <span className="hidden lg:inline">Phiếu viết</span>
-        </Link>
 
         {/* Settings Button */}
         {onOpenSettings && (

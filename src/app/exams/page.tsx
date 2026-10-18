@@ -42,7 +42,6 @@ import {
   Minimize2,
   CheckCircle2,
   Sliders,
-  PenTool,
   Printer,
   ChevronRight,
   AlertCircle,
@@ -447,15 +446,6 @@ export default function ExamsPage() {
 
           {/* Right: Quick Tools */}
           <div className="flex items-center gap-2">
-            {/* Link to Hanzi Worksheet Studio */}
-            <Link
-              href="/worksheet"
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100/70 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/40 transition-colors"
-              title="Mở Xưởng Phiếu Viết Chữ Hán A4"
-            >
-              <PenTool size={13} className="text-rose-600 dark:text-rose-400" />
-              <span>Xưởng Phiếu Viết A4</span>
-            </Link>
 
             {/* View Mode (Grid vs List) */}
             <div className="hidden sm:flex items-center rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-0.5 text-xs">
