@@ -36,6 +36,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { tts, AvailableVoice } from '@/lib/tts';
 import { getClientAuthHeaders } from '@/lib/client-auth';
+import { saveUserSettingsToFirestore, loadUserSettingsFromFirestore } from '@/lib/firebase-db';
 
 interface UserSettingsModalProps {
   isOpen: boolean;
@@ -82,6 +83,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const [fbSent, setFbSent] = useState(false);
 
   const [lastSavedTime, setLastSavedTime] = useState<string>('Vừa xong');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -94,41 +96,167 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Sync to server helper
+  // Sync to server & firestore helper
   const syncServerSettings = useCallback(
     async (overrides?: Record<string, unknown>) => {
-      if (!isAuthenticated) return;
+      const payload = {
+        theme: selectedTheme,
+        ttsVoiceName: selectedVoiceName,
+        ttsVoiceGender: genderChoice,
+        ttsRate,
+        autoPronounce: tempAutoPronounce,
+        fontSize: tempFontSize,
+        targetHsk,
+        ...overrides,
+      };
+
+      // 1. Always persist to localStorage
+      try {
+        if (payload.theme) localStorage.setItem('hsk_theme_preference', payload.theme as string);
+        if (payload.fontSize) localStorage.setItem('hsk_font_size', payload.fontSize as string);
+        if (typeof payload.autoPronounce === 'boolean') {
+          localStorage.setItem('hsk_auto_pronounce', payload.autoPronounce ? 'true' : 'false');
+        }
+        if (typeof payload.ttsRate === 'number') {
+          localStorage.setItem('hsk_tts_rate', String(payload.ttsRate));
+        }
+        if (payload.ttsVoiceName) {
+          localStorage.setItem('hsk_tts_voice_name', payload.ttsVoiceName as string);
+        }
+        if (payload.ttsVoiceGender) {
+          localStorage.setItem('hsk_tts_voice_gender', payload.ttsVoiceGender as string);
+        }
+      } catch {}
+
+      // 2. Persist to server API
       try {
         await fetch('/api/user/settings', {
           method: 'PUT',
           headers: getClientAuthHeaders(user),
-          body: JSON.stringify({
-            theme: selectedTheme,
-            ttsVoiceName: selectedVoiceName,
-            ttsVoiceGender: genderChoice,
-            ttsRate,
-            autoPronounce: tempAutoPronounce,
-            fontSize: tempFontSize,
-            targetHsk,
-            ...overrides,
-          }),
+          body: JSON.stringify(payload),
         });
         setLastSavedTime(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
       } catch {}
+
+      // 3. Persist to Firestore if user ID available
+      if (user?.id) {
+        saveUserSettingsToFirestore(user.id, payload).catch(() => {});
+      }
     },
-    [isAuthenticated, user, selectedTheme, selectedVoiceName, genderChoice, ttsRate, tempAutoPronounce, tempFontSize, targetHsk]
+    [user, selectedTheme, selectedVoiceName, genderChoice, ttsRate, tempAutoPronounce, tempFontSize, targetHsk]
   );
+
+  // Save all settings explicitly
+  const handleSaveAllSettings = async () => {
+    setIsSaving(true);
+    try {
+      // 1. Immediately commit all settings to localStorage
+      try {
+        localStorage.setItem('hsk_theme_preference', selectedTheme);
+        localStorage.setItem('hsk_font_size', tempFontSize);
+        localStorage.setItem('hsk_auto_pronounce', tempAutoPronounce ? 'true' : 'false');
+        localStorage.setItem('hsk_tts_rate', String(ttsRate));
+        if (selectedVoiceName) localStorage.setItem('hsk_tts_voice_name', selectedVoiceName);
+        if (genderChoice) localStorage.setItem('hsk_tts_voice_gender', genderChoice);
+      } catch {}
+
+      // 2. Apply to React contexts & singletons
+      setTheme(selectedTheme);
+      setFontSize(tempFontSize);
+      setAutoPronounce(tempAutoPronounce);
+      tts.setRate(ttsRate);
+      if (selectedVoiceName) tts.setVoiceByName(selectedVoiceName);
+      if (genderChoice) tts.setVoiceByGender(genderChoice);
+
+      if (user && updateProfile) {
+        updateProfile({ targetHsk }).catch(() => {});
+      }
+
+      // 3. Save to server API
+      const settingsPayload = {
+        theme: selectedTheme,
+        ttsVoiceName: selectedVoiceName,
+        ttsVoiceGender: genderChoice,
+        ttsRate,
+        autoPronounce: tempAutoPronounce,
+        fontSize: tempFontSize,
+        targetHsk,
+      };
+
+      await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: getClientAuthHeaders(user),
+        body: JSON.stringify(settingsPayload),
+      }).catch(() => {});
+
+      // 4. Save to Firestore if user is logged in
+      if (user?.id) {
+        await saveUserSettingsToFirestore(user.id, settingsPayload).catch(() => {});
+      }
+
+      const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      setLastSavedTime(timeStr);
+      toast.success('Đã lưu toàn bộ cài đặt thành công!', 'Cài đặt hệ thống');
+      onClose();
+    } catch {
+      toast.error('Lỗi khi lưu cài đặt.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Initialize modal state when opened
   useEffect(() => {
     if (!isOpen) return;
 
-    setSelectedTheme(theme);
-    setTempFontSize(fontSize);
-    setTempAutoPronounce(autoPronounce);
+    // Load from localStorage first
+    try {
+      const savedTheme = localStorage.getItem('hsk_theme_preference') as ThemeMode;
+      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+        setSelectedTheme(savedTheme);
+      } else {
+        setSelectedTheme(theme);
+      }
+
+      const savedFont = localStorage.getItem('hsk_font_size') as FontSize;
+      if (savedFont && ['normal', 'large', 'xlarge'].includes(savedFont)) {
+        setTempFontSize(savedFont);
+      } else {
+        setTempFontSize(fontSize);
+      }
+
+      const savedAuto = localStorage.getItem('hsk_auto_pronounce');
+      if (savedAuto !== null) {
+        setTempAutoPronounce(savedAuto === 'true');
+      } else {
+        setTempAutoPronounce(autoPronounce);
+      }
+
+      const savedRate = localStorage.getItem('hsk_tts_rate');
+      if (savedRate) {
+        const r = parseFloat(savedRate);
+        if (!isNaN(r) && r >= 0.5 && r <= 2.0) {
+          setTtsRate(r);
+          tts.setRate(r);
+        }
+      } else {
+        setTtsRate(tts.getRate());
+      }
+
+      const savedGender = localStorage.getItem('hsk_tts_voice_gender') as any;
+      if (savedGender && ['default', 'male', 'female'].includes(savedGender)) {
+        setGenderChoice(savedGender);
+      } else {
+        setGenderChoice(tts.getCurrentGender());
+      }
+
+      const savedVoice = localStorage.getItem('hsk_tts_voice_name');
+      if (savedVoice) {
+        setSelectedVoiceName(savedVoice);
+      }
+    } catch {}
+
     setTargetHsk(user?.targetHsk || 3);
-    setTtsRate(tts.getRate());
-    setGenderChoice(tts.getCurrentGender());
     if (user?.email) setFbEmail(user.email);
     if (user?.name) setFbName(user.name);
     setFbSent(false);
@@ -153,29 +281,70 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     updateVoiceList(tts.getAvailableVoices());
     const unsubscribe = tts.onVoicesChanged(updateVoiceList);
 
-    // Populate user settings from server if authenticated
-    if (isAuthenticated) {
-      fetch('/api/user/settings', {
-        headers: getClientAuthHeaders(user),
+    // Populate user settings from server API
+    fetch('/api/user/settings', {
+      headers: getClientAuthHeaders(user),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data.settings) {
+          const s = data.settings;
+          if (s.theme && ['light', 'dark', 'system'].includes(s.theme)) {
+            setSelectedTheme(s.theme);
+            setTheme(s.theme);
+          }
+          if (s.fontSize && ['normal', 'large', 'xlarge'].includes(s.fontSize)) {
+            setTempFontSize(s.fontSize);
+            setFontSize(s.fontSize);
+          }
+          if (typeof s.autoPronounce === 'boolean') {
+            setTempAutoPronounce(s.autoPronounce);
+            setAutoPronounce(s.autoPronounce);
+          }
+          if (typeof s.ttsRate === 'number' && s.ttsRate >= 0.5 && s.ttsRate <= 2.0) {
+            setTtsRate(s.ttsRate);
+            tts.setRate(s.ttsRate);
+          }
+          if (s.ttsVoiceName) {
+            setSelectedVoiceName(s.ttsVoiceName);
+            tts.setVoiceByName(s.ttsVoiceName);
+          }
+          if (s.ttsVoiceGender && ['default', 'male', 'female'].includes(s.ttsVoiceGender)) {
+            setGenderChoice(s.ttsVoiceGender);
+          }
+          if (s.targetHsk) setTargetHsk(s.targetHsk);
+        }
       })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.success && data.settings) {
-            const s = data.settings;
-            if (s.ttsVoiceName) {
-              setSelectedVoiceName(s.ttsVoiceName);
-              tts.setVoiceByName(s.ttsVoiceName);
+      .catch(() => {});
+
+    // Also populate from Firestore if user is logged in
+    if (user?.id) {
+      loadUserSettingsFromFirestore(user.id)
+        .then((fsSettings) => {
+          if (fsSettings) {
+            if (fsSettings.theme && ['light', 'dark', 'system'].includes(fsSettings.theme as string)) {
+              setSelectedTheme(fsSettings.theme as ThemeMode);
+              setTheme(fsSettings.theme as ThemeMode);
             }
-            if (s.ttsVoiceGender) {
-              setGenderChoice(s.ttsVoiceGender);
+            if (fsSettings.fontSize && ['normal', 'large', 'xlarge'].includes(fsSettings.fontSize as string)) {
+              setTempFontSize(fsSettings.fontSize as FontSize);
+              setFontSize(fsSettings.fontSize as FontSize);
             }
-            if (typeof s.ttsRate === 'number') {
-              setTtsRate(s.ttsRate);
-              tts.setRate(s.ttsRate);
+            if (typeof fsSettings.autoPronounce === 'boolean') {
+              setTempAutoPronounce(fsSettings.autoPronounce as boolean);
+              setAutoPronounce(fsSettings.autoPronounce as boolean);
             }
-            if (typeof s.autoPronounce === 'boolean') setTempAutoPronounce(s.autoPronounce);
-            if (s.fontSize) setTempFontSize(s.fontSize);
-            if (s.targetHsk) setTargetHsk(s.targetHsk);
+            if (typeof fsSettings.ttsRate === 'number') {
+              setTtsRate(fsSettings.ttsRate);
+              tts.setRate(fsSettings.ttsRate);
+            }
+            if (fsSettings.ttsVoiceName) {
+              setSelectedVoiceName(fsSettings.ttsVoiceName as string);
+              tts.setVoiceByName(fsSettings.ttsVoiceName as string);
+            }
+            if (fsSettings.ttsVoiceGender) {
+              setGenderChoice(fsSettings.ttsVoiceGender as any);
+            }
           }
         })
         .catch(() => {});
@@ -184,7 +353,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     return () => {
       unsubscribe();
     };
-  }, [isOpen, isAuthenticated, user]);
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
@@ -194,6 +363,9 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleThemeSelect = (mode: ThemeMode) => {
     setSelectedTheme(mode);
     setTheme(mode);
+    try {
+      localStorage.setItem('hsk_theme_preference', mode);
+    } catch {}
     syncServerSettings({ theme: mode });
   };
 
@@ -201,6 +373,9 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleFontSizeSelect = (size: FontSize) => {
     setTempFontSize(size);
     setFontSize(size);
+    try {
+      localStorage.setItem('hsk_font_size', size);
+    } catch {}
     syncServerSettings({ fontSize: size });
   };
 
@@ -208,6 +383,9 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleAutoPronounceToggle = (enabled: boolean) => {
     setTempAutoPronounce(enabled);
     setAutoPronounce(enabled);
+    try {
+      localStorage.setItem('hsk_auto_pronounce', enabled ? 'true' : 'false');
+    } catch {}
     syncServerSettings({ autoPronounce: enabled });
   };
 
@@ -215,6 +393,9 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleRateChange = (val: number) => {
     setTtsRate(val);
     tts.setRate(val);
+    try {
+      localStorage.setItem('hsk_tts_rate', String(val));
+    } catch {}
     syncServerSettings({ ttsRate: val });
   };
 
@@ -222,8 +403,16 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleGenderChange = (val: 'default' | 'male' | 'female') => {
     setGenderChoice(val);
     tts.setVoiceByGender(val);
+    try {
+      localStorage.setItem('hsk_tts_voice_gender', val);
+    } catch {}
     const active = tts.getCurrentVoiceName();
-    if (active) setSelectedVoiceName(active);
+    if (active) {
+      setSelectedVoiceName(active);
+      try {
+        localStorage.setItem('hsk_tts_voice_name', active);
+      } catch {}
+    }
     syncServerSettings({ ttsVoiceGender: val, ttsVoiceName: active });
     tts.speak(
       val === 'female' ? '你好，这是女声发音。' : val === 'male' ? '你好，这是男声发音。' : '你好，这是台湾国语标准发音。',
@@ -235,8 +424,14 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   const handleVoiceChange = (voiceName: string) => {
     setSelectedVoiceName(voiceName);
     tts.setVoiceByName(voiceName);
+    try {
+      localStorage.setItem('hsk_tts_voice_name', voiceName);
+    } catch {}
     const g = tts.getCurrentGender();
     setGenderChoice(g);
+    try {
+      localStorage.setItem('hsk_tts_voice_gender', g);
+    } catch {}
     syncServerSettings({ ttsVoiceName: voiceName, ttsVoiceGender: g });
     tts.speak('你好，这是台湾国语标准发音。', {
       voiceName,
@@ -284,6 +479,9 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     if (googleTw) {
       setSelectedVoiceName(googleTw.name);
       tts.setVoiceByName(googleTw.name);
+      try {
+        localStorage.setItem('hsk_tts_voice_name', googleTw.name);
+      } catch {}
     }
     toast.info('Đã khôi phục cài đặt về chuẩn tối ưu ban đầu.');
   };
@@ -977,19 +1175,49 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
           </div>
 
           {/* Right Bottom Action Bar */}
-          <div className="px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-              <CheckCircle2 size={13} className="text-emerald-500" />
-              Mọi thay đổi đều được ghi nhớ tự động tức thì
-            </span>
+          <div className="px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {lastSavedTime ? (
+                <span className="text-[11.5px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Đã đồng bộ lúc {lastSavedTime}
+                </span>
+              ) : (
+                <span className="text-[11.5px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-500" />
+                  Tự động ghi nhớ và đồng bộ đám mây
+                </span>
+              )}
+            </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs"
-            >
-              Hoàn tất
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-2xs"
+              >
+                Đóng
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveAllSettings}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-sm shadow-emerald-600/25 btn-press"
+              >
+                {isSaving ? (
+                  <>
+                    <RefreshCw size={13} className="animate-spin" />
+                    <span>Đang lưu...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={13} />
+                    <span>Lưu cài đặt</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

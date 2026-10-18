@@ -20,8 +20,8 @@ export function getClientAuthHeaders(currentUser?: User | null): Record<string, 
 
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('hsk_session_token') || localStorage.getItem('hsk_auth_token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    if (token && token.trim() && token !== 'undefined' && token !== 'null') {
+      headers['Authorization'] = `Bearer ${token.trim()}`;
     }
   }
 

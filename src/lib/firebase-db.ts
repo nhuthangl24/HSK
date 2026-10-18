@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getFirebaseServices } from './firebase';
 import { VocabItem, Deck } from '@/types/vocabulary';
-import { User, AdminStats, AuditLog } from '@/types/auth';
+import { User, AdminStats, AuditLog, UserSettings } from '@/types/auth';
 import { INITIAL_DECKS } from '@/data/initial-decks';
 
 const COLLECTION_VOCAB = 'vocabulary';
@@ -609,6 +609,50 @@ export async function saveSystemConfigToFirestore(config: Record<string, unknown
   } catch (err) {
     console.error('Error saving system config to Firestore:', err);
     return false;
+  }
+}
+
+const COLLECTION_USER_SETTINGS = 'user_settings';
+
+/**
+ * Save user settings to Firestore
+ */
+export async function saveUserSettingsToFirestore(
+  userId: string,
+  settings: Partial<UserSettings>
+): Promise<boolean> {
+  const { db, isConfigured } = getFirebaseServices();
+  if (!db || !isConfigured || !userId) return false;
+
+  try {
+    const docRef = doc(db, COLLECTION_USER_SETTINGS, userId);
+    await setDoc(docRef, { ...settings, userId, updatedAt: new Date().toISOString() }, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('Notice saving user settings to Firestore:', err);
+    return false;
+  }
+}
+
+/**
+ * Load user settings from Firestore
+ */
+export async function loadUserSettingsFromFirestore(
+  userId: string
+): Promise<Partial<UserSettings> | null> {
+  const { db, isConfigured } = getFirebaseServices();
+  if (!db || !isConfigured || !userId) return null;
+
+  try {
+    const docRef = doc(db, COLLECTION_USER_SETTINGS, userId);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data() as Partial<UserSettings>;
+    }
+    return null;
+  } catch (err) {
+    console.warn('Notice loading user settings from Firestore:', err);
+    return null;
   }
 }
 

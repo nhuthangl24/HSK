@@ -198,8 +198,10 @@ export default function AdminSettingsTab() {
         );
       }
 
-      // 2. Save directly to Cloud Firestore (primary cross-device persistence)
-      await saveSystemConfigToFirestore(updatedConfig as unknown as Record<string, unknown>);
+      // 2. Save to Cloud Firestore (cross-device persistence)
+      await saveSystemConfigToFirestore(updatedConfig as unknown as Record<string, unknown>).catch(
+        (err) => console.warn('Firestore config save warning:', err)
+      );
 
       // 3. Save to server API
       const authHeaders = getClientAuthHeaders(user);
@@ -207,11 +209,11 @@ export default function AdminSettingsTab() {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify(updatedConfig),
-      });
+      }).catch(() => null);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.config) {
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data && data.success && data.config) {
           const finalConfig = { ...updatedConfig, ...data.config };
           setConfig(finalConfig);
           if (typeof window !== 'undefined') {

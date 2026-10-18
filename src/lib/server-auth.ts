@@ -109,7 +109,11 @@ export function extractToken(request: Request): string | null {
   // 1. Check Authorization header: Bearer <token>
   const authHeader = request.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7).trim();
+    const raw = authHeader.substring(7).trim();
+    if (raw && raw !== 'undefined' && raw !== 'null') {
+      const p = verifyToken(raw);
+      if (p) return raw;
+    }
   }
 
   // 2. Check Cookie: hsk_session_token=<token>
@@ -118,14 +122,18 @@ export function extractToken(request: Request): string | null {
     const cookies = cookieHeader.split(';').map((c) => c.trim());
     for (const c of cookies) {
       if (c.startsWith('hsk_session_token=')) {
-        return c.substring('hsk_session_token='.length).trim();
+        const raw = c.substring('hsk_session_token='.length).trim();
+        if (raw && raw !== 'undefined' && raw !== 'null') {
+          const p = verifyToken(raw);
+          if (p) return raw;
+        }
       }
     }
   }
 
   // 3. Check client authenticated user headers (Firebase client session bridge)
   const userId = request.headers.get('x-user-id') || request.headers.get('x-client-user-id');
-  if (userId && userId.trim()) {
+  if (userId && userId.trim() && userId.trim() !== 'undefined' && userId.trim() !== 'null') {
     const cleanId = userId.trim();
     const cleanEmail = (request.headers.get('x-user-email') || '').trim().toLowerCase();
     const rawRole = (request.headers.get('x-user-role') as UserRole) || 'user';
@@ -134,7 +142,9 @@ export function extractToken(request: Request): string | null {
       id: cleanId,
       email: cleanEmail,
       role: cleanRole,
-      name: request.headers.get('x-user-name') || cleanEmail.split('@')[0] || 'User',
+      name: request.headers.get('x-user-name')
+        ? decodeURIComponent(request.headers.get('x-user-name')!)
+        : cleanEmail.split('@')[0] || 'User',
       streakDays: 0,
       totalMastered: 0,
       createdAt: new Date().toISOString(),
