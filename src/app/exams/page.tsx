@@ -634,14 +634,22 @@ export default function ExamsPage() {
                 <BookOpen size={30} />
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Chưa tìm thấy đề thi phù hợp
+                {exams.length === 0 ? 'Kho đề thi hiện đang trống' : 'Chưa tìm thấy đề thi phù hợp'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                 {exams.length === 0
-                  ? 'Kho đề thi hiện đang trống. Admin chưa đăng tải đề thi nào hoặc đang trong quá trình cập nhật.'
+                  ? 'Toàn bộ đề thi đã được xóa sạch. Admin có thể vào trang Quản trị để đăng tải các bộ đề thi mới hoặc nạp lại bộ đề mẫu khi cần.'
                   : 'Không có bộ đề nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại của bạn.'}
               </p>
-              {(selectedLevel !== 'all' || selectedCategory !== 'all' || search) && (
+              {exams.length === 0 && user?.role === 'admin' ? (
+                <Link
+                  href="/admin"
+                  className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer btn-press"
+                >
+                  <Shield size={14} />
+                  <span>Đi đến Quản lý đề thi (Admin)</span>
+                </Link>
+              ) : (selectedLevel !== 'all' || selectedCategory !== 'all' || search) && (
                 <button
                   type="button"
                   onClick={() => {

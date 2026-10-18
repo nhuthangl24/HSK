@@ -1480,22 +1480,7 @@ const INITIAL_STARTER_EXAMS: ExamItem[] = [
   },
 ];
 
-function isExamDbInitialized(): boolean {
-  if (memoryStore.has('exams.json')) return true;
-  try {
-    ensureDataDir();
-    const filePath = path.join(DATA_DIR, 'exams.json');
-    return fs.existsSync(filePath);
-  } catch {
-    return false;
-  }
-}
-
 export function getAllExams(): ExamItem[] {
-  if (!isExamDbInitialized()) {
-    writeJsonFile('exams.json', INITIAL_STARTER_EXAMS);
-    return INITIAL_STARTER_EXAMS;
-  }
   const stored = readJsonFile<ExamItem[]>('exams.json', []);
   return Array.isArray(stored) ? stored : [];
 }
