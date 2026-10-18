@@ -39,6 +39,9 @@ import {
   RefreshCw,
   X,
   SlidersHorizontal,
+  Bookmark,
+  Check,
+  TrendingUp,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { ExamItem, ExamHskLevel } from '@/types/exam';
@@ -47,108 +50,108 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 
-const LEVEL_THEMES: Record<
-  string,
-  {
-    badge: string;
-    pillActive: string;
-    border: string;
-    bgSoft: string;
-    accent: string;
-    label: string;
-    words: string;
-    desc: string;
-  }
-> = {
+// Level Theme Config with Modern Color Palettes
+interface LevelTheme {
+  label: string;
+  sub: string;
+  badge: string;
+  cardBanner: string;
+  pillActive: string;
+  pillInactive: string;
+  accentText: string;
+  kanjiWatermark: string;
+}
+
+const LEVEL_THEMES: Record<string, LevelTheme> = {
   '1': {
-    badge: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-    pillActive: 'bg-emerald-600 text-white shadow-emerald-600/30 shadow-sm ring-2 ring-emerald-500/20',
-    border: 'hover:border-emerald-400 dark:hover:border-emerald-700',
-    bgSoft: 'bg-emerald-500/5',
-    accent: 'text-emerald-600 dark:text-emerald-400',
     label: 'HSK 1',
-    words: '300 từ',
-    desc: 'Cơ bản khởi đầu',
+    sub: '300 từ',
+    badge: 'bg-emerald-500 text-white',
+    cardBanner: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
+    pillActive: 'bg-emerald-600 text-white shadow-emerald-500/30 shadow-md ring-2 ring-emerald-500/30',
+    pillInactive: 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100/80',
+    accentText: 'text-emerald-600 dark:text-emerald-400',
+    kanjiWatermark: '一',
   },
   '2': {
-    badge: 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
-    pillActive: 'bg-cyan-600 text-white shadow-cyan-600/30 shadow-sm ring-2 ring-cyan-500/20',
-    border: 'hover:border-cyan-400 dark:hover:border-cyan-700',
-    bgSoft: 'bg-cyan-500/5',
-    accent: 'text-cyan-600 dark:text-cyan-400',
     label: 'HSK 2',
-    words: '600 từ',
-    desc: 'Giao tiếp thông dụng',
+    sub: '600 từ',
+    badge: 'bg-teal-500 text-white',
+    cardBanner: 'from-teal-500/20 via-teal-500/5 to-transparent',
+    pillActive: 'bg-teal-600 text-white shadow-teal-500/30 shadow-md ring-2 ring-teal-500/30',
+    pillInactive: 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border-teal-200/80 dark:border-teal-800/60 hover:bg-teal-100/80',
+    accentText: 'text-teal-600 dark:text-teal-400',
+    kanjiWatermark: '二',
   },
   '3': {
-    badge: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-    pillActive: 'bg-amber-600 text-white shadow-amber-600/30 shadow-sm ring-2 ring-amber-500/20',
-    border: 'hover:border-amber-400 dark:hover:border-amber-700',
-    bgSoft: 'bg-amber-500/5',
-    accent: 'text-amber-600 dark:text-amber-400',
     label: 'HSK 3',
-    words: '1.000 từ',
-    desc: 'Trung cấp nền tảng',
+    sub: '1.000 từ',
+    badge: 'bg-blue-500 text-white',
+    cardBanner: 'from-blue-500/20 via-blue-500/5 to-transparent',
+    pillActive: 'bg-blue-600 text-white shadow-blue-500/30 shadow-md ring-2 ring-blue-500/30',
+    pillInactive: 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60 hover:bg-blue-100/80',
+    accentText: 'text-blue-600 dark:text-blue-400',
+    kanjiWatermark: '三',
   },
   '4': {
-    badge: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-    pillActive: 'bg-blue-600 text-white shadow-blue-600/30 shadow-sm ring-2 ring-blue-500/20',
-    border: 'hover:border-blue-400 dark:hover:border-blue-700',
-    bgSoft: 'bg-blue-500/5',
-    accent: 'text-blue-600 dark:text-blue-400',
     label: 'HSK 4',
-    words: '1.200 từ',
-    desc: 'Du học & Công việc',
+    sub: '1.200 từ',
+    badge: 'bg-indigo-500 text-white',
+    cardBanner: 'from-indigo-500/20 via-indigo-500/5 to-transparent',
+    pillActive: 'bg-indigo-600 text-white shadow-indigo-500/30 shadow-md ring-2 ring-indigo-500/30',
+    pillInactive: 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100/80',
+    accentText: 'text-indigo-600 dark:text-indigo-400',
+    kanjiWatermark: '四',
   },
   '5': {
-    badge: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-    pillActive: 'bg-purple-600 text-white shadow-purple-600/30 shadow-sm ring-2 ring-purple-500/20',
-    border: 'hover:border-purple-400 dark:hover:border-purple-700',
-    bgSoft: 'bg-purple-500/5',
-    accent: 'text-purple-600 dark:text-purple-400',
     label: 'HSK 5',
-    words: '2.500 từ',
-    desc: 'Đọc báo, xem phim',
+    sub: '2.500 từ',
+    badge: 'bg-purple-500 text-white',
+    cardBanner: 'from-purple-500/20 via-purple-500/5 to-transparent',
+    pillActive: 'bg-purple-600 text-white shadow-purple-500/30 shadow-md ring-2 ring-purple-500/30',
+    pillInactive: 'bg-purple-50/70 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60 hover:bg-purple-100/80',
+    accentText: 'text-purple-600 dark:text-purple-400',
+    kanjiWatermark: '五',
   },
   '6': {
-    badge: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-    pillActive: 'bg-rose-600 text-white shadow-rose-600/30 shadow-sm ring-2 ring-rose-500/20',
-    border: 'hover:border-rose-400 dark:hover:border-rose-700',
-    bgSoft: 'bg-rose-500/5',
-    accent: 'text-rose-600 dark:text-rose-400',
     label: 'HSK 6',
-    words: '5.000 từ',
-    desc: 'Học thuật đỉnh cao',
-  },
-  HSKK: {
-    badge: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
-    pillActive: 'bg-indigo-600 text-white shadow-indigo-600/30 shadow-sm ring-2 ring-indigo-500/20',
-    border: 'hover:border-indigo-400 dark:hover:border-indigo-700',
-    bgSoft: 'bg-indigo-500/5',
-    accent: 'text-indigo-600 dark:text-indigo-400',
-    label: 'HSKK',
-    words: 'Khẩu ngữ',
-    desc: 'Kỳ thi nói chuẩn hóa',
+    sub: '5.000 từ',
+    badge: 'bg-rose-500 text-white',
+    cardBanner: 'from-rose-500/20 via-rose-500/5 to-transparent',
+    pillActive: 'bg-rose-600 text-white shadow-rose-500/30 shadow-md ring-2 ring-rose-500/30',
+    pillInactive: 'bg-rose-50/70 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60 hover:bg-rose-100/80',
+    accentText: 'text-rose-600 dark:text-rose-400',
+    kanjiWatermark: '六',
   },
   '7': {
-    badge: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700',
-    pillActive: 'bg-amber-600 text-white shadow-amber-600/30 shadow-sm ring-2 ring-amber-500/20',
-    border: 'hover:border-amber-400 dark:hover:border-amber-700',
-    bgSoft: 'bg-amber-500/5',
-    accent: 'text-amber-600 dark:text-amber-400',
     label: 'HSK 7-9',
-    words: '11.000+ từ',
-    desc: 'Cao cấp chuyên gia',
+    sub: 'Cao cấp',
+    badge: 'bg-amber-500 text-white',
+    cardBanner: 'from-amber-500/20 via-amber-500/5 to-transparent',
+    pillActive: 'bg-amber-600 text-white shadow-amber-500/30 shadow-md ring-2 ring-amber-500/30',
+    pillInactive: 'bg-amber-50/70 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80',
+    accentText: 'text-amber-600 dark:text-amber-400',
+    kanjiWatermark: '七',
   },
   '7-9': {
-    badge: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700',
-    pillActive: 'bg-amber-600 text-white shadow-amber-600/30 shadow-sm ring-2 ring-amber-500/20',
-    border: 'hover:border-amber-400 dark:hover:border-amber-700',
-    bgSoft: 'bg-amber-500/5',
-    accent: 'text-amber-600 dark:text-amber-400',
     label: 'HSK 7-9',
-    words: '11.000+ từ',
-    desc: 'Cao cấp chuyên gia',
+    sub: 'Cao cấp',
+    badge: 'bg-amber-500 text-white',
+    cardBanner: 'from-amber-500/20 via-amber-500/5 to-transparent',
+    pillActive: 'bg-amber-600 text-white shadow-amber-500/30 shadow-md ring-2 ring-amber-500/30',
+    pillInactive: 'bg-amber-50/70 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80',
+    accentText: 'text-amber-600 dark:text-amber-400',
+    kanjiWatermark: '七',
+  },
+  HSKK: {
+    label: 'HSKK',
+    sub: 'Khẩu ngữ',
+    badge: 'bg-violet-600 text-white',
+    cardBanner: 'from-violet-500/20 via-violet-500/5 to-transparent',
+    pillActive: 'bg-violet-600 text-white shadow-violet-500/30 shadow-md ring-2 ring-violet-500/30',
+    pillInactive: 'bg-violet-50/70 dark:bg-violet-950/40 text-violet-800 dark:text-violet-300 border-violet-200/80 dark:border-violet-800/60 hover:bg-violet-100/80',
+    accentText: 'text-violet-600 dark:text-violet-400',
+    kanjiWatermark: '口',
   },
 };
 
@@ -249,19 +252,14 @@ export default function ExamsPage() {
         audioRef.current.playbackRate = playbackRate;
         audioRef.current.play().catch(() => setIsPlaying(false));
       }
-      fetch('/api/exams', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: exam.id, action: 'increment', type: 'view' }),
-      }).catch(() => {});
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    setCurrentTime(val);
+    const time = parseFloat(e.target.value);
+    setCurrentTime(time);
     if (audioRef.current) {
-      audioRef.current.currentTime = val;
+      audioRef.current.currentTime = time;
     }
   };
 
@@ -272,30 +270,32 @@ export default function ExamsPage() {
   };
 
   const handleSpeedChange = () => {
-    const rates = [0.8, 1.0, 1.2, 1.5];
-    const nextIdx = (rates.indexOf(playbackRate) + 1) % rates.length;
-    const nextRate = rates[nextIdx];
-    setPlaybackRate(nextRate);
+    const speeds = [0.75, 1.0, 1.25, 1.5];
+    const nextIdx = (speeds.indexOf(playbackRate) + 1) % speeds.length;
+    const nextSpeed = speeds[nextIdx];
+    setPlaybackRate(nextSpeed);
     if (audioRef.current) {
-      audioRef.current.playbackRate = nextRate;
+      audioRef.current.playbackRate = nextSpeed;
     }
   };
 
-  const formatTime = (secs: number) => {
-    if (isNaN(secs) || secs < 0) return '00:00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Open resource (PDF, answer)
-  const handleOpenResource = (exam: ExamItem, url?: string, label?: string) => {
+  // Open PDF / Answer
+  const handleOpenResource = (exam: ExamItem, url?: string, label = 'Tài liệu') => {
     if (!url) {
-      toast.warning(`Tài liệu ${label || ''} đang được cập nhật.`);
+      toast.error(`Chưa có file ${label} cho đề thi này.`);
       return;
     }
+
+    // Increment download/view count
     fetch('/api/exams', {
-      method: 'PATCH',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: exam.id, action: 'increment', type: 'download' }),
     }).catch(() => {});
@@ -358,91 +358,89 @@ export default function ExamsPage() {
       if (!a.isPinned && b.isPinned) return 1;
 
       if (sortBy === 'level_asc') {
-        const la = typeof a.hskLevel === 'number' ? a.hskLevel : 7;
-        const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 7;
+        const la = typeof a.hskLevel === 'number' ? a.hskLevel : 99;
+        const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 99;
         return la - lb;
       }
       if (sortBy === 'level_desc') {
-        const la = typeof a.hskLevel === 'number' ? a.hskLevel : 7;
-        const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 7;
+        const la = typeof a.hskLevel === 'number' ? a.hskLevel : 99;
+        const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 99;
         return lb - la;
       }
       if (sortBy === 'views') {
-        return (b.viewsCount || 0) + (b.downloadsCount || 0) - ((a.viewsCount || 0) + (a.downloadsCount || 0));
+        return (b.viewsCount + b.downloadsCount) - (a.viewsCount + a.downloadsCount);
       }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 
     return res;
   }, [exams, selectedLevel, selectedCategory, search, sortBy]);
 
-  // Level statistics
+  // Counts for tabs
   const levelCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: exams.length };
-    exams.forEach((e) => {
+    const map: Record<string, number> = {};
+    for (const e of exams) {
       const key = String(e.hskLevel);
-      counts[key] = (counts[key] || 0) + 1;
-    });
-    return counts;
+      map[key] = (map[key] || 0) + 1;
+    }
+    return map;
   }, [exams]);
 
-  const totalAudioCount = useMemo(() => exams.filter((e) => e.audioUrl).length, [exams]);
+  const totalAudioCount = useMemo(() => exams.filter((e) => Boolean(e.audioUrl)).length, [exams]);
   const totalOfficialCount = useMemo(() => exams.filter((e) => e.category === 'official').length, [exams]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col selection:bg-emerald-500/20">
-      {/* 1. Global Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-8 py-3 transition-colors shadow-2xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Back button & Brand */}
-          <div className="flex items-center gap-3 sm:gap-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 font-sans selection:bg-emerald-500 selection:text-white">
+      {/* 1. Sleek Floating Header */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Logo & Navigation */}
+          <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all btn-press shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-900 dark:hover:bg-zinc-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-2xs btn-press"
+              title="Quay lại bàn học từ vựng"
             >
-              <ArrowLeft size={15} />
-              <span>Bàn học</span>
+              <ArrowLeft size={14} />
+              <span className="hidden sm:inline">Bàn học</span>
             </Link>
 
-            <div className="h-5 w-px bg-slate-200 dark:border-zinc-800 hidden sm:block" />
+            <div className="h-5 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
 
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
                 <GraduationCap size={18} />
               </div>
-              <div className="hidden sm:block">
-                <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">
-                  HSK Master
-                </span>
-                <span className="text-xs text-slate-400 font-medium ml-2">
-                  / Kho Đề Thi Tuyển Chọn
+              <div className="leading-tight">
+                <span className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  HSK Master <span className="text-slate-400 font-normal text-xs hidden sm:inline">/ Kho Đề Tuyển Chọn</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2">
             {/* View Mode Toggle */}
-            <div className="flex items-center p-1 bg-slate-100 dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs">
+            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-bold'
+                    ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
-                title="Dạng thẻ lưới"
+                title="Dạng lưới thẻ"
               >
                 <LayoutGrid size={15} />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'list'
-                    ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs font-bold'
+                    ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
                 title="Dạng danh sách gọn"
@@ -455,16 +453,16 @@ export default function ExamsPage() {
             <button
               type="button"
               onClick={() => setTheme(effectiveTheme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-              title="Chuyển chế độ Sáng / Tối"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-900 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-zinc-800 transition-all"
+              title="Chuyển chế độ sáng/tối"
             >
-              {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              {effectiveTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             {/* Notification Bell */}
             <NotificationBell />
 
-            {/* Admin shortcut if admin */}
+            {/* Admin Link */}
             {user?.role === 'admin' && (
               <Link
                 href="/admin"
@@ -478,79 +476,142 @@ export default function ExamsPage() {
         </div>
       </header>
 
-      {/* 2. Hero Header Section */}
-      <section className="bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-zinc-950 dark:via-zinc-950 dark:to-black border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-8 pt-8 pb-10">
-        <div className="max-w-7xl mx-auto">
-          {/* Headline & Badges */}
+      {/* 2. Modern Hero Section with Chinese Calligraphy Watermark */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50/50 to-slate-100/80 dark:from-zinc-950 dark:via-zinc-950/80 dark:to-black border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-8 pt-10 pb-12">
+        {/* Subtle Decorative Calligraphy Watermark */}
+        <div className="absolute right-4 top-2 select-none pointer-events-none text-[120px] sm:text-[180px] font-black tracking-widest text-slate-900/[0.025] dark:text-white/[0.03] leading-none">
+          汉语水平
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold mb-4">
-              <Sparkles size={13} className="text-emerald-600 dark:text-emerald-400" />
+            {/* Top Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent dark:from-emerald-950/60 dark:via-teal-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black mb-4 shadow-2xs">
+              <Sparkles size={13} className="text-emerald-600 dark:text-emerald-400 animate-pulse" />
               <span>Kho Tài Liệu Luyện Thi HSK Chuẩn Quốc Tế</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              Kho Đề Thi HSK Tuyển Chọn & Đề Thử BLCU
+            {/* Headline */}
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+              Kho Đề Thi HSK Tuyển Chọn <br />
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                & Đề Thử Ma Trận BLCU
+              </span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed">
-              Tuyển tập các bộ đề thi thật HSK 1 – 6 chính thức (Hanban / CTI) cùng các bộ đề mô phỏng chuẩn ma trận đề thi mới từ Đại học Ngôn ngữ Bắc Kinh (BLCU). Đầy đủ file nghe Audio MP3 tốc độ chuẩn và bảng đáp án giải thích chi tiết.
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-3.5 leading-relaxed font-normal">
+              Tuyển tập trọn bộ các đề thi thật chính thức (CTI / Hanban) và chuỗi đề thi mô phỏng từ Đại học Ngôn ngữ Bắc Kinh (BLCU). Đầy đủ bản in A4 sắc nét, file nghe Audio MP3 phòng thi và đáp án chi tiết.
             </p>
 
-            {/* Quick Metrics */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 mt-5 text-xs text-slate-600 dark:text-slate-300 font-semibold">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-2xs">
-                <BookOpen size={14} className="text-emerald-600" />
-                <span>{exams.length} bộ đề trong kho</span>
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-2xs">
-                <Award size={14} className="text-blue-600" />
-                <span>{totalOfficialCount} đề thi thật chính thức</span>
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-2xs">
-                <Headphones size={14} className="text-amber-600" />
-                <span>{totalAudioCount} đề kèm Audio MP3 trực tiếp</span>
-              </span>
+            {/* 4 Sleek Glassmorphic Metric Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 mt-6">
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-slate-200/90 dark:border-zinc-800/90 shadow-2xs">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-lg sm:text-xl">
+                  <BookOpen size={18} />
+                  <span>{exams.length}</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Bộ đề trong kho</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-slate-200/90 dark:border-zinc-800/90 shadow-2xs">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black text-lg sm:text-xl">
+                  <Award size={18} />
+                  <span>{totalOfficialCount}</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Đề thi thật CTI</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-slate-200/90 dark:border-zinc-800/90 shadow-2xs">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-black text-lg sm:text-xl">
+                  <Headphones size={18} />
+                  <span>{totalAudioCount}</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Kèm Audio MP3</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-slate-200/90 dark:border-zinc-800/90 shadow-2xs">
+                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-black text-lg sm:text-xl">
+                  <CheckCircle2 size={18} />
+                  <span>100%</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Đề thật có đáp án</div>
+              </div>
             </div>
           </div>
 
-          {/* Search Box */}
-          <div className="mt-8 max-w-2xl relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm đề thi theo cấp độ HSK, năm phát hành, đơn vị ra đề (vd: HSK 4, BLCU 2024)..."
-              className="w-full pl-11 pr-10 py-3.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
+          {/* Elevated Search Bar */}
+          <div className="mt-8 max-w-3xl">
+            <div className="relative group">
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Tìm đề thi theo mã đề, cấp độ HSK, BLCU, TOCFL, Khối D4..."
+                className="w-full pl-11 pr-10 py-3.5 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all placeholder:text-slate-400"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
 
-          {/* Level Tabs (HSK 1 - 6 & HSKK) */}
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {/* Quick search tags */}
+            <div className="flex flex-wrap items-center gap-1.5 mt-2.5 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-[11px]">Gợi ý tìm nhanh:</span>
+              {[
+                { label: 'HSK 3 BLCUP', query: 'BLCUP HSK 3' },
+                { label: 'HSK 5 Hanban', query: 'HSK 5' },
+                { label: 'HSK 6', query: 'HSK 6' },
+                { label: 'HSK 7–9 Cao cấp', query: 'HSK 7–9' },
+                { label: 'HSKK Khẩu ngữ', query: 'HSKK' },
+                { label: 'THPT Khối D4', query: 'D4' },
+                { label: 'BCT Thương mại', query: 'BCT' },
+              ].map((tag) => (
+                <button
+                  key={tag.label}
+                  type="button"
+                  onClick={() => setSearch(tag.query)}
+                  className="px-2.5 py-0.5 rounded-lg bg-white/70 dark:bg-zinc-900/70 border border-slate-200 dark:border-zinc-800 hover:border-emerald-500 text-[11px] font-medium text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Level Filter Tabs (Colorful & Tactile) */}
+      <section className="sticky top-16 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 py-3 px-4 sm:px-8 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            {/* All Levels */}
             <button
               type="button"
               onClick={() => setSelectedLevel('all')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border ${
+              className={`px-4 py-2 rounded-2xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border btn-press ${
                 selectedLevel === 'all'
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-xs'
-                  : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-transparent shadow-md'
+                  : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-300 border-slate-200/90 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <span>Tất cả cấp độ</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full font-extrabold bg-slate-200/60 dark:bg-zinc-700">
+              <span>Tất cả</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full font-black bg-slate-200/70 dark:bg-zinc-700">
                 {exams.length}
               </span>
             </button>
 
+            {/* Individual HSK Levels */}
             {[
               { id: '1', label: 'HSK 1', sub: '300 từ' },
               { id: '2', label: 'HSK 2', sub: '600 từ' },
@@ -563,28 +624,22 @@ export default function ExamsPage() {
             ].map((lvl) => {
               const isActive = selectedLevel === lvl.id;
               const count = levelCounts[lvl.id] || 0;
-              const theme = LEVEL_THEMES[lvl.id];
+              const theme = LEVEL_THEMES[lvl.id] || LEVEL_THEMES['1'];
 
               return (
                 <button
                   key={lvl.id}
                   type="button"
                   onClick={() => setSelectedLevel(lvl.id)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border btn-press ${
-                    isActive
-                      ? theme?.pillActive || 'bg-slate-900 text-white'
-                      : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                  className={`px-3.5 py-1.5 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 border btn-press ${
+                    isActive ? theme.pillActive : theme.pillInactive
                   }`}
                 >
-                  <div className="text-left">
-                    <span className="font-bold">{lvl.label}</span>
-                  </div>
+                  <span className="font-extrabold">{lvl.label}</span>
                   {count > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-500'
+                      className={`text-[10.5px] px-1.5 py-0.2 rounded-full font-black ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-black/5 dark:bg-white/10'
                       }`}
                     >
                       {count}
@@ -594,60 +649,57 @@ export default function ExamsPage() {
               );
             })}
           </div>
+
+          {/* Quick Counter */}
+          <div className="hidden lg:block text-xs font-semibold text-slate-400 dark:text-zinc-500 whitespace-nowrap">
+            Hiển thị <span className="text-slate-800 dark:text-zinc-200 font-bold">{filteredExams.length}</span> bộ đề
+          </div>
         </div>
       </section>
 
-      {/* 3. Filter Toolbar & Results */}
-      <section className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 flex-1">
-        {/* Sub-toolbar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-6 border-b border-slate-200/80 dark:border-zinc-800/80">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 p-1 rounded-2xl border border-slate-200/80 dark:border-zinc-800 text-xs overflow-x-auto scrollbar-none">
+      {/* 4. Secondary Filter Toolbar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-28">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-200/70 dark:border-zinc-800/70">
+          {/* Categories Pill Buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
             {[
               { id: 'all', label: 'Tất cả tài liệu' },
-              { id: 'official', label: 'Đề thi thật (Hanban/CTI)', icon: Award },
-              { id: 'mock', label: 'Đề thi thử (BLCU)', icon: BookOpen },
-              { id: 'audio', label: `Kèm Audio MP3 (${totalAudioCount})`, icon: Headphones },
-            ].map((cat) => {
-              const Icon = cat.icon;
-              const isActive = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {Icon && <Icon size={13} />}
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
+              { id: 'official', label: '🏛️ Đề thi thật (Hanban/CTI)' },
+              { id: 'mock', label: '📘 Đề thi thử (BLCU)' },
+              { id: 'audio', label: `🎧 Có Audio MP3 (${totalAudioCount})` },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs'
+                    : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-300 border border-slate-200/90 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
-          {/* Sorter */}
-          <div className="flex items-center gap-2 justify-between sm:justify-end">
-            <span className="text-xs text-slate-400 font-medium whitespace-nowrap hidden sm:inline">
-              Sắp xếp theo:
-            </span>
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 font-semibold hidden sm:inline">Sắp xếp:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1.5 text-xs font-semibold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer shadow-2xs outline-none"
+              className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer shadow-2xs outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
               <option value="newest">Mới cập nhật</option>
               <option value="level_asc">Cấp độ HSK: 1 → 6</option>
               <option value="level_desc">Cấp độ HSK: 6 → 1</option>
-              <option value="views">Lượt xem & tải nhiều</option>
+              <option value="views">Lượt xem & tải nhiều nhất</option>
             </select>
           </div>
         </div>
 
-        {/* Exam Cards Grid or List */}
+        {/* 5. Exam Cards Container */}
         <div className="pt-6">
           {loading && exams.length === 0 ? (
             <div className="h-72 flex flex-col items-center justify-center text-slate-400">
@@ -657,7 +709,7 @@ export default function ExamsPage() {
               </p>
             </div>
           ) : filteredExams.length === 0 ? (
-            <div className="h-80 flex flex-col items-center justify-center text-center max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
+            <div className="h-80 flex flex-col items-center justify-center text-center max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm">
               <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 flex items-center justify-center mb-4">
                 <BookOpen size={30} />
               </div>
@@ -666,18 +718,10 @@ export default function ExamsPage() {
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                 {exams.length === 0
-                  ? 'Toàn bộ đề thi đã được xóa sạch. Admin có thể vào trang Quản trị để đăng tải các bộ đề thi mới hoặc nạp lại bộ đề mẫu khi cần.'
+                  ? 'Toàn bộ đề thi đã được xóa sạch. Admin có thể nạp lại bộ đề chuẩn khi cần.'
                   : 'Không có bộ đề nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại của bạn.'}
               </p>
-              {exams.length === 0 && user?.role === 'admin' ? (
-                <Link
-                  href="/admin"
-                  className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer btn-press"
-                >
-                  <Shield size={14} />
-                  <span>Đi đến Quản lý đề thi (Admin)</span>
-                </Link>
-              ) : (selectedLevel !== 'all' || selectedCategory !== 'all' || search) && (
+              {(selectedLevel !== 'all' || selectedCategory !== 'all' || search) && (
                 <button
                   type="button"
                   onClick={() => {
@@ -692,8 +736,10 @@ export default function ExamsPage() {
               )}
             </div>
           ) : viewMode === 'grid' ? (
-            /* GRID VIEW (3 Columns on large screens) */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-28">
+            /* ========================================================================= */
+            /* REDESIGNED GRID VIEW: ELEGANT OFFICIAL EXAM TEST BOOKLETS                 */
+            /* ========================================================================= */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredExams.map((exam) => {
                 const isCurrentPlaying = activeAudioExam?.id === exam.id && isPlaying;
                 const theme = LEVEL_THEMES[String(exam.hskLevel)] || LEVEL_THEMES['1'];
@@ -701,93 +747,109 @@ export default function ExamsPage() {
                 return (
                   <div
                     key={exam.id}
-                    className={`bg-white dark:bg-zinc-900 rounded-3xl border transition-all duration-300 flex flex-col justify-between group shadow-2xs hover:shadow-lg relative overflow-hidden ${
-                      exam.isPinned
-                        ? 'border-amber-300 dark:border-amber-700/80 ring-1 ring-amber-300/40 dark:ring-amber-800/30'
-                        : 'border-slate-200/90 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
-                    }`}
+                    className="group relative bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/90 dark:border-zinc-800/90 hover:border-slate-300 dark:hover:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden"
                   >
-                    {/* Top Tint Bar */}
-                    <div className={`h-1.5 w-full ${exam.isPinned ? 'bg-amber-400' : 'bg-transparent'}`} />
+                    {/* Top Decorative Gradient Banner & Watermark */}
+                    <div
+                      className={`relative px-5 pt-4 pb-3 bg-gradient-to-r ${theme.cardBanner} border-b border-slate-100 dark:border-zinc-800/70 overflow-hidden`}
+                    >
+                      {/* Chinese Kanji Watermark in Banner */}
+                      <span className="absolute -right-1 -bottom-3 select-none pointer-events-none text-6xl font-black text-slate-900/[0.04] dark:text-white/[0.05]">
+                        {theme.kanjiWatermark}
+                      </span>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      {/* Top Meta Header */}
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {/* Level Badge */}
-                            <span
-                              className={`text-xs font-black px-2.5 py-1 rounded-xl border tracking-wide shadow-2xs ${theme.badge}`}
-                            >
-                              {formatLevelLabel(exam.hskLevel)}
-                            </span>
+                      {/* Top Badges Row */}
+                      <div className="relative z-10 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Level Badge */}
+                          <span
+                            className={`text-xs font-black px-2.5 py-1 rounded-xl tracking-wider shadow-xs ${theme.badge}`}
+                          >
+                            {formatLevelLabel(exam.hskLevel)}
+                          </span>
 
-                            {/* Category Badge */}
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-zinc-700">
-                              {exam.category === 'official' ? (
-                                <>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                  <span>Đề thi thật</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                  <span>Đề thi thử</span>
-                                </>
-                              )}
-                            </span>
-
-                            {/* Year */}
-                            {exam.year && (
-                              <span className="text-[10.5px] font-bold text-slate-400 font-mono">
-                                {exam.year}
-                              </span>
+                          {/* Category Tag */}
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-zinc-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-zinc-700 shadow-2xs">
+                            {exam.category === 'official' ? (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>Chính thức</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                <span>Đề thử</span>
+                              </>
                             )}
+                          </span>
 
-                            {/* Featured Pin */}
-                            {exam.isPinned && (
-                              <span className="inline-flex items-center gap-1 text-[10.5px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800">
-                                <Sparkles size={11} className="fill-amber-500 text-amber-500" /> Tuyển chọn
-                              </span>
-                            )}
-                          </div>
+                          {/* Year */}
+                          {exam.year && (
+                            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 font-mono">
+                              {exam.year}
+                            </span>
+                          )}
+                        </div>
 
-                          {/* Share button */}
+                        {/* Top Right: Pinned Badge & Share */}
+                        <div className="flex items-center gap-1">
+                          {exam.isPinned && (
+                            <span className="inline-flex items-center gap-1 text-[10.5px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/30">
+                              <Sparkles size={11} className="fill-amber-500 text-amber-500" />
+                              <span>Tuyển chọn</span>
+                            </span>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => handleOpenShare(exam)}
-                            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl hover:bg-white/80 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                             title="Chia sẻ link & Mã QR"
                           >
-                            <Share2 size={15} />
+                            <Share2 size={14} />
                           </button>
                         </div>
+                      </div>
+                    </div>
 
+                    {/* Card Content */}
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
                         {/* Title */}
-                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
+                        <h3 className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
                           {exam.title}
                         </h3>
 
-                        {/* Specs Chips */}
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-2.5 border-t border-slate-100 dark:border-zinc-800/80">
+                        {/* Specs Pill Row */}
+                        <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80">
                           {exam.durationMinutes && (
-                            <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
+                            <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
                               <Clock size={12} className="text-slate-400" />
                               <span>{exam.durationMinutes} phút</span>
                             </span>
                           )}
+
                           {exam.questionCount && (
-                            <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
+                            <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
                               <FileText size={12} className="text-slate-400" />
                               <span>{exam.questionCount} câu</span>
                             </span>
                           )}
-                          {exam.source && (
-                            <span className="text-slate-400 truncate max-w-[160px]" title={exam.source}>
-                              🏛️ {exam.source}
+
+                          {exam.audioUrl && (
+                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                              <Headphones size={12} />
+                              <span>Có Audio</span>
                             </span>
                           )}
                         </div>
+
+                        {/* Source Label */}
+                        {exam.source && (
+                          <div className="text-[11.5px] text-slate-400 dark:text-zinc-500 mt-2 truncate">
+                            🏛️ {exam.source}
+                          </div>
+                        )}
 
                         {/* Description */}
                         {exam.description && (
@@ -797,17 +859,17 @@ export default function ExamsPage() {
                         )}
                       </div>
 
-                      {/* Action Bar */}
-                      <div className="pt-4 mt-4 border-t border-slate-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
+                      {/* Card Action Bar */}
+                      <div className="pt-4 mt-4 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
                         {/* Audio Button */}
                         {exam.audioUrl ? (
                           <button
                             type="button"
                             onClick={() => togglePlayAudio(exam)}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs btn-press ${
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs btn-press ${
                               isCurrentPlaying
                                 ? 'bg-emerald-600 text-white ring-2 ring-emerald-500/30'
-                                : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800'
+                                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/90 border border-emerald-200 dark:border-emerald-800/60'
                             }`}
                           >
                             {isCurrentPlaying ? (
@@ -821,25 +883,25 @@ export default function ExamsPage() {
                               </>
                             ) : (
                               <>
-                                <Headphones size={14} className="text-emerald-600 dark:text-emerald-400" />
+                                <Play size={12} className="fill-current" />
                                 <span>Nghe Audio</span>
                               </>
                             )}
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Chưa có file nghe</span>
+                          <span className="text-[11px] text-slate-400 italic">Chỉ có đề đọc</span>
                         )}
 
-                        {/* Documents */}
+                        {/* PDF & Answer Buttons */}
                         <div className="flex items-center gap-1.5">
                           {exam.pdfUrl && (
                             <button
                               type="button"
                               onClick={() => handleOpenResource(exam, exam.pdfUrl, 'Đề thi PDF')}
-                              className="flex items-center gap-1 px-3 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs btn-press"
-                              title="Tải file đề thi PDF A4 chuẩn"
+                              className="inline-flex items-center gap-1 px-3 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs btn-press"
+                              title="Tải hoặc xem đề thi PDF A4"
                             >
-                              <Download size={13} />
+                              <Download size={12} />
                               <span>Đề PDF</span>
                             </button>
                           )}
@@ -848,10 +910,10 @@ export default function ExamsPage() {
                             <button
                               type="button"
                               onClick={() => handleOpenResource(exam, exam.answerUrl, 'Đáp án')}
-                              className="flex items-center gap-1 px-2.5 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-zinc-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors btn-press"
-                              title="Xem đáp án và giải thích"
+                              className="inline-flex items-center gap-1 px-2.5 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-zinc-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors btn-press"
+                              title="Xem bảng đáp án đối chiếu"
                             >
-                              <KeyRound size={13} />
+                              <KeyRound size={12} />
                               <span>Đáp án</span>
                             </button>
                           )}
@@ -863,8 +925,10 @@ export default function ExamsPage() {
               })}
             </div>
           ) : (
-            /* COMPACT LIST VIEW */
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/90 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800/80 shadow-2xs overflow-hidden pb-24">
+            /* ========================================================================= */
+            /* REDESIGNED LIST VIEW: CLEAN & HIGH-DENSITY TABLE ROWS                     */
+            /* ========================================================================= */
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/90 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800/80 shadow-sm overflow-hidden">
               {filteredExams.map((exam) => {
                 const isCurrentPlaying = activeAudioExam?.id === exam.id && isPlaying;
                 const theme = LEVEL_THEMES[String(exam.hskLevel)] || LEVEL_THEMES['1'];
@@ -877,31 +941,31 @@ export default function ExamsPage() {
                     {/* Left Details */}
                     <div className="flex items-start gap-3.5 min-w-0 flex-1">
                       <span
-                        className={`text-xs font-black px-3 py-1.5 rounded-xl border shrink-0 text-center min-w-[64px] ${theme.badge}`}
+                        className={`text-xs font-black px-3 py-1.5 rounded-xl border shrink-0 text-center min-w-[70px] shadow-2xs ${theme.badge}`}
                       >
                         {formatLevelLabel(exam.hskLevel)}
                       </span>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">
                             {exam.title}
                           </h4>
                           {exam.isPinned && (
-                            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800 shrink-0">
-                              Nổi bật
+                            <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.2 rounded-md border border-amber-500/30 shrink-0">
+                              Tuyển chọn
                             </span>
                           )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
-                            {exam.category === 'official' ? 'Đề thi thật Hanban' : 'Đề thi thử BLCU'}
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                            {exam.category === 'official' ? '🏛️ Đề thi thật CTI' : '📘 Đề thi thử BLCU'}
                           </span>
                           {exam.year && <span>• Năm {exam.year}</span>}
                           {exam.durationMinutes && <span>• {exam.durationMinutes} phút</span>}
                           {exam.questionCount && <span>• {exam.questionCount} câu</span>}
-                          {exam.source && <span className="truncate max-w-[180px]">• {exam.source}</span>}
+                          {exam.source && <span className="truncate max-w-[200px]">• {exam.source}</span>}
                         </div>
                       </div>
                     </div>
@@ -918,7 +982,7 @@ export default function ExamsPage() {
                               : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800/60'
                           }`}
                         >
-                          {isCurrentPlaying ? <Pause size={13} /> : <Headphones size={13} />}
+                          {isCurrentPlaying ? <Pause size={13} /> : <Play size={13} className="fill-current" />}
                           <span>{isCurrentPlaying ? 'Tạm dừng' : 'Nghe MP3'}</span>
                         </button>
                       )}
@@ -927,7 +991,7 @@ export default function ExamsPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenResource(exam, exam.pdfUrl, 'Đề thi PDF')}
-                          className="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1"
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1 shadow-2xs"
                           title="Tải PDF"
                         >
                           <Download size={13} />
@@ -964,25 +1028,34 @@ export default function ExamsPage() {
         </div>
       </section>
 
-      {/* 4. Sticky Floating Audio Player Bar */}
+      {/* 5. Sticky Floating Audio Player Bar (Glassmorphic) */}
       {activeAudioExam && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 dark:bg-black/95 backdrop-blur-md text-white border-t border-slate-800/80 px-4 sm:px-8 py-3.5 shadow-2xl animate-slideUp">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl text-white border-t border-white/10 px-4 sm:px-8 py-3.5 shadow-2xl animate-slideUp">
           <audio ref={audioRef} />
 
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             {/* Track Info */}
-            <div className="flex items-center gap-3 min-w-0 w-full md:w-auto md:max-w-sm">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shrink-0 shadow-sm">
+            <div className="flex items-center gap-3 min-w-0 w-full md:w-auto md:max-w-md">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shrink-0 shadow-md shadow-emerald-500/20">
                 <Headphones size={18} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs sm:text-sm font-bold truncate text-white">
                   {activeAudioExam.title}
                 </div>
-                <div className="text-[11px] text-emerald-400/90 flex items-center gap-1.5 font-mono">
-                  <span>{formatLevelLabel(activeAudioExam.hskLevel)} (Phần nghe)</span>
+                <div className="text-[11px] text-emerald-400 flex items-center gap-2 font-mono">
+                  <span>{formatLevelLabel(activeAudioExam.hskLevel)}</span>
                   <span>•</span>
                   <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  {activeAudioExam.pdfUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenResource(activeAudioExam, activeAudioExam.pdfUrl, 'Đề thi PDF')}
+                      className="underline text-slate-300 hover:text-white cursor-pointer ml-1"
+                    >
+                      Mở đề PDF
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1026,7 +1099,7 @@ export default function ExamsPage() {
                 max={duration || 100}
                 value={currentTime}
                 onChange={handleSeek}
-                className="w-28 sm:w-64 accent-emerald-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                className="w-28 sm:w-60 accent-emerald-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
               />
 
               {/* Speed Selector */}
@@ -1057,7 +1130,7 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* 5. Share Modal with QR Code */}
+      {/* 6. Share Modal with QR Code */}
       {shareModalExam && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-fadeIn">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-zinc-800 max-w-sm w-full p-6 text-center animate-scaleIn">
