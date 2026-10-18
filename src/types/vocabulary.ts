@@ -112,6 +112,7 @@ export type TableColumnId =
   | 'hanzi'
   | 'pinyin'
   | 'meaning'
+  | 'stroke_order'
   | 'hanzi_practice'
   | 'hanzi_status'
   | 'example'

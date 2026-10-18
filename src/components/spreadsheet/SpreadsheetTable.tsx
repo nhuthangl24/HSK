@@ -23,6 +23,7 @@ interface SpreadsheetTableProps {
   onUpdateItem: (item: VocabItem) => void;
   onDeleteItem: (item: VocabItem) => void;
   onEditItem: (item: VocabItem) => void;
+  onOpenStrokeOrder?: (item: VocabItem) => void;
   onClearFilters: () => void;
   isGuest?: boolean;
   onRequireAuth?: () => void;
@@ -43,6 +44,7 @@ export function SpreadsheetTable({
   onUpdateItem,
   onDeleteItem,
   onEditItem,
+  onOpenStrokeOrder,
   onClearFilters,
   isGuest,
   onRequireAuth,
@@ -249,6 +251,7 @@ export function SpreadsheetTable({
                   onUpdate={onUpdateItem}
                   onDeleteRequest={onDeleteItem}
                   onEditRequest={onEditItem}
+                  onOpenStrokeOrder={onOpenStrokeOrder}
                   isGuest={isGuest}
                   onRequireAuth={onRequireAuth}
                 />

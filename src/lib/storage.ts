@@ -10,6 +10,7 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'hanzi', label: 'Từ mới (Chữ Hán)', width: 140, minWidth: 100, visible: true, align: 'center' },
   { id: 'pinyin', label: 'Phiên âm', width: 150, minWidth: 110, visible: true, align: 'center' },
   { id: 'meaning', label: 'Nghĩa tiếng Việt', width: 190, minWidth: 140, visible: true, align: 'left' },
+  { id: 'stroke_order', label: 'Cách viết', width: 120, minWidth: 100, visible: true, align: 'center' },
   { id: 'hanzi_practice', label: 'Ôn tập chữ Hán', width: 160, minWidth: 120, visible: true, align: 'center' },
   { id: 'hanzi_status', label: 'Kết quả', width: 130, minWidth: 100, visible: true, align: 'center' },
   { id: 'example', label: 'Ví dụ (Chữ Hán)', width: 230, minWidth: 160, visible: true, align: 'left' },

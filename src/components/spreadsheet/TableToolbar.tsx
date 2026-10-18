@@ -17,6 +17,7 @@ import {
   Download,
   Upload,
   ClipboardPaste,
+  PenTool,
 } from 'lucide-react';
 import {
   StudyMode,
@@ -40,6 +41,7 @@ interface TableToolbarProps {
   onOpenImport: () => void;
   onOpenExport: () => void;
   onOpenBulkPaste?: () => void;
+  onOpenStrokePractice?: () => void;
   dueTodayCount: number;
 }
 
@@ -56,6 +58,7 @@ export function TableToolbar({
   onOpenImport,
   onOpenExport,
   onOpenBulkPaste,
+  onOpenStrokePractice,
   dueTodayCount,
 }: TableToolbarProps) {
   const [showColMenu, setShowColMenu] = useState(false);
@@ -294,6 +297,19 @@ export function TableToolbar({
           </div>
 
           <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
+
+          {/* Stroke Order Writing Button */}
+          {onOpenStrokePractice && (
+            <button
+              type="button"
+              onClick={onOpenStrokePractice}
+              title="Mở bảng hướng dẫn & tập viết từng nét chữ Hán"
+              className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 cursor-pointer font-medium transition-colors"
+            >
+              <PenTool size={13} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Tập viết chữ</span>
+            </button>
+          )}
 
           {/* Add Word Button */}
           {onOpenBulkPaste && (

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Star, Edit2, Trash2, Eye, EyeOff, PenLine } from 'lucide-react';
 import { VocabItem, ColumnConfig, StudyMode } from '@/types/vocabulary';
 import { SpeakButton } from '@/components/ui/SpeakButton';
 import { tts } from '@/lib/tts';
@@ -17,6 +17,7 @@ interface TableRowProps {
   onUpdate: (updatedItem: VocabItem) => void;
   onDeleteRequest: (item: VocabItem) => void;
   onEditRequest: (item: VocabItem) => void;
+  onOpenStrokeOrder?: (item: VocabItem) => void;
   isGuest?: boolean;
   onRequireAuth?: () => void;
 }
@@ -29,6 +30,7 @@ function TableRowComponent({
   onUpdate,
   onDeleteRequest,
   onEditRequest,
+  onOpenStrokeOrder,
   isGuest,
   onRequireAuth,
 }: TableRowProps) {
@@ -250,6 +252,28 @@ function TableRowComponent({
                       )}
                     </div>
                   )}
+                </td>
+              );
+
+            case 'stroke_order':
+              return (
+                <td
+                  key={col.id}
+                  style={{ width: `${col.width}px` }}
+                  className="px-2 py-1.5 text-center border-r border-slate-300 dark:border-slate-800 align-middle"
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenStrokeOrder?.(item);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 transition-all shadow-2xs hover:scale-102 cursor-pointer group"
+                    title={`Xem cách viết & thứ tự nét chữ Hán: ${item.hanzi}`}
+                  >
+                    <PenLine size={12} className="text-emerald-600 dark:text-emerald-400 group-hover:rotate-12 transition-transform" />
+                    <span>Cách viết</span>
+                  </button>
                 </td>
               );
 

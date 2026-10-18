@@ -48,6 +48,7 @@ import { DeckModal } from '@/components/modals/DeckModal';
 import { AuthModal } from '@/components/modals/AuthModal';
 import UserSettingsModal from '@/components/modals/UserSettingsModal';
 import BulkPasteModal from '@/components/modals/BulkPasteModal';
+import StrokeOrderModal from '@/components/modals/StrokeOrderModal';
 import { getClientAuthHeaders } from '@/lib/client-auth';
 
 import { getFirebaseServices } from '@/lib/firebase';
@@ -151,6 +152,7 @@ function MainApp() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
+  const [strokeModalItem, setStrokeModalItem] = useState<VocabItem | null>(null);
 
   const currentUserId = user?.id;
 
@@ -826,6 +828,22 @@ function MainApp() {
     return result;
   }, [currentDeckItems, filterOptions, isClient]);
 
+  const currentStrokeIndex = useMemo(() => {
+    if (!strokeModalItem) return -1;
+    return displayedItems.findIndex((it) => it.id === strokeModalItem.id);
+  }, [strokeModalItem, displayedItems]);
+
+  const handleNavigateStrokeModal = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (currentStrokeIndex === -1) return;
+      const targetIdx = direction === 'prev' ? currentStrokeIndex - 1 : currentStrokeIndex + 1;
+      if (targetIdx >= 0 && targetIdx < displayedItems.length) {
+        setStrokeModalItem(displayedItems[targetIdx]);
+      }
+    },
+    [currentStrokeIndex, displayedItems]
+  );
+
   if (!isClient) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 text-slate-500 font-sans text-sm">
@@ -953,6 +971,13 @@ function MainApp() {
               }
               setIsBulkPasteOpen(true);
             }}
+            onOpenStrokePractice={() => {
+              if (displayedItems.length > 0) {
+                setStrokeModalItem(displayedItems[0]);
+              } else if (items.length > 0) {
+                setStrokeModalItem(items[0]);
+              }
+            }}
             dueTodayCount={stats.dueTodayCount}
           />
 
@@ -985,6 +1010,7 @@ function MainApp() {
             onUpdateItem={handleUpdateItem}
             onDeleteItem={(item) => setDeletingItem(item)}
             onEditItem={(item) => setEditingItem(item)}
+            onOpenStrokeOrder={(item) => setStrokeModalItem(item)}
             onClearFilters={handleClearFilters}
             isGuest={isGuest}
             onRequireAuth={() => setIsAuthModalOpen(true)}
@@ -1113,6 +1139,16 @@ function MainApp() {
           loadVocabFromFirebase();
           toast.success('Đã nhập từ vựng thành công!', 'Nhập dữ liệu hoàn tất');
         }}
+      />
+
+      <StrokeOrderModal
+        isOpen={!!strokeModalItem}
+        onClose={() => setStrokeModalItem(null)}
+        item={strokeModalItem}
+        onPrevWord={() => handleNavigateStrokeModal('prev')}
+        onNextWord={() => handleNavigateStrokeModal('next')}
+        hasPrevWord={currentStrokeIndex > 0}
+        hasNextWord={currentStrokeIndex >= 0 && currentStrokeIndex < displayedItems.length - 1}
       />
     </div>
   );
