@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { applyHanziFontToDom, HANZI_FONT_STORAGE_KEY } from '@/lib/hanzi-fonts';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type EffectiveTheme = 'light' | 'dark';
@@ -14,6 +15,8 @@ interface ThemeContextType {
   setFontSize: (size: FontSize) => void;
   autoPronounce: boolean;
   setAutoPronounce: (enabled: boolean) => void;
+  hanziFont: string;
+  setHanziFont: (fontId: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -24,6 +27,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setFontSize: () => {},
   autoPronounce: false,
   setAutoPronounce: () => {},
+  hanziFont: 'system',
+  setHanziFont: () => {},
 });
 
 const THEME_KEY = 'hsk_theme_preference';
@@ -35,6 +40,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [effectiveTheme, setEffectiveTheme] = useState<EffectiveTheme>('light');
   const [fontSize, setFontSizeState] = useState<FontSize>('normal');
   const [autoPronounce, setAutoPronounceState] = useState<boolean>(false);
+  const [hanziFont, setHanziFontState] = useState<string>('system');
 
   // Compute and apply theme to DOM
   const applyTheme = useCallback((mode: ThemeMode) => {
@@ -105,6 +111,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setAutoPronounceState(false);
     }
 
+    // Initialize Hanzi font
+    try {
+      const savedHanziFont = localStorage.getItem(HANZI_FONT_STORAGE_KEY);
+      if (savedHanziFont) {
+        setHanziFontState(savedHanziFont);
+        applyHanziFontToDom(savedHanziFont);
+      } else {
+        applyHanziFontToDom('system');
+      }
+    } catch {
+      applyHanziFontToDom('system');
+    }
+
     // Listen to OS system color-scheme changes
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const listener = () => {
@@ -160,6 +179,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  const setHanziFont = useCallback((fontId: string) => {
+    setHanziFontState(fontId);
+    try {
+      localStorage.setItem(HANZI_FONT_STORAGE_KEY, fontId);
+    } catch {}
+    applyHanziFontToDom(fontId);
+  }, []);
+
   return (
     <ThemeContext.Provider
       value={{
@@ -170,6 +197,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setFontSize,
         autoPronounce,
         setAutoPronounce,
+        hanziFont,
+        setHanziFont,
       }}
     >
       {children}

@@ -954,6 +954,7 @@ export function getUserSettings(userId: string): UserSettings {
     ttsRate: 0.85,
     autoPronounce: false,
     fontSize: 'normal',
+    hanziFont: 'system',
     updatedAt: new Date().toISOString(),
   };
 }
@@ -969,6 +970,7 @@ export function saveUserSettings(
     ttsRate: 0.85,
     autoPronounce: false,
     fontSize: 'normal',
+    hanziFont: 'system',
   };
 
   const updated: UserSettings = {

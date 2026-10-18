@@ -30,6 +30,7 @@ import {
   Sparkle,
   Radio,
   User as UserIcon,
+  Palette,
 } from 'lucide-react';
 import { useTheme, ThemeMode, FontSize } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -37,11 +38,18 @@ import { useToast } from '@/context/ToastContext';
 import { tts, AvailableVoice } from '@/lib/tts';
 import { getClientAuthHeaders } from '@/lib/client-auth';
 import { saveUserSettingsToFirestore, loadUserSettingsFromFirestore } from '@/lib/firebase-db';
+import {
+  ALL_HANZI_FONTS,
+  TOP_10_HANZI_FONTS,
+  SYSTEM_HANZI_FONT,
+  getHanziFontById,
+  HANZI_FONT_STORAGE_KEY,
+} from '@/lib/hanzi-fonts';
 
 interface UserSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'tts' | 'theme' | 'study' | 'feedback';
+  initialTab?: 'tts' | 'theme' | 'font' | 'study' | 'feedback';
 }
 
 export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserSettingsModalProps) {
@@ -52,14 +60,18 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     setFontSize,
     autoPronounce,
     setAutoPronounce,
+    hanziFont,
+    setHanziFont,
   } = useTheme();
   const { user, isAuthenticated, updateProfile } = useAuth();
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState<'tts' | 'theme' | 'study' | 'feedback'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'tts' | 'theme' | 'font' | 'study' | 'feedback'>(initialTab);
 
-  // Theme Local State
+  // Theme & Font Local State
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>(theme);
+  const [selectedHanziFont, setSelectedHanziFont] = useState<string>(hanziFont || 'system');
+  const [fontPreviewText, setFontPreviewText] = useState<string>('学而时习之，不亦说乎');
 
   // TTS Settings Local State
   const [voices, setVoices] = useState<AvailableVoice[]>([]);
@@ -106,6 +118,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
         ttsRate,
         autoPronounce: tempAutoPronounce,
         fontSize: tempFontSize,
+        hanziFont: selectedHanziFont,
         targetHsk,
         ...overrides,
       };
@@ -114,6 +127,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
       try {
         if (payload.theme) localStorage.setItem('hsk_theme_preference', payload.theme as string);
         if (payload.fontSize) localStorage.setItem('hsk_font_size', payload.fontSize as string);
+        if (payload.hanziFont) localStorage.setItem(HANZI_FONT_STORAGE_KEY, payload.hanziFont as string);
         if (typeof payload.autoPronounce === 'boolean') {
           localStorage.setItem('hsk_auto_pronounce', payload.autoPronounce ? 'true' : 'false');
         }
@@ -143,7 +157,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
         saveUserSettingsToFirestore(user.id, payload).catch(() => {});
       }
     },
-    [user, selectedTheme, selectedVoiceName, genderChoice, ttsRate, tempAutoPronounce, tempFontSize, targetHsk]
+    [user, selectedTheme, selectedVoiceName, genderChoice, ttsRate, tempAutoPronounce, tempFontSize, selectedHanziFont, targetHsk]
   );
 
   // Save all settings explicitly
@@ -154,6 +168,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
       try {
         localStorage.setItem('hsk_theme_preference', selectedTheme);
         localStorage.setItem('hsk_font_size', tempFontSize);
+        localStorage.setItem(HANZI_FONT_STORAGE_KEY, selectedHanziFont);
         localStorage.setItem('hsk_auto_pronounce', tempAutoPronounce ? 'true' : 'false');
         localStorage.setItem('hsk_tts_rate', String(ttsRate));
         if (selectedVoiceName) localStorage.setItem('hsk_tts_voice_name', selectedVoiceName);
@@ -163,6 +178,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
       // 2. Apply to React contexts & singletons
       setTheme(selectedTheme);
       setFontSize(tempFontSize);
+      setHanziFont(selectedHanziFont);
       setAutoPronounce(tempAutoPronounce);
       tts.setRate(ttsRate);
       if (selectedVoiceName) tts.setVoiceByName(selectedVoiceName);
@@ -180,6 +196,7 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
         ttsRate,
         autoPronounce: tempAutoPronounce,
         fontSize: tempFontSize,
+        hanziFont: selectedHanziFont,
         targetHsk,
       };
 
@@ -254,6 +271,13 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
       if (savedVoice) {
         setSelectedVoiceName(savedVoice);
       }
+
+      const savedHanziFont = localStorage.getItem(HANZI_FONT_STORAGE_KEY);
+      if (savedHanziFont) {
+        setSelectedHanziFont(savedHanziFont);
+      } else {
+        setSelectedHanziFont(hanziFont || 'system');
+      }
     } catch {}
 
     setTargetHsk(user?.targetHsk || 3);
@@ -297,6 +321,10 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
             setTempFontSize(s.fontSize);
             setFontSize(s.fontSize);
           }
+          if (s.hanziFont) {
+            setSelectedHanziFont(s.hanziFont);
+            setHanziFont(s.hanziFont);
+          }
           if (typeof s.autoPronounce === 'boolean') {
             setTempAutoPronounce(s.autoPronounce);
             setAutoPronounce(s.autoPronounce);
@@ -330,6 +358,10 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
               setTempFontSize(fsSettings.fontSize as FontSize);
               setFontSize(fsSettings.fontSize as FontSize);
             }
+            if (fsSettings.hanziFont) {
+              setSelectedHanziFont(fsSettings.hanziFont as string);
+              setHanziFont(fsSettings.hanziFont as string);
+            }
             if (typeof fsSettings.autoPronounce === 'boolean') {
               setTempAutoPronounce(fsSettings.autoPronounce as boolean);
               setAutoPronounce(fsSettings.autoPronounce as boolean);
@@ -358,6 +390,18 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
   if (!isOpen) return null;
 
   const chineseVoices = voices.filter((v) => v.isChinese);
+
+  // Handle Hanzi Font Selection with Instant Preview & Auto-Save
+  const handleHanziFontSelect = (fontId: string) => {
+    setSelectedHanziFont(fontId);
+    setHanziFont(fontId);
+    try {
+      localStorage.setItem(HANZI_FONT_STORAGE_KEY, fontId);
+    } catch {}
+    syncServerSettings({ hanziFont: fontId });
+    const f = getHanziFontById(fontId);
+    toast.success(`Đã áp dụng phông: ${f.name}`, 'Phông chữ Hán');
+  };
 
   // Handle Theme Selection with Instant Auto-Save
   const handleThemeSelect = (mode: ThemeMode) => {
@@ -532,9 +576,16 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
     },
     {
       id: 'theme' as const,
-      label: 'Giao diện & Chủ đề',
+      label: 'Giao diện & Cỡ chữ',
       icon: <Moon size={16} />,
-      desc: 'Dark mode & Cỡ chữ Hán',
+      desc: 'Dark mode & Kích thước chữ',
+    },
+    {
+      id: 'font' as const,
+      label: 'Phông chữ Hán (Fonts)',
+      badge: 'Top 10',
+      icon: <Type size={16} />,
+      desc: '10 phông Google nghệ thuật',
     },
     {
       id: 'study' as const,
@@ -961,6 +1012,237 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
                       })}
                     </div>
                   </div>
+
+                  {/* Current Hanzi Font Banner */}
+                  <div className="p-4 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Type size={18} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>Phông chữ Hán: {getHanziFontById(selectedHanziFont).name}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                            {getHanziFontById(selectedHanziFont).categoryBadge}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          {getHanziFontById(selectedHanziFont).category} • Google Fonts
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('font')}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs shrink-0"
+                    >
+                      Đổi phông chữ →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: TOP 10 GOOGLE FONTS FOR CHINESE CHARACTERS */}
+            {activeTab === 'font' && (
+              <div className="space-y-4">
+                {/* Header Showcase Card */}
+                <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-400 text-[10.5px] font-bold uppercase tracking-wider mb-1.5">
+                        <Sparkles size={11} />
+                        Google Fonts CJK Collection • Top 10 Tuyển Chọn
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                        Bộ Sưu Tập Phông Chữ Hán Tuyển Chọn
+                      </h3>
+                      <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
+                        Tuyển chọn 10 kiểu chữ Hán đỉnh cao trên Google Fonts: từ <strong>Khải thư giáo trình</strong>, <strong>Thư pháp bút lông</strong>, <strong>Hành thư bay bổng</strong> đến <strong>Tống thể tao nhã</strong> và <strong>Poster hiện đại</strong>. Phông chữ được áp dụng lập tức cho toàn bộ bảng tính, thẻ từ vựng và bài tập.
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleHanziFontSelect('system')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                          selectedHanziFont === 'system'
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                            : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        Khôi phục phông hệ thống
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive Live Font Tester Bar */}
+                  <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/60 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <Type size={13} className="text-emerald-600" />
+                        Gõ chữ Hán bất kỳ để xem thử trực tiếp tất cả 10 phông:
+                      </span>
+                      {fontPreviewText && (
+                        <button
+                          type="button"
+                          onClick={() => setFontPreviewText('')}
+                          className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          Xóa chữ
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={fontPreviewText}
+                        onChange={(e) => setFontPreviewText(e.target.value)}
+                        placeholder="Nhập chữ Hán của bạn (vd: 学习中文, 见贤思齐, 春暖花开)..."
+                        className="w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    {/* Quick Sample Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 mr-1">Mẫu nhanh:</span>
+                      {[
+                        '温故而知新',
+                        '海纳百川',
+                        '千里之行',
+                        '天天向上',
+                        '长风破浪',
+                        '落霞与孤鹜齐飞',
+                      ].map((sample) => (
+                        <button
+                          key={sample}
+                          type="button"
+                          onClick={() => setFontPreviewText(sample)}
+                          className="px-2.5 py-0.5 text-[11px] rounded-lg bg-slate-200/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 hover:text-emerald-700 cursor-pointer transition-colors"
+                        >
+                          {sample}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Font Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {ALL_HANZI_FONTS.map((font) => {
+                    const isSelected = selectedHanziFont === font.id;
+                    const displaySample = fontPreviewText.trim() || font.previewSample;
+
+                    return (
+                      <div
+                        key={font.id}
+                        onClick={() => handleHanziFontSelect(font.id)}
+                        className={`group relative p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 ring-2 ring-emerald-500/25 shadow-sm'
+                            : 'border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'
+                        }`}
+                      >
+                        {/* Top: Header Info & Badges */}
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                                  {font.chineseName}
+                                </h4>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                  {font.name.split('(')[0].trim()}
+                                </span>
+                              </div>
+                              <div className="text-[10.5px] font-medium text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                {font.category}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              {font.categoryBadge && (
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    font.id === 'lxgw-wenkai'
+                                      ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
+                                      : font.isCalligraphy
+                                      ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                  }`}
+                                >
+                                  {font.categoryBadge}
+                                </span>
+                              )}
+                              {isSelected && (
+                                <span className="flex items-center gap-1 text-[10.5px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded-full shadow-2xs">
+                                  <Check size={11} /> Đang dùng
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Font Preview Showcase Box */}
+                          <div className="my-2.5 p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800/80 overflow-hidden">
+                            <div
+                              style={{ fontFamily: font.fontFamily }}
+                              className="text-2xl sm:text-3xl font-medium text-slate-900 dark:text-slate-100 leading-snug tracking-wide text-center py-1 transition-all"
+                            >
+                              {displaySample}
+                            </div>
+
+                            {!fontPreviewText.trim() && (
+                              <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col text-center">
+                                <span className="font-pinyin text-[11px] text-slate-400 dark:text-slate-500">
+                                  {font.previewPinyin}
+                                </span>
+                                <span className="text-[10.5px] text-slate-500 dark:text-slate-400 italic mt-0.5">
+                                  &ldquo;{font.previewMeaning}&rdquo;
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+                            {font.description}
+                          </p>
+                        </div>
+
+                        {/* Bottom: Tags & Select Button */}
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap gap-1">
+                            {font.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleHanziFontSelect(font.id);
+                            }}
+                            className={`px-3 py-1 rounded-xl text-xs font-bold cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {isSelected ? 'Đã kích hoạt' : 'Chọn phông'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

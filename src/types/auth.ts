@@ -59,6 +59,7 @@ export interface UserSettings {
   ttsRate?: number;
   autoPronounce?: boolean;
   fontSize?: 'normal' | 'large' | 'xlarge';
+  hanziFont?: string;
   updatedAt?: string;
 }
 

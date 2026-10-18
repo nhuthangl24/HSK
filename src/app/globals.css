@@ -31,6 +31,9 @@
   --meaning-size: 0.875rem;
   --example-size: 0.8125rem;
   --table-row-py: 0.5rem;
+
+  /* Hanzi font-family dynamically controlled via user preferences */
+  --hanzi-font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
 }
 
 html[data-font-size="large"] {
@@ -80,9 +83,18 @@ body {
   overflow-x: hidden;
 }
 
-/* Hanzi font utility for optimal clarity */
+/* Hanzi font utility for optimal clarity & dynamic Google Fonts styling */
 .font-hanzi {
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Noto Sans SC", "SimSun", sans-serif;
+  font-family: var(
+    --hanzi-font-family,
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft YaHei",
+    "WenQuanYi Micro Hei",
+    "Noto Sans SC",
+    "SimSun",
+    sans-serif
+  );
 }
 
 /* Pinyin font utility for clear tone marks */
