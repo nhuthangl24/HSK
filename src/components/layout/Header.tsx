@@ -14,13 +14,13 @@ import {
   Moon,
   Sparkles,
   ClipboardPaste,
-  GraduationCap,
 } from 'lucide-react';
 
 import Link from 'next/link';
 import { Deck, DeckStatistics } from '@/types/vocabulary';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 interface HeaderProps {
   currentDeck: Deck;
@@ -31,6 +31,8 @@ interface HeaderProps {
   onOpenSettings?: () => void;
   onOpenBulkPaste?: () => void;
   onOpenExams?: () => void;
+  onStartSmartReview?: () => void;
+  onOpenWorksheet?: () => void;
   isFirebaseConnected?: boolean;
 }
 
@@ -42,6 +44,8 @@ export function Header({
   onOpenSettings,
   onOpenBulkPaste,
   onOpenExams,
+  onStartSmartReview,
+  onOpenWorksheet,
 }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
@@ -118,18 +122,14 @@ export function Header({
           </button>
         )}
 
-        {/* Exam Hub Button */}
-        {onOpenExams && (
-          <button
-            type="button"
-            onClick={onOpenExams}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 transition-colors cursor-pointer text-xs font-semibold shrink-0 btn-press"
-            title="Kho đề thi HSK tuyển chọn"
-          >
-            <GraduationCap size={15} className="text-emerald-600 dark:text-emerald-400" />
-            <span>Kho Đề Thi</span>
-          </button>
-        )}
+        {/* Notification Bell */}
+        <NotificationBell
+          onOpenExams={onOpenExams}
+          onStartSmartReview={onStartSmartReview}
+          onOpenWorksheet={onOpenWorksheet}
+          dueTodayCount={stats?.dueTodayCount ?? 0}
+          streakDays={user?.streakDays ?? 0}
+        />
 
         {/* User Account / Auth Section */}
         {isAuthenticated && user ? (

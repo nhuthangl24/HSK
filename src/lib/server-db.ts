@@ -4,6 +4,7 @@ import os from 'os';
 import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserFeedback, PracticedWordRecord } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { ExamItem } from '@/types/exam';
+import { AppNotification } from '@/types/notification';
 import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
 
@@ -1539,5 +1540,96 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
   writeJsonFile('exams.json', exams);
   return true;
 }
+
+// -------------------------------------------------------------
+// NOTIFICATIONS MANAGEMENT
+// -------------------------------------------------------------
+
+const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-welcome',
+    title: 'Chào mừng bạn đến với HSK Master! 🎉',
+    message: 'Nền tảng học tiếng Trung tương tác thông minh với bảng tính flashcard, hệ thống lặp lại ngắt quãng SRS và luyện viết chữ Hán chuyên nghiệp.',
+    type: 'system',
+    priority: 'normal',
+    actionLabel: 'Bắt đầu học',
+    actionType: 'open_srs',
+    createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'notif-exam-hub-launch',
+    title: '🎓 Kho Đề Thi HSK Tuyển Chọn chính thức ra mắt!',
+    message: 'Admin đã tuyển chọn và đăng tải các bộ đề thi thật HSK 1 - 6 kèm file nghe Audio MP3 trực tiếp và bảng đáp án chi tiết. Hãy vào làm thử ngay!',
+    type: 'exam',
+    priority: 'urgent',
+    actionLabel: 'Mở Kho Đề Thi',
+    actionType: 'open_exams',
+    createdAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'notif-worksheet-pdf',
+    title: '📄 Tính năng: Xuất Phiếu Tập Viết Chữ Hán PDF Khổ A4',
+    message: 'Bạn có thể xuất phiếu luyện viết chuẩn ô Mễ điền (米字格) và Điền tự (田字格) ra file PDF A4 cực nét để in ra giấy luyện chữ hàng ngày.',
+    type: 'update',
+    priority: 'normal',
+    actionLabel: 'In Phiếu Viết',
+    actionType: 'open_worksheet',
+    createdAt: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+export function getAllNotifications(): AppNotification[] {
+  const stored = readJsonFile<AppNotification[]>('notifications.json', []);
+  if (!stored || stored.length === 0) {
+    writeJsonFile('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
+    return INITIAL_STARTER_NOTIFICATIONS;
+  }
+  return stored;
+}
+
+export function saveNotification(
+  data: Omit<AppNotification, 'id' | 'createdAt'> & { id?: string }
+): AppNotification {
+  const list = getAllNotifications();
+  const id = data.id?.trim() || `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const now = new Date().toISOString();
+
+  const newNotif: AppNotification = {
+    ...data,
+    id,
+    createdAt: now,
+  };
+
+  list.unshift(newNotif);
+  if (list.length > 200) list.length = 200;
+  writeJsonFile('notifications.json', list);
+  return newNotif;
+}
+
+export function updateNotification(
+  id: string,
+  updates: Partial<Omit<AppNotification, 'id' | 'createdAt'>>
+): AppNotification | null {
+  const list = getAllNotifications();
+  const index = list.findIndex((n) => n.id === id);
+  if (index === -1) return null;
+
+  list[index] = {
+    ...list[index],
+    ...updates,
+  };
+
+  writeJsonFile('notifications.json', list);
+  return list[index];
+}
+
+export function deleteNotification(id: string): boolean {
+  const list = getAllNotifications();
+  const filtered = list.filter((n) => n.id !== id);
+  if (filtered.length === list.length) return false;
+  writeJsonFile('notifications.json', filtered);
+  return true;
+}
+
 
 

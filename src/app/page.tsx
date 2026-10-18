@@ -893,6 +893,14 @@ function MainApp() {
           setIsBulkPasteOpen(true);
         }}
         onOpenExams={() => setIsExamHubOpen(true)}
+        onStartSmartReview={() => {
+          if (isGuest) {
+            setIsAuthModalOpen(true);
+            return;
+          }
+          setIsSmartReviewOpen(true);
+        }}
+        onOpenWorksheet={() => setIsWorksheetOpen(true)}
         isFirebaseConnected={isClient ? getFirebaseServices().isConfigured : false}
       />
 

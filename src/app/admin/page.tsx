@@ -36,6 +36,7 @@ import {
   FolderKanban,
   Settings,
   MessageSquare,
+  Bell,
 } from 'lucide-react';
 import { User, AdminStats, AuditLog, UserRole } from '@/types/auth';
 import { VocabItem, HskLevel } from '@/types/vocabulary';
@@ -61,6 +62,7 @@ import AdminSettingsTab from './components/AdminSettingsTab';
 import AdminPasteTab from './components/AdminPasteTab';
 import AdminFeedbackTab from './components/AdminFeedbackTab';
 import AdminExamsTab from './components/AdminExamsTab';
+import AdminNotificationsTab from './components/AdminNotificationsTab';
 
 export default function AdminPage() {
   const toast = useToast();
@@ -68,7 +70,7 @@ export default function AdminPage() {
   const adminEmail = user?.email || 'admin@hsk.com';
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'users' | 'vocab' | 'hsk' | 'topics' | 'paste' | 'workspaces' | 'exams' | 'feedback' | 'logs' | 'settings' | 'io'
+    'overview' | 'users' | 'vocab' | 'hsk' | 'topics' | 'paste' | 'workspaces' | 'exams' | 'notifications' | 'feedback' | 'logs' | 'settings' | 'io'
   >('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(true);
@@ -1170,6 +1172,39 @@ export default function AdminPage() {
               {!adminSidebarCollapsed && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
                   Tuyển chọn
+                </span>
+              )}
+            </button>
+
+            {/* TAB: Notifications */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('notifications');
+                setMobileMenuOpen(false);
+              }}
+              title="Thông Báo & Phát Tin Hệ Thống"
+              className={`flex items-center justify-between rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press relative ${
+                adminSidebarCollapsed
+                  ? `w-10 h-10 mx-auto justify-center ${
+                      activeTab === 'notifications'
+                        ? 'bg-emerald-600 text-white shadow-xs scale-105 ring-2 ring-emerald-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`
+                  : `w-full px-3 py-2.5 ${
+                      activeTab === 'notifications'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Bell size={16} className="shrink-0" />
+                {!adminSidebarCollapsed && <span>Thông Báo Hệ Thống</span>}
+              </div>
+              {!adminSidebarCollapsed && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold">
+                  Phát tin
                 </span>
               )}
             </button>
@@ -2629,6 +2664,9 @@ export default function AdminPage() {
 
           {/* TAB: EXAM REPOSITORY & SHARING */}
           {activeTab === 'exams' && <AdminExamsTab />}
+
+          {/* TAB: BROADCAST NOTIFICATIONS */}
+          {activeTab === 'notifications' && <AdminNotificationsTab />}
 
           {/* TAB 8: USER FEEDBACK & BUG REPORTS */}
           {activeTab === 'feedback' && <AdminFeedbackTab />}
