@@ -21,6 +21,7 @@ import {
   Sliders,
   Layers,
   HelpCircle,
+  Printer,
 } from 'lucide-react';
 import { VocabItem } from '@/types/vocabulary';
 import { useTheme } from '@/context/ThemeContext';
@@ -34,6 +35,7 @@ interface StrokeOrderModalProps {
   onNextWord?: () => void;
   hasPrevWord?: boolean;
   hasNextWord?: boolean;
+  onOpenWorksheet?: (item: VocabItem) => void;
 }
 
 interface CharData {
@@ -50,6 +52,7 @@ export function StrokeOrderModal({
   onNextWord,
   hasPrevWord = false,
   hasNextWord = false,
+  onOpenWorksheet,
 }: StrokeOrderModalProps) {
   const { effectiveTheme } = useTheme();
 
@@ -310,6 +313,19 @@ export function StrokeOrderModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Printable Worksheet Shortcut Button */}
+            {onOpenWorksheet && (
+              <button
+                type="button"
+                onClick={() => onOpenWorksheet(item)}
+                className="px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
+                title="In phiếu tập viết ô Mễ điền A4 cho từ này"
+              >
+                <Printer size={13} className="text-rose-600 dark:text-rose-400" />
+                <span className="hidden sm:inline">In phiếu viết</span>
+              </button>
+            )}
+
             {/* HSK Level Badge */}
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
               HSK {item.hskLevel}

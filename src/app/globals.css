@@ -301,3 +301,73 @@ html {
 .card-lift:hover {
   transform: translateY(-2px);
 }
+
+/* Hanzi Printable Writing Worksheet Styles for A4 Paper & PDF */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 6mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #09090b !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* When printing worksheet */
+  body.worksheet-printing {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  body.worksheet-printing * {
+    visibility: hidden;
+  }
+
+  body.worksheet-printing .hanzi-worksheet-printable,
+  body.worksheet-printing .hanzi-worksheet-printable * {
+    visibility: visible !important;
+  }
+
+  .hanzi-worksheet-printable {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    z-index: 999999 !important;
+  }
+
+  .hanzi-print-page {
+    min-height: 280mm !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #ffffff !important;
+  }
+
+  .hanzi-print-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+}
+

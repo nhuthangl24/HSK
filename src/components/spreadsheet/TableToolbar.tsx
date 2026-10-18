@@ -18,6 +18,7 @@ import {
   Upload,
   ClipboardPaste,
   PenTool,
+  Printer,
 } from 'lucide-react';
 import {
   StudyMode,
@@ -40,6 +41,7 @@ interface TableToolbarProps {
   onStartSmartReview: () => void;
   onOpenImport: () => void;
   onOpenExport: () => void;
+  onOpenWorksheet?: () => void;
   onOpenBulkPaste?: () => void;
   onOpenStrokePractice?: () => void;
   dueTodayCount: number;
@@ -57,6 +59,7 @@ export function TableToolbar({
   onStartSmartReview,
   onOpenImport,
   onOpenExport,
+  onOpenWorksheet,
   onOpenBulkPaste,
   onOpenStrokePractice,
   dueTodayCount,
@@ -344,6 +347,19 @@ export function TableToolbar({
             <Download size={13} />
             Xuất file
           </button>
+
+          {/* Printable Hanzi Writing Worksheet Button */}
+          {onOpenWorksheet && (
+            <button
+              type="button"
+              onClick={onOpenWorksheet}
+              title="Xuất phiếu tập viết chữ Hán ra PDF (Khổ A4, ô Mễ điền/Điền tự cách)"
+              className="px-2.5 py-1.5 rounded-md border border-rose-300 dark:border-rose-900/60 bg-rose-50/80 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 flex items-center gap-1.5 cursor-pointer font-semibold shadow-2xs transition-colors"
+            >
+              <Printer size={13} className="text-rose-600 dark:text-rose-400" />
+              <span>Phiếu viết PDF</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

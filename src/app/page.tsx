@@ -49,6 +49,7 @@ import { AuthModal } from '@/components/modals/AuthModal';
 import UserSettingsModal from '@/components/modals/UserSettingsModal';
 import BulkPasteModal from '@/components/modals/BulkPasteModal';
 import StrokeOrderModal from '@/components/modals/StrokeOrderModal';
+import HanziWorksheetModal from '@/components/modals/HanziWorksheetModal';
 import { getClientAuthHeaders } from '@/lib/client-auth';
 
 import { getFirebaseServices } from '@/lib/firebase';
@@ -153,6 +154,8 @@ function MainApp() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
   const [strokeModalItem, setStrokeModalItem] = useState<VocabItem | null>(null);
+  const [isWorksheetOpen, setIsWorksheetOpen] = useState(false);
+  const [worksheetPreselectedItem, setWorksheetPreselectedItem] = useState<VocabItem | null>(null);
 
   const currentUserId = user?.id;
 
@@ -964,6 +967,10 @@ function MainApp() {
               }
               setIsExportOpen(true);
             }}
+            onOpenWorksheet={() => {
+              setWorksheetPreselectedItem(null);
+              setIsWorksheetOpen(true);
+            }}
             onOpenBulkPaste={() => {
               if (isGuest) {
                 setIsAuthModalOpen(true);
@@ -1149,6 +1156,22 @@ function MainApp() {
         onNextWord={() => handleNavigateStrokeModal('next')}
         hasPrevWord={currentStrokeIndex > 0}
         hasNextWord={currentStrokeIndex >= 0 && currentStrokeIndex < displayedItems.length - 1}
+        onOpenWorksheet={(target) => {
+          setWorksheetPreselectedItem(target);
+          setIsWorksheetOpen(true);
+        }}
+      />
+
+      <HanziWorksheetModal
+        isOpen={isWorksheetOpen}
+        onClose={() => {
+          setIsWorksheetOpen(false);
+          setWorksheetPreselectedItem(null);
+        }}
+        filteredItems={displayedItems}
+        allDeckItems={currentDeckItems}
+        currentDeck={currentDeck}
+        preselectedItem={worksheetPreselectedItem}
       />
     </div>
   );
