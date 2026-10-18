@@ -56,6 +56,118 @@ interface PracticeRow {
   isBlank: boolean;
 }
 
+type GridStyleType = 'mi' | 'tian' | 'hui' | 'kou';
+type GridColorType = 'red' | 'gray' | 'emerald' | 'blue';
+
+interface GridColorConfig {
+  main: string;
+  border: string;
+  cross: string;
+  sub: string;
+  bg: string;
+  pinyinColor: string;
+  name: string;
+}
+
+/**
+ * Reusable Vector Hanzi Grid Component (米字格, 田字格, 回字格, 方格)
+ * Uses vectorEffect="non-scaling-stroke" to ensure sharp, crisp lines regardless of scale
+ */
+function HanziGridSvg({
+  style,
+  colorConfig,
+}: {
+  style: GridStyleType;
+  colorConfig: GridColorConfig;
+}) {
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none select-none"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      {/* Outer Square Border */}
+      <rect
+        x="1"
+        y="1"
+        width="98"
+        height="98"
+        fill="none"
+        stroke={colorConfig.border}
+        strokeWidth="2.2"
+        vectorEffect="non-scaling-stroke"
+      />
+
+      {/* Cross Center Lines (+) for 'mi' and 'tian' */}
+      {(style === 'mi' || style === 'tian') && (
+        <>
+          <line
+            x1="0"
+            y1="50"
+            x2="100"
+            y2="50"
+            stroke={colorConfig.cross}
+            strokeWidth="1.3"
+            strokeDasharray="4 3"
+            vectorEffect="non-scaling-stroke"
+          />
+          <line
+            x1="50"
+            y1="0"
+            x2="50"
+            y2="100"
+            stroke={colorConfig.cross}
+            strokeWidth="1.3"
+            strokeDasharray="4 3"
+            vectorEffect="non-scaling-stroke"
+          />
+        </>
+      )}
+
+      {/* Diagonal Lines (X) ONLY for 'mi' (米字格) */}
+      {style === 'mi' && (
+        <>
+          <line
+            x1="0"
+            y1="0"
+            x2="100"
+            y2="100"
+            stroke={colorConfig.sub}
+            strokeWidth="1.2"
+            strokeDasharray="4 3"
+            vectorEffect="non-scaling-stroke"
+          />
+          <line
+            x1="100"
+            y1="0"
+            x2="0"
+            y2="100"
+            stroke={colorConfig.sub}
+            strokeWidth="1.2"
+            strokeDasharray="4 3"
+            vectorEffect="non-scaling-stroke"
+          />
+        </>
+      )}
+
+      {/* Inner Concentric Square for 'hui' (回字格) */}
+      {style === 'hui' && (
+        <rect
+          x="26"
+          y="26"
+          width="48"
+          height="48"
+          fill="none"
+          stroke={colorConfig.cross}
+          strokeWidth="1.4"
+          strokeDasharray="4 3"
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
+    </svg>
+  );
+}
+
 export function HanziWorksheetModal({
   isOpen,
   onClose,
@@ -85,8 +197,8 @@ export function HanziWorksheetModal({
   const [fillBlankRows, setFillBlankRows] = useState<boolean>(true); // Auto-fill last page with blank grids to prevent empty bottom void
 
   // 3. Grid & Styling Settings
-  const [gridStyle, setGridStyle] = useState<'mi' | 'tian'>('mi'); // 'mi' = 米字格, 'tian' = 田字格
-  const [gridColorTheme, setGridColorTheme] = useState<'red' | 'gray' | 'emerald'>('red');
+  const [gridStyle, setGridStyle] = useState<GridStyleType>('mi');
+  const [gridColorTheme, setGridColorTheme] = useState<GridColorType>('red');
   const [traceCount, setTraceCount] = useState<number>(2); // 0, 1, 2, or 3 faint trace cells
   const [cellsPerRow, setCellsPerRow] = useState<number>(12); // 10, 12 (standard A4), or 14 practice cells
 
@@ -111,32 +223,49 @@ export function HanziWorksheetModal({
     }
   }, [preselectedItem]);
 
-  // Color Definitions
-  const colorConfig = useMemo(() => {
+  // Dynamic Color Definitions (High-contrast, saturated borders and distinct inner lines)
+  const colorConfig: GridColorConfig = useMemo(() => {
     switch (gridColorTheme) {
-      case 'red':
-        return {
-          main: '#ef4444',
-          sub: '#fca5a5',
-          bg: '#fef2f2',
-          border: '#f87171',
-          name: 'Đỏ son truyền thống',
-        };
       case 'gray':
         return {
-          main: '#64748b',
-          sub: '#cbd5e1',
+          main: '#334155',
+          border: '#475569',
+          cross: '#64748b',
+          sub: '#94a3b8',
           bg: '#f8fafc',
-          border: '#94a3b8',
+          pinyinColor: '#334155',
           name: 'Xám tiết kiệm mực',
         };
       case 'emerald':
         return {
-          main: '#059669',
-          sub: '#a7f3d0',
+          main: '#047857',
+          border: '#059669',
+          cross: '#10b981',
+          sub: '#34d399',
           bg: '#ecfdf5',
-          border: '#34d399',
+          pinyinColor: '#047857',
           name: 'Xanh ngọc trang nhã',
+        };
+      case 'blue':
+        return {
+          main: '#1d4ed8',
+          border: '#2563eb',
+          cross: '#3b82f6',
+          sub: '#60a5fa',
+          bg: '#eff6ff',
+          pinyinColor: '#1d4ed8',
+          name: 'Xanh mực bút máy',
+        };
+      case 'red':
+      default:
+        return {
+          main: '#b91c1c',
+          border: '#dc2626',
+          cross: '#ef4444',
+          sub: '#f87171',
+          bg: '#fef2f2',
+          pinyinColor: '#b91c1c',
+          name: 'Đỏ son truyền thống',
         };
     }
   }, [gridColorTheme]);
@@ -406,18 +535,27 @@ export function HanziWorksheetModal({
           {/* TOP HEADER */}
           <div className="px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40 flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shadow-2xs shrink-0">
+              <div
+                style={{ backgroundColor: `${colorConfig.border}15`, color: colorConfig.border }}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg shadow-2xs shrink-0 transition-colors"
+              >
                 <FileText size={20} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <span>Xuất Phiếu Tập Viết Chữ Hán Khổ A4</span>
-                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                  <span
+                    style={{
+                      backgroundColor: `${colorConfig.border}20`,
+                      color: colorConfig.border,
+                    }}
+                    className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full transition-colors"
+                  >
                     PDF Chuẩn In Ấn
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Tùy chỉnh mật độ A4 ({rowsPerPage} dòng/trang, {cellsPerRow} ô/hàng) • Lưới Mễ điền (米字格) sắc nét • Hỗ trợ tự nhập từ ngoài.
+                  Lưới {gridStyle === 'mi' ? 'Mễ điền (米字格)' : gridStyle === 'tian' ? 'Điền tự (田字格)' : gridStyle === 'hui' ? 'Hồi tự (回字格)' : 'Ô vuông (方格)'} • Màu {colorConfig.name} • {rowsPerPage} dòng/trang.
                 </p>
               </div>
             </div>
@@ -426,7 +564,8 @@ export function HanziWorksheetModal({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md shadow-rose-600/25 btn-press"
+                style={{ backgroundColor: colorConfig.border }}
+                className="flex items-center gap-2 px-5 py-2.5 hover:brightness-110 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md btn-press"
               >
                 <Printer size={15} />
                 <span>In ngay / Lưu PDF ({pages.length} trang)</span>
@@ -608,7 +747,7 @@ export function HanziWorksheetModal({
                     </div>
 
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                      💡 Mẹo: Hệ thống sẽ tự động tra cứu từ điển HSK để điền Pinyin & Nghĩa nếu bạn chỉ dán chữ Hán!
+                      💡 Mẹo: Hệ thống tự động tra cứu từ điển HSK để điền Pinyin & Nghĩa nếu bạn chỉ dán chữ Hán!
                     </p>
                   </div>
                 )}
@@ -773,12 +912,6 @@ export function HanziWorksheetModal({
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400 italic">
-                    {rowsPerChar === 2 && 'Mỗi chữ sẽ có 2 dòng (dòng 1 đồ nét, dòng 2 tự viết vào ô trống).'}
-                    {rowsPerChar === 3 && 'Mỗi chữ sẽ có 3 dòng để luyện viết nhuần nhuyễn nét bút.'}
-                    {rowsPerChar === 'full_page' && 'Mỗi chữ sẽ chiếm trọn 1 trang A4 (12-14 dòng chuyên sâu).'}
-                    {rowsPerChar === 1 && 'Mỗi chữ xuất hiện 1 dòng, tối đa hóa số từ khác nhau trên 1 trang.'}
-                  </p>
                 </div>
 
                 {/* Cells per row (Số ô trên 1 hàng) */}
@@ -830,67 +963,97 @@ export function HanziWorksheetModal({
                 </div>
               </div>
 
-              {/* SECTION 5: Grid Style & Color Theme */}
+              {/* SECTION 5: Grid Style & Color Theme (Real-time Interactive Swatches) */}
               <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
-                <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <Grid size={14} className="text-rose-600" />
-                  <span>Kiểu lưới & Màu sắc vở viết</span>
+                <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Grid size={14} style={{ color: colorConfig.border }} />
+                    <span>Kiểu lưới & Màu sắc vở viết</span>
+                  </span>
+                  <span
+                    style={{ color: colorConfig.border }}
+                    className="text-[10.5px] font-bold"
+                  >
+                    {colorConfig.name}
+                  </span>
                 </div>
 
-                {/* Grid Type: Mi vs Tian */}
+                {/* Grid Type: Mi (米), Tian (田), Hui (回), Kou (口) with Live Mini Icons */}
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setGridStyle('mi')}
-                    className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                      gridStyle === 'mi'
-                        ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300 ring-2 ring-rose-500/20 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold">Ô Mễ Điền (米字格)</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Kẻ chéo + chữ thập chuẩn</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setGridStyle('tian')}
-                    className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                      gridStyle === 'tian'
-                        ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300 ring-2 ring-rose-500/20 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold">Ô Điền Tự (田字格)</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Kẻ chữ thập vuông vức</div>
-                  </button>
+                  {[
+                    { id: 'mi' as const, name: 'Ô Mễ Điền (米字格)', desc: 'Kẻ chéo + chữ thập' },
+                    { id: 'tian' as const, name: 'Ô Điền Tự (田字格)', desc: 'Kẻ chữ thập' },
+                    { id: 'hui' as const, name: 'Ô Hồi Tự (回字格)', desc: 'Khung vuông lồng' },
+                    { id: 'kou' as const, name: 'Ô Vuông (方格)', desc: 'Không đường kẻ phụ' },
+                  ].map((g) => {
+                    const isSelected = gridStyle === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setGridStyle(g.id)}
+                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-2.5 ${
+                          isSelected
+                            ? 'ring-2 bg-white dark:bg-slate-900 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300'
+                        }`}
+                        style={{
+                          borderColor: isSelected ? colorConfig.border : undefined,
+                          boxShadow: isSelected ? `0 0 0 2px ${colorConfig.border}30` : undefined,
+                        }}
+                      >
+                        {/* Mini Live Preview Icon */}
+                        <div className="w-8 h-8 relative shrink-0 bg-white dark:bg-slate-950 rounded border border-slate-100 dark:border-slate-800">
+                          <HanziGridSvg style={g.id} colorConfig={colorConfig} />
+                        </div>
+                        <div className="min-w-0">
+                          <div
+                            className="text-xs font-bold truncate"
+                            style={{ color: isSelected ? colorConfig.border : undefined }}
+                          >
+                            {g.name}
+                          </div>
+                          <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                            {g.desc}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Color Theme */}
+                {/* Color Theme Selector with vibrant swatches */}
                 <div>
                   <span className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
-                    Màu mực in đường kẻ:
+                    Màu mực in đường kẻ & Phiên âm:
                   </span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {[
-                      { id: 'red' as const, label: 'Đỏ son truyền thống', hex: '#ef4444' },
-                      { id: 'gray' as const, label: 'Xám tiết kiệm mực', hex: '#64748b' },
-                      { id: 'emerald' as const, label: 'Xanh ngọc', hex: '#059669' },
-                    ].map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setGridColorTheme(c.id)}
-                        className={`p-2 rounded-xl border text-center cursor-pointer transition-all flex flex-col items-center gap-1 ${
-                          gridColorTheme === c.id
-                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-400 bg-white dark:bg-slate-900 font-bold'
-                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500'
-                        }`}
-                      >
-                        <span className="w-4 h-4 rounded-full shadow-2xs" style={{ backgroundColor: c.hex }} />
-                        <span className="text-[10px] truncate">{c.label.split(' ')[0]}</span>
-                      </button>
-                    ))}
+                      { id: 'red' as const, label: 'Đỏ son', hex: '#dc2626', desc: 'Thư pháp truyền thống' },
+                      { id: 'gray' as const, label: 'Xám', hex: '#475569', desc: 'Tiết kiệm mực in' },
+                      { id: 'emerald' as const, label: 'Xanh ngọc', hex: '#059669', desc: 'Trang nhã, dịu mắt' },
+                      { id: 'blue' as const, label: 'Xanh lam', hex: '#2563eb', desc: 'Mực bút máy' },
+                    ].map((c) => {
+                      const isSelected = gridColorTheme === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setGridColorTheme(c.id)}
+                          className={`p-2 rounded-xl border text-center cursor-pointer transition-all flex flex-col items-center gap-1.5 ${
+                            isSelected
+                              ? 'border-slate-900 dark:border-white ring-2 ring-slate-400 bg-white dark:bg-slate-900 font-bold shadow-xs'
+                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:border-slate-300'
+                          }`}
+                        >
+                          <span
+                            className="w-5 h-5 rounded-full shadow-xs border-2 border-white dark:border-slate-900 transition-transform hover:scale-110"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span className="text-[10.5px] truncate">{c.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -898,7 +1061,9 @@ export function HanziWorksheetModal({
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                     <span>Số ô nét mờ để đồ theo:</span>
-                    <span className="text-rose-600 font-bold">{traceCount} ô mờ</span>
+                    <span style={{ color: colorConfig.border }} className="font-bold">
+                      {traceCount} ô mờ
+                    </span>
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {[0, 1, 2, 3].map((cnt) => (
@@ -906,9 +1071,12 @@ export function HanziWorksheetModal({
                         key={cnt}
                         type="button"
                         onClick={() => setTraceCount(cnt)}
+                        style={{
+                          backgroundColor: traceCount === cnt ? colorConfig.border : undefined,
+                        }}
                         className={`py-1 text-center rounded-lg text-xs font-bold cursor-pointer transition-all ${
                           traceCount === cnt
-                            ? 'bg-rose-600 text-white shadow-2xs'
+                            ? 'text-white shadow-2xs'
                             : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
                         }`}
                       >
@@ -987,11 +1155,18 @@ export function HanziWorksheetModal({
               <div className="mb-3 flex items-center justify-between w-full max-w-[680px] text-xs font-semibold text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <span>Xem trước bản in A4 ({pages.length} trang)</span>
-                  <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300/80 dark:border-slate-700 text-[11px]">
-                    {rowsPerPage} dòng/trang • {cellsPerRow} ô/hàng
+                  <span
+                    style={{
+                      borderColor: `${colorConfig.border}50`,
+                      backgroundColor: `${colorConfig.border}10`,
+                      color: colorConfig.border,
+                    }}
+                    className="px-2 py-0.5 rounded-md border text-[11px] font-bold"
+                  >
+                    {gridStyle === 'mi' ? 'Lưới Mễ (米)' : gridStyle === 'tian' ? 'Lưới Điền (田)' : gridStyle === 'hui' ? 'Lưới Hồi (回)' : 'Ô Vuông (口)'} • {colorConfig.name.split(' ')[0]}
                   </span>
                 </div>
-                <span className="text-rose-600 dark:text-rose-400 font-bold">
+                <span style={{ color: colorConfig.border }} className="font-bold">
                   {targetWords.length} từ vựng ({practiceRows.length} dòng bài tập)
                 </span>
               </div>
@@ -1056,7 +1231,10 @@ export function HanziWorksheetModal({
                               ) : (
                                 <>
                                   {showPinyin && (
-                                    <div className="font-pinyin font-bold text-xs text-rose-700 leading-none truncate">
+                                    <div
+                                      style={{ color: colorConfig.pinyinColor }}
+                                      className="font-pinyin font-bold text-xs leading-none truncate transition-colors"
+                                    >
                                       {row.pinyin}
                                     </div>
                                   )}
@@ -1085,18 +1263,8 @@ export function HanziWorksheetModal({
                                   }}
                                   className="relative shrink-0 flex items-center justify-center bg-white"
                                 >
-                                  {/* SVG Grid */}
-                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                                    <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                                    <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    {gridStyle === 'mi' && (
-                                      <>
-                                        <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                        <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                      </>
-                                    )}
-                                  </svg>
+                                  {/* Dynamic Vector SVG Grid */}
+                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                                   <span
                                     className={`relative z-10 font-hanzi font-bold ${sizeConfig.previewFontClass} text-slate-950 leading-none`}
                                   >
@@ -1112,17 +1280,7 @@ export function HanziWorksheetModal({
                                   }}
                                   className="relative shrink-0 flex items-center justify-center bg-white"
                                 >
-                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                                    <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                                    <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    {gridStyle === 'mi' && (
-                                      <>
-                                        <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                        <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                      </>
-                                    )}
-                                  </svg>
+                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                                 </div>
                               )}
 
@@ -1136,17 +1294,7 @@ export function HanziWorksheetModal({
                                   }}
                                   className="relative shrink-0 flex items-center justify-center bg-white"
                                 >
-                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                                    <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                                    <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    {gridStyle === 'mi' && (
-                                      <>
-                                        <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                        <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                      </>
-                                    )}
-                                  </svg>
+                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                                   <span
                                     className={`relative z-10 font-hanzi ${sizeConfig.previewFontClass} select-none leading-none`}
                                     style={{ color: tIdx === 0 ? '#94a3b8' : '#cbd5e1' }}
@@ -1170,17 +1318,7 @@ export function HanziWorksheetModal({
                                   }}
                                   className="relative shrink-0 flex items-center justify-center bg-white"
                                 >
-                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                                    <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                                    <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                    {gridStyle === 'mi' && (
-                                      <>
-                                        <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                        <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                      </>
-                                    )}
-                                  </svg>
+                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                                 </div>
                               ))}
                             </div>
@@ -1191,7 +1329,7 @@ export function HanziWorksheetModal({
 
                     {/* Page Footer */}
                     <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-400 font-sans">
-                      <span>HSK Master • Nền tảng học tiếng Trung tương tác ({rowsPerPage} dòng/trang)</span>
+                      <span>HSK Master • Nền tảng học tiếng Trung ({gridStyle.toUpperCase()} • {colorConfig.name})</span>
                       <span>Trang {pageIdx + 1} / {pages.length}</span>
                     </div>
                   </div>
@@ -1265,7 +1403,10 @@ export function HanziWorksheetModal({
                       ) : (
                         <>
                           {showPinyin && (
-                            <div className="font-pinyin font-bold text-xs text-rose-800 leading-none truncate">
+                            <div
+                              style={{ color: colorConfig.pinyinColor }}
+                              className="font-pinyin font-bold text-xs leading-none truncate"
+                            >
                               {row.pinyin}
                             </div>
                           )}
@@ -1294,17 +1435,7 @@ export function HanziWorksheetModal({
                           }}
                           className="relative shrink-0 flex items-center justify-center bg-white"
                         >
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                            <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                            <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            {gridStyle === 'mi' && (
-                              <>
-                                <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                              </>
-                            )}
-                          </svg>
+                          <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                           <span
                             className={`relative z-10 font-hanzi font-bold ${sizeConfig.printFontClass} text-slate-950 leading-none`}
                           >
@@ -1319,17 +1450,7 @@ export function HanziWorksheetModal({
                           }}
                           className="relative shrink-0 flex items-center justify-center bg-white"
                         >
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                            <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                            <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            {gridStyle === 'mi' && (
-                              <>
-                                <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                              </>
-                            )}
-                          </svg>
+                          <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                         </div>
                       )}
 
@@ -1343,17 +1464,7 @@ export function HanziWorksheetModal({
                           }}
                           className="relative shrink-0 flex items-center justify-center bg-white"
                         >
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                            <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                            <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            {gridStyle === 'mi' && (
-                              <>
-                                <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                              </>
-                            )}
-                          </svg>
+                          <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                           <span
                             className={`relative z-10 font-hanzi ${sizeConfig.printFontClass} select-none leading-none`}
                             style={{ color: tIdx === 0 ? '#94a3b8' : '#cbd5e1' }}
@@ -1377,17 +1488,7 @@ export function HanziWorksheetModal({
                           }}
                           className="relative shrink-0 flex items-center justify-center bg-white"
                         >
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                            <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke={colorConfig.border} strokeWidth="1.2" />
-                            <line x1="0" y1="50" x2="100" y2="50" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            <line x1="50" y1="0" x2="50" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                            {gridStyle === 'mi' && (
-                              <>
-                                <line x1="0" y1="0" x2="100" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                                <line x1="100" y1="0" x2="0" y2="100" stroke={colorConfig.sub} strokeWidth="0.8" strokeDasharray="3 3" />
-                              </>
-                            )}
-                          </svg>
+                          <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
                         </div>
                       ))}
                     </div>
