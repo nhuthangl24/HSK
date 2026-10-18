@@ -902,7 +902,7 @@ function MainApp() {
           }
           setIsSmartReviewOpen(true);
         }}
-        onOpenWorksheet={() => setIsWorksheetOpen(true)}
+        onOpenWorksheet={() => router.push('/worksheet')}
         isFirebaseConnected={isClient ? getFirebaseServices().isConfigured : false}
       />
 
@@ -994,8 +994,7 @@ function MainApp() {
               setIsExportOpen(true);
             }}
             onOpenWorksheet={() => {
-              setWorksheetPreselectedItem(null);
-              setIsWorksheetOpen(true);
+              router.push('/worksheet');
             }}
             onOpenBulkPaste={() => {
               if (isGuest) {
@@ -1184,8 +1183,11 @@ function MainApp() {
         hasPrevWord={currentStrokeIndex > 0}
         hasNextWord={currentStrokeIndex >= 0 && currentStrokeIndex < displayedItems.length - 1}
         onOpenWorksheet={(target) => {
-          setWorksheetPreselectedItem(target);
-          setIsWorksheetOpen(true);
+          if (target) {
+            router.push(`/worksheet?word=${encodeURIComponent(target.hanzi)}`);
+          } else {
+            router.push('/worksheet');
+          }
         }}
       />
 
