@@ -194,23 +194,28 @@ class ChineseTTS {
         }
       }
 
-      // If no valid voice selected yet, default to best mainland Chinese voice
+      // If no valid voice selected yet, default to Google 國語（臺灣） (zh-TW) or preferred Chinese voice
       if (!this.currentVoice) {
         const zhVoices = this.voices.filter((v) => this.isChineseVoice(v));
         if (zhVoices.length > 0) {
-          // If a gender preference was saved, try matching it
+          // 1. Prioritize Google 國語（臺灣） (zh-TW)
+          const googleTw = zhVoices.find(
+            (v) =>
+              v.name.includes('Google') &&
+              (v.name.includes('國語') || v.name.includes('臺灣') || v.name.includes('Taiwan') || (v.lang || '').toLowerCase().includes('zh-tw'))
+          );
+          // 2. Any zh-TW voice
+          const anyTw = zhVoices.find((v) => (v.lang || '').toLowerCase().replace(/_/g, '-').startsWith('zh-tw'));
+
           if (this.gender !== 'default') {
             const genderMatch = zhVoices.find((v) => this.detectGender(v) === this.gender);
             if (genderMatch) {
               this.currentVoice = genderMatch;
             }
           }
+
           if (!this.currentVoice) {
-            const zhDefault =
-              zhVoices.find((v) => (v.lang || '').toLowerCase() === 'zh-cn') ||
-              zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) ||
-              zhVoices[0];
-            this.currentVoice = zhDefault;
+            this.currentVoice = googleTw || anyTw || zhVoices.find((v) => v.name.includes('Google')) || zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) || zhVoices[0];
           }
         }
       }
@@ -228,13 +233,38 @@ class ChineseTTS {
       this.voices = this.synth.getVoices();
     }
 
-    return this.voices.map((v) => ({
+    const list = this.voices.map((v) => ({
       name: v.name,
       lang: v.lang,
       gender: this.detectGender(v),
       isChinese: this.isChineseVoice(v),
       voiceURI: v.voiceURI,
     }));
+
+    // Prioritize Google 國語 (zh-TW) and zh-TW at the very top of Chinese voices
+    return list.sort((a, b) => {
+      if (a.isChinese && !b.isChinese) return -1;
+      if (!a.isChinese && b.isChinese) return 1;
+
+      if (a.isChinese && b.isChinese) {
+        const isGoogleTwA = a.name.includes('Google') && (a.name.includes('國語') || a.name.includes('臺灣') || a.lang.toLowerCase().includes('zh-tw'));
+        const isGoogleTwB = b.name.includes('Google') && (b.name.includes('國語') || b.name.includes('臺灣') || b.lang.toLowerCase().includes('zh-tw'));
+        if (isGoogleTwA && !isGoogleTwB) return -1;
+        if (!isGoogleTwA && isGoogleTwB) return 1;
+
+        const isTwA = (a.lang || '').toLowerCase().replace(/_/g, '-').startsWith('zh-tw');
+        const isTwB = (b.lang || '').toLowerCase().replace(/_/g, '-').startsWith('zh-tw');
+        if (isTwA && !isTwB) return -1;
+        if (!isTwA && isTwB) return 1;
+
+        const isGoogleA = a.name.includes('Google');
+        const isGoogleB = b.name.includes('Google');
+        if (isGoogleA && !isGoogleB) return -1;
+        if (!isGoogleA && isGoogleB) return 1;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
   }
 
   public setVoiceByName(voiceName: string): boolean {
@@ -281,10 +311,13 @@ class ChineseTTS {
     if (zhVoices.length === 0) return false;
 
     if (gender === 'default') {
-      const zhDefault =
-        zhVoices.find((v) => (v.lang || '').toLowerCase() === 'zh-cn') ||
-        zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) ||
-        zhVoices[0];
+      const googleTw = zhVoices.find(
+        (v) =>
+          v.name.includes('Google') &&
+          (v.name.includes('國語') || v.name.includes('臺灣') || v.name.includes('Taiwan') || (v.lang || '').toLowerCase().includes('zh-tw'))
+      );
+      const anyTw = zhVoices.find((v) => (v.lang || '').toLowerCase().replace(/_/g, '-').startsWith('zh-tw'));
+      const zhDefault = googleTw || anyTw || zhVoices.find((v) => v.name.includes('Google')) || zhVoices.find((v) => (v.lang || '').toLowerCase().startsWith('zh-cn')) || zhVoices[0];
       if (zhDefault) {
         this.currentVoice = zhDefault;
         try {

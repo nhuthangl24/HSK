@@ -76,3 +76,16 @@ export interface SystemConfig {
   updatedAt?: string;
   updatedBy?: string;
 }
+
+export interface UserFeedback {
+  id: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  category: 'feature' | 'bug' | 'voice' | 'content' | 'other';
+  rating?: number; // 1-5
+  message: string;
+  createdAt: string;
+  deviceInfo?: string;
+  status?: 'new' | 'reviewed' | 'resolved';
+}

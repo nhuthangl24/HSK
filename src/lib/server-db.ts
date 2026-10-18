@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig } from '@/types/auth';
+import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserFeedback } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
@@ -1245,3 +1245,26 @@ export function getAllUserWorkspacesSummary(): Array<{
     };
   });
 }
+
+// -------------------------------------------------------------
+// USER FEEDBACK MANAGEMENT
+// -------------------------------------------------------------
+
+export function getAllFeedbacks(): UserFeedback[] {
+  return readJsonFile<UserFeedback[]>('feedbacks.json', []);
+}
+
+export function saveFeedback(fb: Omit<UserFeedback, 'id' | 'createdAt'>): UserFeedback {
+  const feedbacks = getAllFeedbacks();
+  const newFeedback: UserFeedback = {
+    ...fb,
+    id: `fb-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    createdAt: new Date().toISOString(),
+    status: 'new',
+  };
+  feedbacks.unshift(newFeedback);
+  if (feedbacks.length > 1000) feedbacks.length = 1000;
+  writeJsonFile('feedbacks.json', feedbacks);
+  return newFeedback;
+}
+
