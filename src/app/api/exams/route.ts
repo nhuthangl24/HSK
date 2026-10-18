@@ -4,6 +4,8 @@ import {
   saveExam,
   updateExam,
   deleteExam,
+  deleteAllExams,
+  resetStarterExams,
   incrementExamStats,
 } from '@/lib/server-db';
 import { authenticateAdmin } from '@/lib/server-db';
@@ -24,7 +26,16 @@ export async function GET(request: Request) {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 
-    return NextResponse.json({ success: true, exams: list });
+    return NextResponse.json(
+      { success: true, exams: list },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Lỗi khi tải danh sách đề thi.';
     return NextResponse.json({ success: false, message: errorMsg }, { status: 500 });
@@ -42,6 +53,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+
+    if (body.action === 'reset_starter') {
+      const restored = resetStarterExams();
+      return NextResponse.json({
+        success: true,
+        message: 'Đã nạp lại các bộ đề thi mẫu thành công!',
+        exams: restored,
+      });
+    }
+
     const {
       title,
       hskLevel,
@@ -140,6 +161,12 @@ export async function DELETE(request: Request) {
 
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
+    const deleteAll = url.searchParams.get('all') === 'true';
+
+    if (deleteAll) {
+      deleteAllExams();
+      return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ đề thi thành công.' });
+    }
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Thiếu mã đề thi (id).' }, { status: 400 });

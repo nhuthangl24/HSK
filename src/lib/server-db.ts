@@ -707,12 +707,23 @@ const DEFAULT_SYSTEM_TOPICS: Topic[] = [
   },
 ];
 
-export function getTopics(userId?: string): Topic[] {
-  let stored = readJsonFile<Topic[]>('topics.json', []);
-  if (stored.length === 0) {
-    stored = [...DEFAULT_SYSTEM_TOPICS];
-    writeJsonFile('topics.json', stored);
+function isTopicDbInitialized(): boolean {
+  if (memoryStore.has('topics.json')) return true;
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, 'topics.json');
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
   }
+}
+
+export function getTopics(userId?: string): Topic[] {
+  if (!isTopicDbInitialized()) {
+    writeJsonFile('topics.json', [...DEFAULT_SYSTEM_TOPICS]);
+  }
+  let stored = readJsonFile<Topic[]>('topics.json', []);
+  if (!Array.isArray(stored)) stored = [];
 
   // Calculate dynamic wordCount per topic
   const systemWords = getSystemVocabulary();
@@ -1469,14 +1480,24 @@ const INITIAL_STARTER_EXAMS: ExamItem[] = [
   },
 ];
 
+function isExamDbInitialized(): boolean {
+  if (memoryStore.has('exams.json')) return true;
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, 'exams.json');
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+}
+
 export function getAllExams(): ExamItem[] {
-  const stored = readJsonFile<ExamItem[]>('exams.json', []);
-  if (!stored || stored.length === 0) {
-    // Seed initial starter exams
+  if (!isExamDbInitialized()) {
     writeJsonFile('exams.json', INITIAL_STARTER_EXAMS);
     return INITIAL_STARTER_EXAMS;
   }
-  return stored;
+  const stored = readJsonFile<ExamItem[]>('exams.json', []);
+  return Array.isArray(stored) ? stored : [];
 }
 
 export function getExamById(id: string): ExamItem | null {
@@ -1524,6 +1545,16 @@ export function deleteExam(id: string): boolean {
   if (filtered.length === exams.length) return false;
   writeJsonFile('exams.json', filtered);
   return true;
+}
+
+export function deleteAllExams(): boolean {
+  writeJsonFile('exams.json', []);
+  return true;
+}
+
+export function resetStarterExams(): ExamItem[] {
+  writeJsonFile('exams.json', INITIAL_STARTER_EXAMS);
+  return INITIAL_STARTER_EXAMS;
 }
 
 export function incrementExamStats(id: string, type: 'view' | 'download'): boolean {
@@ -1578,13 +1609,29 @@ const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   },
 ];
 
+function isNotificationDbInitialized(): boolean {
+  if (memoryStore.has('notifications.json')) return true;
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, 'notifications.json');
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+}
+
 export function getAllNotifications(): AppNotification[] {
-  const stored = readJsonFile<AppNotification[]>('notifications.json', []);
-  if (!stored || stored.length === 0) {
+  if (!isNotificationDbInitialized()) {
     writeJsonFile('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
     return INITIAL_STARTER_NOTIFICATIONS;
   }
-  return stored;
+  const stored = readJsonFile<AppNotification[]>('notifications.json', []);
+  return Array.isArray(stored) ? stored : [];
+}
+
+export function deleteAllNotifications(): boolean {
+  writeJsonFile('notifications.json', []);
+  return true;
 }
 
 export function saveNotification(

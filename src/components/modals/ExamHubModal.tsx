@@ -65,7 +65,7 @@ export function ExamHubModal({
   const fetchExams = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/exams');
+      const res = await fetch(`/api/exams?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.exams)) {

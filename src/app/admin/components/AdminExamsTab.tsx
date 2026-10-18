@@ -54,6 +54,10 @@ export default function AdminExamsTab() {
   const [deletingExam, setDeletingExam] = useState<ExamItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Delete All Modal
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+
   // Form fields
   const [formTitle, setFormTitle] = useState('');
   const [formHskLevel, setFormHskLevel] = useState<ExamHskLevel>(1);
@@ -73,7 +77,8 @@ export default function AdminExamsTab() {
     setLoading(true);
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch('/api/exams', {
+      const res = await fetch(`/api/exams?t=${Date.now()}`, {
+        cache: 'no-store',
         headers: authHeaders,
       });
       if (res.ok) {
@@ -252,15 +257,17 @@ export default function AdminExamsTab() {
   const handleDeleteExam = async () => {
     if (!deletingExam) return;
     setIsDeleting(true);
+    const targetId = deletingExam.id;
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch(`/api/exams?id=${encodeURIComponent(deletingExam.id)}`, {
+      const res = await fetch(`/api/exams?id=${encodeURIComponent(targetId)}`, {
         method: 'DELETE',
         headers: authHeaders,
       });
       if (res.ok) {
         toast.success('Đã xóa bộ đề thi.');
         setDeletingExam(null);
+        setExams((prev) => prev.filter((e) => e.id !== targetId));
         fetchExams();
       } else {
         toast.error('Không thể xóa đề thi.');
@@ -269,6 +276,56 @@ export default function AdminExamsTab() {
       toast.error('Lỗi khi xóa đề thi.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteAllExams = async () => {
+    setIsDeletingAll(true);
+    try {
+      const authHeaders = getClientAuthHeaders(user);
+      const res = await fetch('/api/exams?all=true', {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
+      if (res.ok) {
+        toast.success('Đã xóa toàn bộ đề thi thành công!');
+        setExams([]);
+        setIsDeleteAllModalOpen(false);
+        fetchExams();
+      } else {
+        toast.error('Không thể xóa toàn bộ đề thi.');
+      }
+    } catch {
+      toast.error('Lỗi khi xóa đề thi.');
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
+  const handleResetStarterExams = async () => {
+    setLoading(true);
+    try {
+      const authHeaders = getClientAuthHeaders(user);
+      const res = await fetch('/api/exams', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ action: 'reset_starter' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success('Đã nạp lại các bộ đề thi mẫu thành công!');
+        if (data.exams && Array.isArray(data.exams)) {
+          setExams(data.exams);
+        } else {
+          fetchExams();
+        }
+      } else {
+        toast.error('Không thể nạp đề mẫu.');
+      }
+    } catch {
+      toast.error('Lỗi khi nạp đề thi mẫu.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -366,7 +423,7 @@ export default function AdminExamsTab() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
           <button
             type="button"
             onClick={fetchExams}
@@ -376,6 +433,31 @@ export default function AdminExamsTab() {
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
+
+          {exams.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteAllModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press"
+              title="Xóa toàn bộ đề thi hiện có trong kho"
+            >
+              <Trash2 size={15} />
+              <span className="hidden sm:inline">Xóa tất cả ({exams.length})</span>
+            </button>
+          )}
+
+          {exams.length === 0 && (
+            <button
+              type="button"
+              onClick={handleResetStarterExams}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-2 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press"
+              title="Nạp lại 6 bộ đề thi HSK chuẩn mẫu ban đầu"
+            >
+              <Sparkles size={15} className="text-amber-500" />
+              <span>Nạp lại 6 đề mẫu</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -982,6 +1064,42 @@ export default function AdminExamsTab() {
                 className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
               >
                 {isDeleting ? 'Đang xóa...' : 'Xóa Đề Thi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ALL CONFIRM MODAL */}
+      {isDeleteAllModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full p-5 text-center animate-scaleIn">
+            <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={24} />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              Xác nhận xóa TẤT CẢ đề thi?
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+              Toàn bộ <strong className="text-rose-600 font-bold">{exams.length} bộ đề thi</strong> hiện có sẽ bị xóa sạch khỏi kho đề. Hệ thống sẽ để trống kho và không tự động nạp lại dữ liệu giả nữa.
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isDeletingAll}
+                onClick={() => setIsDeleteAllModalOpen(false)}
+                className="flex-1 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingAll}
+                onClick={handleDeleteAllExams}
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingAll ? 'Đang xóa...' : 'Xác nhận xóa hết'}
               </button>
             </div>
           </div>
