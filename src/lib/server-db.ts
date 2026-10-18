@@ -171,6 +171,7 @@ export function registerUser(
     process.env.ADMIN_EMAIL,
     process.env.NEXT_PUBLIC_ADMIN_EMAIL,
     'luunhuthang2402@gmail.com',
+    'nhuthangl24@gmail.com',
   ]
     .filter(Boolean)
     .map((e) => (e as string).toLowerCase().trim());
@@ -984,7 +985,7 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   maintenanceMode: false,
   maxImportBatchSize: 500,
   defaultTargetHsk: 3,
-  zaloCommunityEnabled: true,
+  zaloCommunityEnabled: false,
   zaloCommunityUrl: 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
   zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
   zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',

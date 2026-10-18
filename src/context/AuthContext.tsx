@@ -43,6 +43,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_EMAILS = [
   process.env.NEXT_PUBLIC_ADMIN_EMAIL,
   'luunhuthang2402@gmail.com',
+  'nhuthangl24@gmail.com',
 ]
   .filter(Boolean)
   .map((e) => (e as string).toLowerCase().trim());

@@ -58,6 +58,7 @@ export const ADMIN_EMAILS = [
   process.env.ADMIN_EMAIL,
   process.env.NEXT_PUBLIC_ADMIN_EMAIL,
   'luunhuthang2402@gmail.com',
+  'nhuthangl24@gmail.com',
 ]
   .filter(Boolean)
   .map((e) => (e as string).toLowerCase().trim());

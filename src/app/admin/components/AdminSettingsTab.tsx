@@ -26,11 +26,11 @@ const DEFAULT_CONFIG: SystemConfig = {
   maintenanceMode: false,
   maxImportBatchSize: 500,
   defaultTargetHsk: 3,
-  zaloCommunityEnabled: true,
+  zaloCommunityEnabled: false,
   zaloCommunityUrl: 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
   zaloCommunityTitle: 'Tham gia Cộng Đồng Zalo',
   zaloCommunityDescription: 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
-  updatedAt: '2026-10-17T00:00:00.000Z',
+  updatedAt: '2026-10-18T00:00:00.000Z',
 };
 
 export default function AdminSettingsTab() {
@@ -43,7 +43,11 @@ export default function AdminSettingsTab() {
         if (local) {
           const parsed = JSON.parse(local);
           if (parsed && typeof parsed === 'object') {
-            return { ...DEFAULT_CONFIG, ...parsed };
+            return {
+              ...DEFAULT_CONFIG,
+              ...parsed,
+              zaloCommunityEnabled: Boolean(parsed.zaloCommunityEnabled),
+            };
           }
         }
       } catch {}
@@ -95,9 +99,21 @@ export default function AdminSettingsTab() {
 
       let winningConfig = currentConfig;
       if (fsTime > localTime && fsTime >= serverTime && firestoreConfig) {
-        winningConfig = { ...DEFAULT_CONFIG, ...firestoreConfig };
+        winningConfig = {
+          ...DEFAULT_CONFIG,
+          ...firestoreConfig,
+          zaloCommunityEnabled: typeof firestoreConfig.zaloCommunityEnabled !== 'undefined'
+            ? Boolean(firestoreConfig.zaloCommunityEnabled)
+            : Boolean(currentConfig.zaloCommunityEnabled),
+        };
       } else if (serverTime > localTime && serverTime > fsTime && serverConfig) {
-        winningConfig = { ...DEFAULT_CONFIG, ...serverConfig };
+        winningConfig = {
+          ...DEFAULT_CONFIG,
+          ...serverConfig,
+          zaloCommunityEnabled: typeof serverConfig.zaloCommunityEnabled !== 'undefined'
+            ? Boolean(serverConfig.zaloCommunityEnabled)
+            : Boolean(currentConfig.zaloCommunityEnabled),
+        };
       }
 
       setConfig(winningConfig);
@@ -125,12 +141,52 @@ export default function AdminSettingsTab() {
     fetchConfig();
   }, [fetchConfig]);
 
+  const handleToggleZalo = async (checked: boolean) => {
+    const now = new Date().toISOString();
+    const updatedConfig: SystemConfig = {
+      ...config,
+      zaloCommunityEnabled: checked,
+      updatedAt: now,
+    };
+    setConfig(updatedConfig);
+
+    // 1. Instant local persistence & broadcast to Sidebar
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hsk_system_config', JSON.stringify(updatedConfig));
+      window.dispatchEvent(
+        new CustomEvent('hsk_system_config_updated', { detail: updatedConfig })
+      );
+    }
+
+    // 2. Persist to Firestore
+    saveSystemConfigToFirestore(updatedConfig as unknown as Record<string, unknown>).catch(() => {});
+
+    // 3. Persist to server API
+    try {
+      const authHeaders = getClientAuthHeaders(user);
+      await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify(updatedConfig),
+      });
+    } catch {}
+
+    toast.success(
+      checked ? 'Đã bật nút Cộng Đồng Zalo' : 'Đã tắt nút Cộng Đồng Zalo',
+      'Cộng Đồng Zalo'
+    );
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const updatedConfig: SystemConfig = { ...config, updatedAt: now };
+      const updatedConfig: SystemConfig = {
+        ...config,
+        zaloCommunityEnabled: Boolean(config.zaloCommunityEnabled),
+        updatedAt: now,
+      };
       setConfig(updatedConfig);
 
       // 1. Save immediately to localStorage (instant persistence on current browser)
@@ -233,8 +289,8 @@ export default function AdminSettingsTab() {
                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
                     type="checkbox"
-                    checked={config.zaloCommunityEnabled ?? true}
-                    onChange={(e) => setConfig({ ...config, zaloCommunityEnabled: e.target.checked })}
+                    checked={Boolean(config.zaloCommunityEnabled)}
+                    onChange={(e) => handleToggleZalo(e.target.checked)}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0068FF]" />

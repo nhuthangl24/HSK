@@ -10,7 +10,7 @@ export async function GET() {
       platformDescription: config.platformDescription,
       allowRegistration: config.allowRegistration,
       maintenanceMode: config.maintenanceMode,
-      zaloCommunityEnabled: config.zaloCommunityEnabled ?? true,
+      zaloCommunityEnabled: Boolean(config.zaloCommunityEnabled),
       zaloCommunityUrl: config.zaloCommunityUrl || 'https://zalo.me/g/urwxu6t93bwfnjkzeuok',
       zaloCommunityTitle: config.zaloCommunityTitle || 'Tham gia Cộng Đồng Zalo',
       zaloCommunityDescription: config.zaloCommunityDescription || 'Hỏi đáp & cùng luyện thi HSK mỗi ngày',
