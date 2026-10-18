@@ -89,3 +89,28 @@ export interface UserFeedback {
   deviceInfo?: string;
   status?: 'new' | 'reviewed' | 'resolved';
 }
+
+export interface PracticedWordRecord {
+  vocabId: string;
+  hanzi: string;
+  pinyin: string;
+  vietnamese: string;
+  hskLevel?: number | string;
+  hanziStatus?: 'correct' | 'wrong' | 'uncertain' | 'unlearned';
+  hanziPracticeInput?: string;
+  translationStatus?: 'correct' | 'review' | 'unanswered';
+  translationPracticeInput?: string;
+  favorite?: boolean;
+  notes?: string;
+  lastPracticedAt?: string;
+  srs?: {
+    repetition?: number;
+    interval?: number;
+    easeFactor?: number;
+    nextReview?: string;
+    totalReviews?: number;
+    successRate?: number;
+  };
+  isMastered: boolean;
+}
+

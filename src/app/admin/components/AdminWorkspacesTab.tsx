@@ -15,6 +15,19 @@ import {
   CheckCircle2,
   Flame,
   GraduationCap,
+  Star,
+  FileText,
+  Check,
+  X,
+  AlertCircle,
+  Bookmark,
+  Calendar,
+  ArrowUpDown,
+  Filter,
+  Sparkles,
+  PenTool,
+  Languages,
+  ExternalLink,
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
@@ -26,7 +39,7 @@ import {
   loadUserProgressFromFirestore,
   deleteWordFromFirestore,
 } from '@/lib/firebase-db';
-import { User, UserSettings } from '@/types/auth';
+import { User, UserSettings, PracticedWordRecord } from '@/types/auth';
 import { VocabItem, Deck, CustomHskGroup } from '@/types/vocabulary';
 import { UserWorkspaceData } from '@/lib/server-db';
 
@@ -64,9 +77,15 @@ export default function AdminWorkspacesTab({
   // Detail
   const [workspaceData, setWorkspaceData] = useState<UserWorkspaceData | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [workspaceSubTab, setWorkspaceSubTab] = useState<'words' | 'hsk' | 'topics' | 'settings'>('words');
+  const [workspaceSubTab, setWorkspaceSubTab] = useState<'practiced' | 'words' | 'hsk' | 'topics' | 'settings'>('practiced');
   const [wordSearch, setWordSearch] = useState('');
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
+
+  // Practiced words filters & controls
+  const [practicedSearch, setPracticedSearch] = useState('');
+  const [practicedFilter, setPracticedFilter] = useState<'all' | 'mastered' | 'reviewing' | 'written' | 'translated' | 'has_notes' | 'favorite'>('all');
+  const [practicedHskFilter, setPracticedHskFilter] = useState<string>('all');
+  const [practicedSortBy, setPracticedSortBy] = useState<'recent' | 'reviews' | 'hsk' | 'hanzi'>('recent');
 
   // Synchronize when initialSelectedUserId changes
   useEffect(() => {
@@ -199,13 +218,14 @@ export default function AdminWorkspacesTab({
       } catch {}
 
       // 2. Fetch directly from Firestore (live cloud data)
+      let allFirestoreWords: VocabItem[] = [];
       let firestoreWords: VocabItem[] = [];
       let firestoreDecks: Deck[] = [];
       let firestoreProgress: Record<string, Record<string, unknown>> = {};
 
       try {
-        const allWords = await loadWordsFromFirestore();
-        firestoreWords = allWords.filter((w) => w.userId === userId && !w.isSystem);
+        allFirestoreWords = await loadWordsFromFirestore();
+        firestoreWords = allFirestoreWords.filter((w) => w.userId === userId && !w.isSystem);
       } catch {}
 
       try {
@@ -314,26 +334,76 @@ export default function AdminWorkspacesTab({
         createdAt: foundSummary?.createdAt || new Date().toISOString(),
       };
 
-      // Calculate progress stats
+      // Calculate progress stats & practiced words
       const firestoreProgressKeys = Object.keys(firestoreProgress);
       let masteredCount = srvData?.masteredCount || finalUser.totalMastered || 0;
       let totalReviews = srvData?.totalReviews || 0;
       let progressCount = srvData?.progressCount || 0;
 
-      if (firestoreProgressKeys.length > 0) {
-        progressCount = Math.max(progressCount, firestoreProgressKeys.length);
-        let fsMastered = 0;
-        let fsReviews = 0;
-        for (const k of firestoreProgressKeys) {
-          const p = firestoreProgress[k] as { hanziStatus?: string; srs?: { repetition?: number; totalReviews?: number } };
-          if (p.hanziStatus === 'correct' || (p.srs && (p.srs.repetition || 0) >= 2)) {
-            fsMastered++;
-          }
-          fsReviews += p.srs?.totalReviews || 0;
+      // Build Practiced Words list
+      const practicedMap = new Map<string, PracticedWordRecord>();
+
+      // 1. Load existing server practiced words
+      for (const pw of srvData?.practicedWords || []) {
+        if (pw.vocabId) {
+          practicedMap.set(pw.vocabId, pw);
         }
-        masteredCount = Math.max(masteredCount, fsMastered);
-        totalReviews = Math.max(totalReviews, fsReviews);
       }
+
+      // 2. Merge firestore progress
+      for (const [vId, rawVal] of Object.entries(firestoreProgress)) {
+        const rawP = rawVal as Record<string, unknown>;
+        const matchedWord = allFirestoreWords.find((w: VocabItem) => w.id === vId) || combinedWords.find((w: VocabItem) => w.id === vId);
+        const existing = practicedMap.get(vId);
+
+        const hanzi = (rawP.hanzi as string) || matchedWord?.hanzi || existing?.hanzi || vId;
+        const pinyin = (rawP.pinyin as string) || matchedWord?.pinyin || existing?.pinyin || '';
+        const vietnamese = (rawP.vietnamese as string) || matchedWord?.meaning || existing?.vietnamese || '';
+        const hskLevel = (rawP.hskLevel as number) || matchedWord?.hskLevel || existing?.hskLevel || 1;
+        const hanziStatus = (rawP.hanziStatus as any) || existing?.hanziStatus || 'unlearned';
+        const hanziPracticeInput = (rawP.hanziPracticeInput as string) ?? existing?.hanziPracticeInput ?? '';
+        const translationStatus = (rawP.translationStatus as any) || existing?.translationStatus || 'unanswered';
+        const translationPracticeInput = (rawP.translationPracticeInput as string) ?? existing?.translationPracticeInput ?? '';
+        const favorite = rawP.favorite !== undefined ? Boolean(rawP.favorite) : Boolean(existing?.favorite);
+        const notes = (rawP.notes as string) ?? existing?.notes ?? '';
+        const srs = (rawP.srs as any) || existing?.srs;
+        const isMastered = hanziStatus === 'correct' || (srs && (srs.repetition || 0) >= 2) || !!existing?.isMastered;
+        const lastPracticedAt = (rawP.lastPracticedAt as string) || (rawP.updatedAt as string) || existing?.lastPracticedAt || new Date().toISOString();
+
+        practicedMap.set(vId, {
+          vocabId: vId,
+          hanzi,
+          pinyin,
+          vietnamese,
+          hskLevel,
+          hanziStatus,
+          hanziPracticeInput,
+          translationStatus,
+          translationPracticeInput,
+          favorite,
+          notes,
+          srs,
+          isMastered,
+          lastPracticedAt,
+        });
+
+        if (srs?.totalReviews) {
+          totalReviews += Number(srs.totalReviews);
+        }
+      }
+
+      const combinedPracticedWords = Array.from(practicedMap.values());
+      combinedPracticedWords.sort((a, b) => {
+        const tA = a.lastPracticedAt ? new Date(a.lastPracticedAt).getTime() : 0;
+        const tB = b.lastPracticedAt ? new Date(b.lastPracticedAt).getTime() : 0;
+        return tB - tA;
+      });
+
+      masteredCount = Math.max(
+        masteredCount,
+        combinedPracticedWords.filter((p) => p.isMastered).length
+      );
+      progressCount = Math.max(progressCount, combinedPracticedWords.length, firestoreProgressKeys.length);
 
       const finalWorkspace: UserWorkspaceData = {
         user: finalUser,
@@ -342,7 +412,7 @@ export default function AdminWorkspacesTab({
         customTopics: srvData?.customTopics || [],
         progressCount,
         masteredCount,
-        totalReviews,
+        totalReviews: Math.max(totalReviews, srvData?.totalReviews || 0),
         settings: srvData?.settings || {
           userId,
           theme: 'system',
@@ -351,6 +421,7 @@ export default function AdminWorkspacesTab({
           autoPronounce: true,
           fontSize: 'normal',
         },
+        practicedWords: combinedPracticedWords,
       };
 
       setWorkspaceData(finalWorkspace);
@@ -435,6 +506,56 @@ export default function AdminWorkspacesTab({
       w.meaning.toLowerCase().includes(q)
     );
   }) || [];
+
+  const filteredPracticedWords = (workspaceData?.practicedWords || [])
+    .filter((w) => {
+      if (practicedHskFilter !== 'all' && String(w.hskLevel) !== practicedHskFilter) {
+        return false;
+      }
+      if (practicedFilter === 'mastered' && !w.isMastered) return false;
+      if (practicedFilter === 'reviewing' && (w.isMastered || (w.srs?.totalReviews || 0) === 0)) return false;
+      if (practicedFilter === 'written' && (!w.hanziStatus || w.hanziStatus === 'unlearned')) return false;
+      if (practicedFilter === 'translated' && (!w.translationStatus || w.translationStatus === 'unanswered')) return false;
+      if (practicedFilter === 'has_notes' && (!w.notes || !w.notes.trim())) return false;
+      if (practicedFilter === 'favorite' && !w.favorite) return false;
+
+      if (!practicedSearch.trim()) return true;
+      const q = practicedSearch.toLowerCase().trim();
+      return (
+        w.hanzi.toLowerCase().includes(q) ||
+        w.pinyin.toLowerCase().includes(q) ||
+        w.vietnamese.toLowerCase().includes(q) ||
+        (w.notes && w.notes.toLowerCase().includes(q)) ||
+        (w.hanziPracticeInput && w.hanziPracticeInput.toLowerCase().includes(q)) ||
+        (w.translationPracticeInput && w.translationPracticeInput.toLowerCase().includes(q))
+      );
+    })
+    .sort((a, b) => {
+      if (practicedSortBy === 'recent') {
+        const tA = a.lastPracticedAt ? new Date(a.lastPracticedAt).getTime() : 0;
+        const tB = b.lastPracticedAt ? new Date(b.lastPracticedAt).getTime() : 0;
+        return tB - tA;
+      }
+      if (practicedSortBy === 'reviews') {
+        return (b.srs?.totalReviews || 0) - (a.srs?.totalReviews || 0);
+      }
+      if (practicedSortBy === 'hsk') {
+        return Number(a.hskLevel || 1) - Number(b.hskLevel || 1);
+      }
+      if (practicedSortBy === 'hanzi') {
+        return a.hanzi.localeCompare(b.hanzi);
+      }
+      return 0;
+    });
+
+  const practicedStats = {
+    total: workspaceData?.practicedWords?.length || 0,
+    mastered: workspaceData?.practicedWords?.filter((w) => w.isMastered).length || 0,
+    written: workspaceData?.practicedWords?.filter((w) => w.hanziStatus && w.hanziStatus !== 'unlearned').length || 0,
+    translated: workspaceData?.practicedWords?.filter((w) => w.translationStatus && w.translationStatus !== 'unanswered').length || 0,
+    withNotes: workspaceData?.practicedWords?.filter((w) => Boolean(w.notes?.trim())).length || 0,
+    starred: workspaceData?.practicedWords?.filter((w) => Boolean(w.favorite)).length || 0,
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -595,21 +716,11 @@ export default function AdminWorkspacesTab({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase">Từ vựng riêng</span>
+                    <span className="text-[10px] font-bold uppercase">Từ đã học & làm</span>
                     <BookOpen size={14} className="text-emerald-600" />
                   </div>
                   <div className="text-2xl font-black text-slate-900">
-                    {workspaceData.customWords.length}
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase">Nhóm HSK riêng</span>
-                    <Layers size={14} className="text-blue-600" />
-                  </div>
-                  <div className="text-2xl font-black text-slate-900">
-                    {workspaceData.customHskGroups.length}
+                    {practicedStats.total}
                   </div>
                 </div>
 
@@ -619,7 +730,17 @@ export default function AdminWorkspacesTab({
                     <CheckCircle2 size={14} className="text-emerald-600" />
                   </div>
                   <div className="text-2xl font-black text-emerald-700">
-                    {workspaceData.masteredCount}
+                    {practicedStats.mastered}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between text-slate-400 mb-1">
+                    <span className="text-[10px] font-bold uppercase">Từ vựng riêng</span>
+                    <FileText size={14} className="text-blue-600" />
+                  </div>
+                  <div className="text-2xl font-black text-slate-900">
+                    {workspaceData.customWords.length}
                   </div>
                 </div>
 
@@ -638,6 +759,18 @@ export default function AdminWorkspacesTab({
               <div className="flex border-b border-slate-200 text-xs overflow-x-auto">
                 <button
                   type="button"
+                  onClick={() => setWorkspaceSubTab('practiced')}
+                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    workspaceSubTab === 'practiced'
+                      ? 'border-emerald-600 text-emerald-700'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Sparkles size={14} className={workspaceSubTab === 'practiced' ? 'text-emerald-600' : 'text-slate-400'} />
+                  <span>Từ vựng đã làm & Luyện tập ({practicedStats.total})</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setWorkspaceSubTab('words')}
                   className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap ${
                     workspaceSubTab === 'words'
@@ -645,7 +778,7 @@ export default function AdminWorkspacesTab({
                       : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Từ vựng cá nhân ({workspaceData.customWords.length})
+                  Từ vựng riêng ({workspaceData.customWords.length})
                 </button>
                 <button
                   type="button"
@@ -681,6 +814,251 @@ export default function AdminWorkspacesTab({
                   Thiết lập cá nhân
                 </button>
               </div>
+
+              {/* Sub-tab 0: Practiced Words (Từ vựng đã làm & Luyện tập) */}
+              {workspaceSubTab === 'practiced' && (
+                <div className="space-y-4">
+                  {/* Search, Filter chips & Sort controls */}
+                  <div className="space-y-3 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="relative flex-1 min-w-[220px]">
+                        <Search size={13} className="absolute left-3 top-2.5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={practicedSearch}
+                          onChange={(e) => setPracticedSearch(e.target.value)}
+                          placeholder="Tìm chữ Hán, Pinyin, nghĩa, câu trả lời của user..."
+                          className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* HSK Level Filter */}
+                        <select
+                          value={practicedHskFilter}
+                          onChange={(e) => setPracticedHskFilter(e.target.value)}
+                          className="text-xs bg-white border border-slate-200 py-1.5 px-2.5 rounded-xl text-slate-700 focus:border-emerald-500 focus:outline-hidden cursor-pointer"
+                        >
+                          <option value="all">Tất cả cấp độ HSK</option>
+                          <option value="1">HSK 1</option>
+                          <option value="2">HSK 2</option>
+                          <option value="3">HSK 3</option>
+                          <option value="4">HSK 4</option>
+                          <option value="5">HSK 5</option>
+                          <option value="6">HSK 6</option>
+                          <option value="7">HSK 7-9</option>
+                        </select>
+
+                        {/* Sort Selector */}
+                        <select
+                          value={practicedSortBy}
+                          onChange={(e) => setPracticedSortBy(e.target.value as any)}
+                          className="text-xs bg-white border border-slate-200 py-1.5 px-2.5 rounded-xl text-slate-700 focus:border-emerald-500 focus:outline-hidden cursor-pointer"
+                        >
+                          <option value="recent">Lần học gần nhất</option>
+                          <option value="reviews">Lượt ôn nhiều nhất</option>
+                          <option value="hsk">Cấp HSK tăng dần</option>
+                          <option value="hanzi">Chữ Hán A-Z</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                        <Filter size={11} /> Lọc:
+                      </span>
+                      {[
+                        { id: 'all', label: `Tất cả (${practicedStats.total})` },
+                        { id: 'mastered', label: `✨ Đã thuộc (${practicedStats.mastered})` },
+                        { id: 'reviewing', label: `🔄 Đang ôn (${Math.max(0, practicedStats.total - practicedStats.mastered)})` },
+                        { id: 'written', label: `✍️ Đã viết Hanzi (${practicedStats.written})` },
+                        { id: 'translated', label: `🌐 Đã dịch câu (${practicedStats.translated})` },
+                        { id: 'has_notes', label: `📝 Có ghi chú (${practicedStats.withNotes})` },
+                        { id: 'favorite', label: `⭐ Yêu thích (${practicedStats.starred})` },
+                      ].map((chip) => (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          onClick={() => setPracticedFilter(chip.id as any)}
+                          className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                            practicedFilter === chip.id
+                              ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                          }`}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Practiced Words List */}
+                  {filteredPracticedWords.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                      <Sparkles size={32} className="mx-auto text-slate-300 mb-2" />
+                      {practicedStats.total === 0
+                        ? 'Học viên này chưa bắt đầu luyện tập hoặc học từ vựng nào trong hệ thống.'
+                        : 'Không có từ vựng nào khớp với bộ lọc tìm kiếm.'}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
+                      {filteredPracticedWords.map((w) => (
+                        <div
+                          key={w.vocabId}
+                          className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition-all shadow-2xs space-y-3"
+                        >
+                          {/* Top row: Word Info, Meaning, HSK, Star, Mastered */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <span className="text-2xl font-black text-slate-900 font-hanzi tracking-wide leading-none pt-0.5">
+                                {w.hanzi}
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-bold text-emerald-700 font-mono">
+                                    {w.pinyin || '—'}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      w.hskLevel === 1
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : w.hskLevel === 2
+                                        ? 'bg-teal-100 text-teal-800'
+                                        : w.hskLevel === 3
+                                        ? 'bg-sky-100 text-sky-800'
+                                        : w.hskLevel === 4
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : w.hskLevel === 5
+                                        ? 'bg-indigo-100 text-indigo-800'
+                                        : w.hskLevel === 6
+                                        ? 'bg-purple-100 text-purple-800'
+                                        : 'bg-fuchsia-100 text-fuchsia-800'
+                                    }`}
+                                  >
+                                    HSK {w.hskLevel || 1}
+                                  </span>
+                                  {w.favorite && (
+                                    <span className="text-amber-500 flex items-center text-xs" title="Từ yêu thích của học viên">
+                                      <Star size={13} className="fill-amber-400 text-amber-400" />
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-700 mt-1 font-medium">
+                                  {w.vietnamese || '—'}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Mastered or Review badge */}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {w.isMastered ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                                  <Sparkles size={12} className="text-emerald-600" /> Đã thuộc
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold">
+                                  <RefreshCw size={11} className="text-slate-400" /> {w.srs?.totalReviews || 0} lượt ôn
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Middle row: Practice details (Writing + Translation) */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100 text-xs">
+                            {/* Luyện viết Hanzi */}
+                            <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                  <PenTool size={11} /> Luyện viết Hanzi
+                                </span>
+                                {w.hanziStatus === 'correct' ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                                    <Check size={10} /> Viết đúng
+                                  </span>
+                                ) : w.hanziStatus === 'wrong' ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-700 bg-rose-100/70 px-1.5 py-0.5 rounded">
+                                    <X size={10} /> Viết sai
+                                  </span>
+                                ) : w.hanziStatus === 'uncertain' ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-100/70 px-1.5 py-0.5 rounded">
+                                    <AlertCircle size={10} /> Chưa chắc
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    Chưa làm
+                                  </span>
+                                )}
+                              </div>
+                              {w.hanziPracticeInput ? (
+                                <div className="text-[11px] text-slate-800 font-mono bg-white p-1.5 rounded border border-slate-200/80 truncate">
+                                  <span className="text-slate-400 text-[10px] mr-1">User gõ:</span>
+                                  <strong className="font-hanzi text-slate-900">{w.hanziPracticeInput}</strong>
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-slate-400 italic">Chưa nhập nội dung viết</div>
+                              )}
+                            </div>
+
+                            {/* Luyện dịch */}
+                            <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                  <Languages size={11} /> Luyện dịch nghĩa
+                                </span>
+                                {w.translationStatus === 'correct' ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                                    <Check size={10} /> Dịch chuẩn
+                                  </span>
+                                ) : w.translationStatus === 'review' ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-100/70 px-1.5 py-0.5 rounded">
+                                    <AlertCircle size={10} /> Cần xem lại
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    Chưa làm
+                                  </span>
+                                )}
+                              </div>
+                              {w.translationPracticeInput ? (
+                                <div className="text-[11px] text-slate-800 bg-white p-1.5 rounded border border-slate-200/80 truncate">
+                                  <span className="text-slate-400 text-[10px] mr-1">Câu dịch:</span>
+                                  <span>{w.translationPracticeInput}</span>
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-slate-400 italic">Chưa nhập bản dịch</div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Bottom row: User notes & timestamp */}
+                          {(w.notes || w.lastPracticedAt) && (
+                            <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex-wrap">
+                              <div className="flex items-center gap-1.5 truncate max-w-md">
+                                {w.notes ? (
+                                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md text-[11px] font-medium truncate">
+                                    <Bookmark size={11} className="text-amber-600 shrink-0" />
+                                    <span className="truncate">Ghi chú: "{w.notes}"</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 text-[10px]">Không có ghi chú</span>
+                                )}
+                              </div>
+
+                              {w.lastPracticedAt && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono shrink-0">
+                                  <Calendar size={11} />
+                                  <span>Luyện gần nhất: {new Date(w.lastPracticedAt).toLocaleString('vi-VN')}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Sub-tab 1: Words */}
               {workspaceSubTab === 'words' && (

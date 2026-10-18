@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saveFeedback, getAllFeedbacks, authenticateAdmin } from '@/lib/server-db';
+import { saveFeedback, getAllFeedbacks, updateFeedbackStatus, deleteFeedback, authenticateAdmin } from '@/lib/server-db';
 import { UserFeedback } from '@/types/auth';
 
 export async function POST(request: Request) {
@@ -49,4 +49,60 @@ export async function GET(request: Request) {
 
   const list = getAllFeedbacks();
   return NextResponse.json({ success: true, feedbacks: list });
+}
+
+export async function PATCH(request: Request) {
+  const { isAdmin } = authenticateAdmin(request);
+  if (!isAdmin) {
+    return NextResponse.json(
+      { success: false, message: 'Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+    if (!id || !status) {
+      return NextResponse.json({ success: false, message: 'Thiếu id hoặc trạng thái.' }, { status: 400 });
+    }
+
+    const ok = updateFeedbackStatus(id, status);
+    if (!ok) {
+      return NextResponse.json({ success: false, message: 'Không tìm thấy phản hồi.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã cập nhật trạng thái phản hồi.' });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Lỗi cập nhật trạng thái phản hồi.';
+    return NextResponse.json({ success: false, message: errorMsg }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const { isAdmin } = authenticateAdmin(request);
+  if (!isAdmin) {
+    return NextResponse.json(
+      { success: false, message: 'Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Thiếu tham số ID phản hồi.' }, { status: 400 });
+    }
+
+    const ok = deleteFeedback(id);
+    if (!ok) {
+      return NextResponse.json({ success: false, message: 'Không tìm thấy phản hồi để xóa.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã xóa phản hồi thành công.' });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Lỗi khi xóa phản hồi.';
+    return NextResponse.json({ success: false, message: errorMsg }, { status: 500 });
+  }
 }

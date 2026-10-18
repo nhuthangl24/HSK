@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserFeedback } from '@/types/auth';
+import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserFeedback, PracticedWordRecord } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
@@ -1031,6 +1031,7 @@ export interface UserWorkspaceData {
   masteredCount: number;
   totalReviews: number;
   settings: UserSettings;
+  practicedWords: PracticedWordRecord[];
 }
 
 export function syncUsersToServer(incomingUsers: User[]): void {
@@ -1113,15 +1114,54 @@ export function getUserWorkspaceData(targetUserId: string): UserWorkspaceData {
     };
   }
 
+  // Build a lookup map of all vocabulary (system + custom)
+  const systemVocab = getSystemVocabulary();
+  const vocabLookup = new Map<string, VocabItem>();
+  for (const v of systemVocab) {
+    if (v.id) vocabLookup.set(v.id, v);
+  }
+  for (const w of userCustomWords) {
+    if (w.id) vocabLookup.set(w.id, w);
+  }
+
+  const practicedWords: PracticedWordRecord[] = [];
   let totalReviews = 0;
   let masteredCount = 0;
+
   for (const vId of Object.keys(userProgress)) {
     const p = userProgress[vId];
-    if (p.hanziStatus === 'correct' || (p.srs && p.srs.repetition >= 2)) {
+    const word = vocabLookup.get(vId);
+    const isMastered = p.hanziStatus === 'correct' || (p.srs && (p.srs.repetition || 0) >= 2);
+    if (isMastered) {
       masteredCount++;
     }
     totalReviews += p.srs?.totalReviews || 0;
+
+    const rawP = p as unknown as Record<string, unknown>;
+    practicedWords.push({
+      vocabId: vId,
+      hanzi: word?.hanzi || (rawP.hanzi as string) || vId,
+      pinyin: word?.pinyin || (rawP.pinyin as string) || '',
+      vietnamese: word?.meaning || (rawP.vietnamese as string) || (rawP.meaning as string) || '',
+      hskLevel: word?.hskLevel || (rawP.hskLevel as number) || 1,
+      hanziStatus: p.hanziStatus,
+      hanziPracticeInput: p.hanziPracticeInput,
+      translationStatus: p.translationStatus,
+      translationPracticeInput: p.translationPracticeInput,
+      favorite: !!p.favorite,
+      notes: p.notes,
+      lastPracticedAt: (rawP.lastPracticedAt as string) || p.updatedAt || undefined,
+      srs: p.srs,
+      isMastered,
+    });
   }
+
+  // Sort practicedWords: most recently practiced first
+  practicedWords.sort((a, b) => {
+    const tA = a.lastPracticedAt ? new Date(a.lastPracticedAt).getTime() : 0;
+    const tB = b.lastPracticedAt ? new Date(b.lastPracticedAt).getTime() : 0;
+    return tB - tA;
+  });
 
   const settings = getUserSettings(targetUserId);
 
@@ -1134,6 +1174,7 @@ export function getUserWorkspaceData(targetUserId: string): UserWorkspaceData {
     masteredCount,
     totalReviews,
     settings,
+    practicedWords,
   };
 }
 
@@ -1267,4 +1308,25 @@ export function saveFeedback(fb: Omit<UserFeedback, 'id' | 'createdAt'>): UserFe
   writeJsonFile('feedbacks.json', feedbacks);
   return newFeedback;
 }
+
+export function updateFeedbackStatus(
+  feedbackId: string,
+  status: 'new' | 'reviewed' | 'resolved'
+): boolean {
+  const list = getAllFeedbacks();
+  const item = list.find((f) => f.id === feedbackId);
+  if (!item) return false;
+  item.status = status;
+  writeJsonFile('feedbacks.json', list);
+  return true;
+}
+
+export function deleteFeedback(feedbackId: string): boolean {
+  const list = getAllFeedbacks();
+  const filtered = list.filter((f) => f.id !== feedbackId);
+  if (filtered.length === list.length) return false;
+  writeJsonFile('feedbacks.json', filtered);
+  return true;
+}
+
 
