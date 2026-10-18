@@ -130,7 +130,34 @@ const LEVEL_THEMES: Record<
     words: 'Khẩu ngữ',
     desc: 'Kỳ thi nói chuẩn hóa',
   },
+  '7': {
+    badge: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700',
+    pillActive: 'bg-amber-600 text-white shadow-amber-600/30 shadow-sm ring-2 ring-amber-500/20',
+    border: 'hover:border-amber-400 dark:hover:border-amber-700',
+    bgSoft: 'bg-amber-500/5',
+    accent: 'text-amber-600 dark:text-amber-400',
+    label: 'HSK 7-9',
+    words: '11.000+ từ',
+    desc: 'Cao cấp chuyên gia',
+  },
+  '7-9': {
+    badge: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700',
+    pillActive: 'bg-amber-600 text-white shadow-amber-600/30 shadow-sm ring-2 ring-amber-500/20',
+    border: 'hover:border-amber-400 dark:hover:border-amber-700',
+    bgSoft: 'bg-amber-500/5',
+    accent: 'text-amber-600 dark:text-amber-400',
+    label: 'HSK 7-9',
+    words: '11.000+ từ',
+    desc: 'Cao cấp chuyên gia',
+  },
 };
+
+function formatLevelLabel(lvl: ExamHskLevel | string | number | undefined): string {
+  if (!lvl) return '';
+  if (lvl === 'HSKK') return 'HSKK';
+  if (lvl === 7 || lvl === '7' || lvl === '7-9') return 'HSK 7-9';
+  return `HSK ${lvl}`;
+}
 
 export default function ExamsPage() {
   const toast = useToast();
@@ -299,7 +326,7 @@ export default function ExamsPage() {
   const handleCopyLink = (exam: ExamItem) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const shareUrl = `${origin}/exams?id=${encodeURIComponent(exam.id)}`;
-    const copyText = `📚 Luyện Thi HSK: ${exam.title} (HSK ${exam.hskLevel} • Kèm file nghe MP3 & Đáp án chi tiết) 👉 ${shareUrl}`;
+    const copyText = `📚 Luyện Thi HSK: ${exam.title} (${formatLevelLabel(exam.hskLevel)} • Kèm file nghe MP3 & Đáp án chi tiết) 👉 ${shareUrl}`;
     navigator.clipboard.writeText(copyText);
     toast.success('Đã sao chép link đề thi vào bộ nhớ tạm!');
   };
@@ -531,6 +558,7 @@ export default function ExamsPage() {
               { id: '4', label: 'HSK 4', sub: '1.200 từ' },
               { id: '5', label: 'HSK 5', sub: '2.500 từ' },
               { id: '6', label: 'HSK 6', sub: '5.000 từ' },
+              { id: '7', label: 'HSK 7-9', sub: 'Cao cấp' },
               { id: 'HSKK', label: 'HSKK', sub: 'Khẩu ngữ' },
             ].map((lvl) => {
               const isActive = selectedLevel === lvl.id;
@@ -691,7 +719,7 @@ export default function ExamsPage() {
                             <span
                               className={`text-xs font-black px-2.5 py-1 rounded-xl border tracking-wide shadow-2xs ${theme.badge}`}
                             >
-                              HSK {exam.hskLevel}
+                              {formatLevelLabel(exam.hskLevel)}
                             </span>
 
                             {/* Category Badge */}
@@ -851,7 +879,7 @@ export default function ExamsPage() {
                       <span
                         className={`text-xs font-black px-3 py-1.5 rounded-xl border shrink-0 text-center min-w-[64px] ${theme.badge}`}
                       >
-                        HSK {exam.hskLevel}
+                        {formatLevelLabel(exam.hskLevel)}
                       </span>
 
                       <div className="min-w-0 flex-1">
@@ -952,7 +980,7 @@ export default function ExamsPage() {
                   {activeAudioExam.title}
                 </div>
                 <div className="text-[11px] text-emerald-400/90 flex items-center gap-1.5 font-mono">
-                  <span>HSK {activeAudioExam.hskLevel} (Phần nghe)</span>
+                  <span>{formatLevelLabel(activeAudioExam.hskLevel)} (Phần nghe)</span>
                   <span>•</span>
                   <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
                 </div>
@@ -1049,7 +1077,7 @@ export default function ExamsPage() {
 
             <div className="bg-slate-50 dark:bg-zinc-950 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 mb-4">
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                HSK {shareModalExam.hskLevel}
+                {formatLevelLabel(shareModalExam.hskLevel)}
               </span>
               <h4 className="text-xs font-bold text-slate-900 dark:text-white mt-1.5 line-clamp-2">
                 {shareModalExam.title}

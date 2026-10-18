@@ -1,4 +1,4 @@
-export type ExamHskLevel = 1 | 2 | 3 | 4 | 5 | 6 | 'HSKK';
+export type ExamHskLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | '7-9' | 'HSKK';
 
 export type ExamCategory = 'official' | 'mock' | 'listening' | 'reading' | 'writing';
 

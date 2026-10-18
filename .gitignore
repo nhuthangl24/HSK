@@ -43,4 +43,5 @@ next-env.d.ts
 # local persistent database
 .data/*
 !.data/system_vocab.json
+!.data/exams.json
 
