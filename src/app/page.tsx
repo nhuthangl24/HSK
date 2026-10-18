@@ -1162,17 +1162,19 @@ function MainApp() {
         }}
       />
 
-      <HanziWorksheetModal
-        isOpen={isWorksheetOpen}
-        onClose={() => {
-          setIsWorksheetOpen(false);
-          setWorksheetPreselectedItem(null);
-        }}
-        filteredItems={displayedItems}
-        allDeckItems={currentDeckItems}
-        currentDeck={currentDeck}
-        preselectedItem={worksheetPreselectedItem}
-      />
+      {isWorksheetOpen && (
+        <HanziWorksheetModal
+          isOpen={isWorksheetOpen}
+          onClose={() => {
+            setIsWorksheetOpen(false);
+            setWorksheetPreselectedItem(null);
+          }}
+          filteredItems={displayedItems}
+          allDeckItems={currentDeckItems}
+          currentDeck={currentDeck}
+          preselectedItem={worksheetPreselectedItem}
+        />
+      )}
     </div>
   );
 }

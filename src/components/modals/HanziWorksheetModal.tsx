@@ -15,6 +15,8 @@ import {
   Palette,
   Layers,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   BookOpen,
   Maximize2,
   Sliders,
@@ -73,7 +75,7 @@ interface GridColorConfig {
  * Reusable Vector Hanzi Grid Component (米字格, 田字格, 回字格, 方格)
  * Uses vectorEffect="non-scaling-stroke" to ensure sharp, crisp lines regardless of scale
  */
-function HanziGridSvg({
+const HanziGridSvg = React.memo(function HanziGridSvg({
   style,
   colorConfig,
 }: {
@@ -166,7 +168,7 @@ function HanziGridSvg({
       )}
     </svg>
   );
-}
+});
 
 export function HanziWorksheetModal({
   isOpen,
@@ -187,8 +189,9 @@ export function HanziWorksheetModal({
   );
 
   const [maxWords, setMaxWords] = useState<number>(24);
-  const [isAllWords, setIsAllWords] = useState<boolean>(true);
+  const [isAllWords, setIsAllWords] = useState<boolean>(false);
   const [customWordCount, setCustomWordCount] = useState<string>('24');
+  const [previewPageIndex, setPreviewPageIndex] = useState<number>(0);
   const [practiceMode, setPracticeMode] = useState<'character' | 'word'>('character');
 
   // 2. Page Density & Rows Configuration
@@ -329,8 +332,12 @@ export function HanziWorksheetModal({
     }
   }, [rowsPerPage]);
 
-  // Quick lookup dictionary from allDeckItems to auto-enrich Pinyin and Meaning when user enters Hanzi
+  // Maximum safe words per export to ensure instantaneous rendering and prevent browser freeze
+  const MAX_SAFE_WORKSHEET_WORDS = 60; // ~5-6 pages A4
+
+  // Quick lookup dictionary only when in custom scope to auto-enrich Pinyin & Meaning
   const deckLookupMap = useMemo(() => {
+    if (scope !== 'custom') return new Map<string, VocabItem>();
     const map = new Map<string, VocabItem>();
     allDeckItems.forEach((item) => {
       if (item.hanzi) {
@@ -338,7 +345,7 @@ export function HanziWorksheetModal({
       }
     });
     return map;
-  }, [allDeckItems]);
+  }, [scope, allDeckItems]);
 
   // Parse custom raw input text into WorksheetWordItems
   const customParsedItems = useMemo<WorksheetWordItem[]>(() => {
@@ -375,7 +382,6 @@ export function HanziWorksheetModal({
         }
       } else {
         // 2. Line might be space-separated words, or comma-separated, or single word/sentence
-        // e.g. "你好 谢谢 老师" or "你好, 谢谢, 老师"
         const tokens = line.split(/[\s,，、]+/).map((t) => t.trim()).filter(Boolean);
 
         tokens.forEach((token, tIdx) => {
@@ -401,13 +407,24 @@ export function HanziWorksheetModal({
     return parsed;
   }, [customRawInput, deckLookupMap]);
 
-  // Filter items based on selected scope
+  // Total count of source items before slicing
+  const totalSourceCount = useMemo(() => {
+    if (scope === 'single') return 1;
+    if (scope === 'custom') return customParsedItems.length;
+    if (scope === 'filtered') return filteredItems.length;
+    if (scope === 'favorites') return allDeckItems.filter((i) => i.favorite).length;
+    return allDeckItems.length;
+  }, [scope, customParsedItems, filteredItems, allDeckItems]);
+
+  // Filter items based on selected scope with safe limit
   const targetWords = useMemo<WorksheetWordItem[]>(() => {
     if (scope === 'single' && preselectedItem) {
       return [preselectedItem];
     }
     if (scope === 'custom') {
-      return isAllWords ? customParsedItems : customParsedItems.slice(0, maxWords);
+      return isAllWords
+        ? customParsedItems.slice(0, MAX_SAFE_WORKSHEET_WORDS)
+        : customParsedItems.slice(0, Math.min(maxWords, MAX_SAFE_WORKSHEET_WORDS));
     }
     let sourceList: VocabItem[] = [];
     if (scope === 'filtered') sourceList = filteredItems;
@@ -415,9 +432,9 @@ export function HanziWorksheetModal({
     else sourceList = allDeckItems;
 
     if (isAllWords) {
-      return sourceList;
+      return sourceList.slice(0, MAX_SAFE_WORKSHEET_WORDS);
     }
-    return sourceList.slice(0, maxWords);
+    return sourceList.slice(0, Math.min(maxWords, MAX_SAFE_WORKSHEET_WORDS));
   }, [scope, preselectedItem, filteredItems, allDeckItems, maxWords, isAllWords, customParsedItems]);
 
   // Expand into practice entries (each Hanzi character gets a row, supporting multiple rows per char)
@@ -489,6 +506,16 @@ export function HanziWorksheetModal({
     }
     return p.length > 0 ? p : [[]];
   }, [practiceRows, rowsPerPage, fillBlankRows]);
+
+  // Safe page index clamped between 0 and pages.length - 1
+  const safePageIndex = Math.min(Math.max(0, previewPageIndex), Math.max(0, pages.length - 1));
+
+  // Reset or adjust preview page index when pages count changes
+  useEffect(() => {
+    if (previewPageIndex >= pages.length && pages.length > 0) {
+      setPreviewPageIndex(pages.length - 1);
+    }
+  }, [pages.length, previewPageIndex]);
 
   // Listen for browser print events (Ctrl+P / Cmd+P or print dialog)
   useEffect(() => {
@@ -759,7 +786,9 @@ export function HanziWorksheetModal({
                   <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
                     <span>Số lượng từ xuất:</span>
                     <span className="text-rose-600 dark:text-rose-400 font-semibold">
-                      {isAllWords ? `Tất cả (${targetWords.length} từ)` : `${maxWords} từ`}
+                      {isAllWords
+                        ? `Tất cả (${targetWords.length} từ${totalSourceCount > MAX_SAFE_WORKSHEET_WORDS ? ` / tối đa ${MAX_SAFE_WORKSHEET_WORDS}` : ''})`
+                        : `${targetWords.length} từ`}
                     </span>
                   </div>
                   
@@ -790,6 +819,7 @@ export function HanziWorksheetModal({
                           ? 'bg-rose-600 text-white shadow-xs'
                           : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
                       }`}
+                      title={`Xuất tất cả (Tối đa ${MAX_SAFE_WORKSHEET_WORDS} từ / ~5 trang A4 để tránh đơ máy)`}
                     >
                       Tất cả
                     </button>
@@ -801,20 +831,26 @@ export function HanziWorksheetModal({
                     <input
                       type="number"
                       min="1"
-                      max="500"
+                      max="60"
                       value={customWordCount}
                       onChange={(e) => {
                         setCustomWordCount(e.target.value);
                         const val = parseInt(e.target.value, 10);
                         if (!isNaN(val) && val > 0) {
-                          setMaxWords(val);
+                          setMaxWords(Math.min(val, MAX_SAFE_WORKSHEET_WORDS));
                           setIsAllWords(false);
                         }
                       }}
                       className="w-20 px-2 py-1 text-xs text-center font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-rose-500 text-slate-800 dark:text-slate-200"
                     />
-                    <span className="text-[11px] text-slate-400">từ</span>
+                    <span className="text-[11px] text-slate-400">từ (tối đa {MAX_SAFE_WORKSHEET_WORDS})</span>
                   </div>
+
+                  {totalSourceCount > MAX_SAFE_WORKSHEET_WORDS && isAllWords && (
+                    <div className="text-[10.5px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-2 rounded-xl leading-relaxed">
+                      ⚡ Nguồn hiện có {totalSourceCount} từ. Hệ thống tự động giới hạn 60 từ đầu tiên (~5 trang A4) để đảm bảo in ấn mượt mà và không làm đơ trình duyệt.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1171,169 +1207,205 @@ export function HanziWorksheetModal({
                 </span>
               </div>
 
-              {/* Simulated A4 Paper Sheets Container */}
-              <div className="space-y-6 flex flex-col items-center w-full max-w-[680px]">
-                {pages.map((pageRows, pageIdx) => (
-                  <div
-                    key={`page-${pageIdx}`}
-                    className="w-full bg-white text-slate-900 shadow-xl border border-slate-200 p-5 sm:p-6 rounded-sm relative aspect-[1/1.414] overflow-hidden flex flex-col justify-between"
-                    style={{ minHeight: '840px' }}
-                  >
-                    {/* Header of Worksheet */}
-                    <div>
-                      {/* Top Title & Subtitle */}
-                      <div className="text-center pb-2.5 border-b-2 border-slate-900/80 mb-2.5">
-                        <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 font-serif">
-                          {worksheetTitle}
-                        </h2>
-                        {worksheetSubtitle && (
-                          <p className="text-[10px] text-slate-600 mt-0.5 tracking-wide">
-                            {worksheetSubtitle}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Student Info Bar */}
-                      {showStudentInfo && (
-                        <div className="flex items-center justify-between text-[10.5px] font-serif text-slate-700 pb-2 mb-2 border-b border-dashed border-slate-300">
-                          <div>
-                            <span>Học viên: </span>
-                            <span className="font-semibold text-slate-900">...................................................</span>
-                          </div>
-                          <div>
-                            <span>Lớp / Ngày: </span>
-                            <span className="font-semibold text-slate-900">..../..../202...</span>
-                          </div>
-                          <div>
-                            <span>Điểm: </span>
-                            <span className="font-semibold text-slate-900">........</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Character Rows Table */}
-                      <div className="space-y-1 mt-1 flex flex-col justify-between">
-                        {pageRows.map((row) => (
-                          <div
-                            key={row.id}
-                            className={`flex items-center gap-1.5 ${sizeConfig.previewCellPadding} border-b border-slate-100 last:border-b-0`}
-                          >
-                            {/* Word Meta Info Box */}
-                            <div className={`${sizeConfig.previewMetaWidth} shrink-0 text-left`}>
-                              {row.isBlank ? (
-                                <div className="text-[9.5px] text-slate-300 dark:text-slate-400 italic">
-                                  Tự luyện
-                                </div>
-                              ) : row.isFollowUpLine ? (
-                                <div className="text-[9.5px] text-slate-400 font-medium italic">
-                                  Dòng {row.lineIndex}
-                                </div>
-                              ) : (
-                                <>
-                                  {showPinyin && (
-                                    <div
-                                      style={{ color: colorConfig.pinyinColor }}
-                                      className="font-pinyin font-bold text-xs leading-none truncate transition-colors"
-                                    >
-                                      {row.pinyin}
-                                    </div>
-                                  )}
-                                  {showMeaning && (
-                                    <div className="text-[9.5px] text-slate-600 leading-tight line-clamp-1 mt-0.5">
-                                      {row.meaning}
-                                    </div>
-                                  )}
-                                  {showHskLevel && (
-                                    <div className="text-[8px] font-bold text-slate-400 mt-0.5">
-                                      HSK {row.hskLevel}
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-
-                            {/* Practice Grid Cells */}
-                            <div className="flex items-center gap-0.5 overflow-hidden">
-                              {/* 1. Model Bold Hanzi Cell (Only if not blank) */}
-                              {!row.isBlank ? (
-                                <div
-                                  style={{
-                                    width: `${sizeConfig.previewCellPx}px`,
-                                    height: `${sizeConfig.previewCellPx}px`,
-                                  }}
-                                  className="relative shrink-0 flex items-center justify-center bg-white"
-                                >
-                                  {/* Dynamic Vector SVG Grid */}
-                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
-                                  <span
-                                    className={`relative z-10 font-hanzi font-bold ${sizeConfig.previewFontClass} text-slate-950 leading-none`}
-                                  >
-                                    {row.hanzi}
-                                  </span>
-                                </div>
-                              ) : (
-                                /* Blank practice cell in place of model */
-                                <div
-                                  style={{
-                                    width: `${sizeConfig.previewCellPx}px`,
-                                    height: `${sizeConfig.previewCellPx}px`,
-                                  }}
-                                  className="relative shrink-0 flex items-center justify-center bg-white"
-                                >
-                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
-                                </div>
-                              )}
-
-                              {/* 2. Faint Trace Cells (For tracing over) */}
-                              {!row.isBlank && Array.from({ length: traceCount }).map((_, tIdx) => (
-                                <div
-                                  key={`trace-${tIdx}`}
-                                  style={{
-                                    width: `${sizeConfig.previewCellPx}px`,
-                                    height: `${sizeConfig.previewCellPx}px`,
-                                  }}
-                                  className="relative shrink-0 flex items-center justify-center bg-white"
-                                >
-                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
-                                  <span
-                                    className={`relative z-10 font-hanzi ${sizeConfig.previewFontClass} select-none leading-none`}
-                                    style={{ color: tIdx === 0 ? '#94a3b8' : '#cbd5e1' }}
-                                  >
-                                    {row.hanzi}
-                                  </span>
-                                </div>
-                              ))}
-
-                              {/* 3. Empty Practice Cells for Free Writing */}
-                              {Array.from({
-                                length: row.isBlank
-                                  ? cellsPerRow - 1
-                                  : Math.max(2, cellsPerRow - 1 - traceCount),
-                              }).map((_, eIdx) => (
-                                <div
-                                  key={`empty-${eIdx}`}
-                                  style={{
-                                    width: `${sizeConfig.previewCellPx}px`,
-                                    height: `${sizeConfig.previewCellPx}px`,
-                                  }}
-                                  className="relative shrink-0 flex items-center justify-center bg-white"
-                                >
-                                  <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Page Footer */}
-                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-400 font-sans">
-                      <span>HSK Master • Nền tảng học tiếng Trung ({gridStyle.toUpperCase()} • {colorConfig.name})</span>
-                      <span>Trang {pageIdx + 1} / {pages.length}</span>
-                    </div>
+              {/* Preview Pagination Toolbar (Shown when multiple pages exist) */}
+              {pages.length > 1 && (
+                <div className="mb-3 flex items-center justify-between w-full max-w-[680px] bg-white dark:bg-slate-900 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPageIndex((p) => Math.max(0, p - 1))}
+                      disabled={safePageIndex === 0}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer text-slate-700 dark:text-slate-300 transition-colors"
+                      title="Xem trang trước"
+                    >
+                      <ChevronLeft size={14} /> Trang trước
+                    </button>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 px-1">
+                      Trang <span style={{ color: colorConfig.border }}>{safePageIndex + 1}</span> / {pages.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPageIndex((p) => Math.min(pages.length - 1, p + 1))}
+                      disabled={safePageIndex >= pages.length - 1}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer text-slate-700 dark:text-slate-300 transition-colors"
+                      title="Xem trang sau"
+                    >
+                      Trang sau <ChevronRight size={14} />
+                    </button>
                   </div>
-                ))}
+
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+                    In / Lưu PDF sẽ in đủ cả {pages.length} trang
+                  </div>
+                </div>
+              )}
+
+              {/* Simulated A4 Paper Sheet Container (Single Active Page for 60fps instant preview) */}
+              <div className="space-y-6 flex flex-col items-center w-full max-w-[680px]">
+                {(() => {
+                  const activePageRows = pages[safePageIndex] || [];
+                  return (
+                    <div
+                      key={`page-${safePageIndex}`}
+                      className="w-full bg-white text-slate-900 shadow-xl border border-slate-200 p-5 sm:p-6 rounded-sm relative aspect-[1/1.414] overflow-hidden flex flex-col justify-between"
+                      style={{ minHeight: '840px' }}
+                    >
+                      {/* Header of Worksheet */}
+                      <div>
+                        {/* Top Title & Subtitle */}
+                        <div className="text-center pb-2.5 border-b-2 border-slate-900/80 mb-2.5">
+                          <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 font-serif">
+                            {worksheetTitle}
+                          </h2>
+                          {worksheetSubtitle && (
+                            <p className="text-[10px] text-slate-600 mt-0.5 tracking-wide">
+                              {worksheetSubtitle}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Student Info Bar */}
+                        {showStudentInfo && (
+                          <div className="flex items-center justify-between text-[10.5px] font-serif text-slate-700 pb-2 mb-2 border-b border-dashed border-slate-300">
+                            <div>
+                              <span>Học viên: </span>
+                              <span className="font-semibold text-slate-900">...................................................</span>
+                            </div>
+                            <div>
+                              <span>Lớp / Ngày: </span>
+                              <span className="font-semibold text-slate-900">..../..../202...</span>
+                            </div>
+                            <div>
+                              <span>Điểm: </span>
+                              <span className="font-semibold text-slate-900">........</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Character Rows Table */}
+                        <div className="space-y-1 mt-1 flex flex-col justify-between">
+                          {activePageRows.map((row) => (
+                            <div
+                              key={row.id}
+                              className={`flex items-center gap-1.5 ${sizeConfig.previewCellPadding} border-b border-slate-100 last:border-b-0`}
+                            >
+                              {/* Word Meta Info Box */}
+                              <div className={`${sizeConfig.previewMetaWidth} shrink-0 text-left`}>
+                                {row.isBlank ? (
+                                  <div className="text-[9.5px] text-slate-300 dark:text-slate-400 italic">
+                                    Tự luyện
+                                  </div>
+                                ) : row.isFollowUpLine ? (
+                                  <div className="text-[9.5px] text-slate-400 font-medium italic">
+                                    Dòng {row.lineIndex}
+                                  </div>
+                                ) : (
+                                  <>
+                                    {showPinyin && (
+                                      <div
+                                        style={{ color: colorConfig.pinyinColor }}
+                                        className="font-pinyin font-bold text-xs leading-none truncate transition-colors"
+                                      >
+                                        {row.pinyin}
+                                      </div>
+                                    )}
+                                    {showMeaning && (
+                                      <div className="text-[9.5px] text-slate-600 leading-tight line-clamp-1 mt-0.5">
+                                        {row.meaning}
+                                      </div>
+                                    )}
+                                    {showHskLevel && (
+                                      <div className="text-[8px] font-bold text-slate-400 mt-0.5">
+                                        HSK {row.hskLevel}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+
+                              {/* Practice Grid Cells */}
+                              <div className="flex items-center gap-0.5 overflow-hidden">
+                                {/* 1. Model Bold Hanzi Cell (Only if not blank) */}
+                                {!row.isBlank ? (
+                                  <div
+                                    style={{
+                                      width: `${sizeConfig.previewCellPx}px`,
+                                      height: `${sizeConfig.previewCellPx}px`,
+                                    }}
+                                    className="relative shrink-0 flex items-center justify-center bg-white"
+                                  >
+                                    {/* Dynamic Vector SVG Grid */}
+                                    <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
+                                    <span
+                                      className={`relative z-10 font-hanzi font-bold ${sizeConfig.previewFontClass} text-slate-950 leading-none`}
+                                    >
+                                      {row.hanzi}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  /* Blank practice cell in place of model */
+                                  <div
+                                    style={{
+                                      width: `${sizeConfig.previewCellPx}px`,
+                                      height: `${sizeConfig.previewCellPx}px`,
+                                    }}
+                                    className="relative shrink-0 flex items-center justify-center bg-white"
+                                  >
+                                    <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
+                                  </div>
+                                )}
+
+                                {/* 2. Faint Trace Cells (For tracing over) */}
+                                {!row.isBlank && Array.from({ length: traceCount }).map((_, tIdx) => (
+                                  <div
+                                    key={`trace-${tIdx}`}
+                                    style={{
+                                      width: `${sizeConfig.previewCellPx}px`,
+                                      height: `${sizeConfig.previewCellPx}px`,
+                                    }}
+                                    className="relative shrink-0 flex items-center justify-center bg-white"
+                                  >
+                                    <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
+                                    <span
+                                      className={`relative z-10 font-hanzi ${sizeConfig.previewFontClass} select-none leading-none`}
+                                      style={{ color: tIdx === 0 ? '#94a3b8' : '#cbd5e1' }}
+                                    >
+                                      {row.hanzi}
+                                    </span>
+                                  </div>
+                                ))}
+
+                                {/* 3. Empty Practice Cells for Free Writing */}
+                                {Array.from({
+                                  length: row.isBlank
+                                    ? cellsPerRow - 1
+                                    : Math.max(2, cellsPerRow - 1 - traceCount),
+                                }).map((_, eIdx) => (
+                                  <div
+                                    key={`empty-${eIdx}`}
+                                    style={{
+                                      width: `${sizeConfig.previewCellPx}px`,
+                                      height: `${sizeConfig.previewCellPx}px`,
+                                    }}
+                                    className="relative shrink-0 flex items-center justify-center bg-white"
+                                  >
+                                    <HanziGridSvg style={gridStyle} colorConfig={colorConfig} />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Page Footer */}
+                      <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-400 font-sans">
+                        <span>HSK Master • Nền tảng học tiếng Trung ({gridStyle.toUpperCase()} • {colorConfig.name})</span>
+                        <span>Trang {safePageIndex + 1} / {pages.length}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
