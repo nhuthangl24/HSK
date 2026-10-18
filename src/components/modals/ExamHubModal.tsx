@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import Link from 'next/link';
 import {
   X,
   Search,
@@ -385,6 +386,17 @@ export function ExamHubModal({
                   <List size={15} />
                 </button>
               </div>
+
+              {/* Open Full Page */}
+              <Link
+                href="/exams"
+                onClick={onClose}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                title="Mở kho đề ở trang riêng biệt"
+              >
+                <ExternalLink size={13} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Trang riêng</span>
+              </Link>
 
               {/* Close Button */}
               <button

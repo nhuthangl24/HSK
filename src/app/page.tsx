@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   VocabItem,
   Deck,
@@ -70,6 +71,7 @@ import {
 const emptySubscribe = () => () => {};
 
 function MainApp() {
+  const router = useRouter();
   const toast = useToast();
   const { user, isAuthenticated } = useAuth();
   const isGuest = !isAuthenticated || !user;
@@ -892,7 +894,7 @@ function MainApp() {
           }
           setIsBulkPasteOpen(true);
         }}
-        onOpenExams={() => setIsExamHubOpen(true)}
+        onOpenExams={() => router.push('/exams')}
         onStartSmartReview={() => {
           if (isGuest) {
             setIsAuthModalOpen(true);
@@ -1009,7 +1011,7 @@ function MainApp() {
                 setStrokeModalItem(items[0]);
               }
             }}
-            onOpenExams={() => setIsExamHubOpen(true)}
+            onOpenExams={() => router.push('/exams')}
             dueTodayCount={stats.dueTodayCount}
           />
 
