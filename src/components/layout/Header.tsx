@@ -14,6 +14,7 @@ import {
   Moon,
   Sparkles,
   ClipboardPaste,
+  GraduationCap,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -29,6 +30,7 @@ interface HeaderProps {
   onToggleSidebar?: () => void;
   onOpenSettings?: () => void;
   onOpenBulkPaste?: () => void;
+  onOpenExams?: () => void;
   isFirebaseConnected?: boolean;
 }
 
@@ -39,6 +41,7 @@ export function Header({
   onToggleSidebar,
   onOpenSettings,
   onOpenBulkPaste,
+  onOpenExams,
 }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
@@ -112,6 +115,19 @@ export function Header({
             title="Cài đặt học tập & Giọng đọc TTS"
           >
             <Settings size={15} />
+          </button>
+        )}
+
+        {/* Exam Hub Button */}
+        {onOpenExams && (
+          <button
+            type="button"
+            onClick={onOpenExams}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 transition-colors cursor-pointer text-xs font-semibold shrink-0 btn-press"
+            title="Kho đề thi HSK tuyển chọn"
+          >
+            <GraduationCap size={15} className="text-emerald-600 dark:text-emerald-400" />
+            <span>Kho Đề Thi</span>
           </button>
         )}
 

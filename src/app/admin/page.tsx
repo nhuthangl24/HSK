@@ -60,6 +60,7 @@ import AdminWorkspacesTab from './components/AdminWorkspacesTab';
 import AdminSettingsTab from './components/AdminSettingsTab';
 import AdminPasteTab from './components/AdminPasteTab';
 import AdminFeedbackTab from './components/AdminFeedbackTab';
+import AdminExamsTab from './components/AdminExamsTab';
 
 export default function AdminPage() {
   const toast = useToast();
@@ -67,7 +68,7 @@ export default function AdminPage() {
   const adminEmail = user?.email || 'admin@hsk.com';
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'users' | 'vocab' | 'hsk' | 'topics' | 'paste' | 'workspaces' | 'feedback' | 'logs' | 'settings' | 'io'
+    'overview' | 'users' | 'vocab' | 'hsk' | 'topics' | 'paste' | 'workspaces' | 'exams' | 'feedback' | 'logs' | 'settings' | 'io'
   >('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(true);
@@ -1137,6 +1138,39 @@ export default function AdminPage() {
               )}
               {adminSidebarCollapsed && stats?.totalCustomWords !== undefined && stats.totalCustomWords > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400" />
+              )}
+            </button>
+
+            {/* TAB: Kho Đề Thi HSK */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('exams');
+                setMobileMenuOpen(false);
+              }}
+              title="Kho Đề Thi HSK Tuyển Chọn & Chia Sẻ"
+              className={`flex items-center justify-between rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press relative ${
+                adminSidebarCollapsed
+                  ? `w-10 h-10 mx-auto justify-center ${
+                      activeTab === 'exams'
+                        ? 'bg-emerald-600 text-white shadow-xs scale-105 ring-2 ring-emerald-400'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`
+                  : `w-full px-3 py-2.5 ${
+                      activeTab === 'exams'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen size={16} className="shrink-0" />
+                {!adminSidebarCollapsed && <span>Kho Đề Thi HSK</span>}
+              </div>
+              {!adminSidebarCollapsed && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
+                  Tuyển chọn
+                </span>
               )}
             </button>
 
@@ -2592,6 +2626,9 @@ export default function AdminPage() {
               onSelectUser={(uId) => setWorkspaceSelectedUserId(uId)}
             />
           )}
+
+          {/* TAB: EXAM REPOSITORY & SHARING */}
+          {activeTab === 'exams' && <AdminExamsTab />}
 
           {/* TAB 8: USER FEEDBACK & BUG REPORTS */}
           {activeTab === 'feedback' && <AdminFeedbackTab />}

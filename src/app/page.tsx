@@ -50,6 +50,7 @@ import UserSettingsModal from '@/components/modals/UserSettingsModal';
 import BulkPasteModal from '@/components/modals/BulkPasteModal';
 import StrokeOrderModal from '@/components/modals/StrokeOrderModal';
 import HanziWorksheetModal from '@/components/modals/HanziWorksheetModal';
+import ExamHubModal from '@/components/modals/ExamHubModal';
 import { getClientAuthHeaders } from '@/lib/client-auth';
 
 import { getFirebaseServices } from '@/lib/firebase';
@@ -156,6 +157,20 @@ function MainApp() {
   const [strokeModalItem, setStrokeModalItem] = useState<VocabItem | null>(null);
   const [isWorksheetOpen, setIsWorksheetOpen] = useState(false);
   const [worksheetPreselectedItem, setWorksheetPreselectedItem] = useState<VocabItem | null>(null);
+  const [isExamHubOpen, setIsExamHubOpen] = useState(false);
+  const [directExamId, setDirectExamId] = useState<string | null>(null);
+
+  // Check URL query parameters for direct shared exam link: ?examId=xxx
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const examParam = params.get('examId');
+      if (examParam) {
+        setDirectExamId(examParam);
+        setIsExamHubOpen(true);
+      }
+    }
+  }, []);
 
   const currentUserId = user?.id;
 
@@ -877,6 +892,7 @@ function MainApp() {
           }
           setIsBulkPasteOpen(true);
         }}
+        onOpenExams={() => setIsExamHubOpen(true)}
         isFirebaseConnected={isClient ? getFirebaseServices().isConfigured : false}
       />
 
@@ -985,6 +1001,7 @@ function MainApp() {
                 setStrokeModalItem(items[0]);
               }
             }}
+            onOpenExams={() => setIsExamHubOpen(true)}
             dueTodayCount={stats.dueTodayCount}
           />
 
@@ -1173,6 +1190,17 @@ function MainApp() {
           allDeckItems={currentDeckItems}
           currentDeck={currentDeck}
           preselectedItem={worksheetPreselectedItem}
+        />
+      )}
+
+      {isExamHubOpen && (
+        <ExamHubModal
+          isOpen={isExamHubOpen}
+          onClose={() => {
+            setIsExamHubOpen(false);
+            setDirectExamId(null);
+          }}
+          initialSelectedExamId={directExamId}
         />
       )}
     </div>

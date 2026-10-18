@@ -19,6 +19,7 @@ import {
   ClipboardPaste,
   PenTool,
   Printer,
+  GraduationCap,
 } from 'lucide-react';
 import {
   StudyMode,
@@ -44,6 +45,7 @@ interface TableToolbarProps {
   onOpenWorksheet?: () => void;
   onOpenBulkPaste?: () => void;
   onOpenStrokePractice?: () => void;
+  onOpenExams?: () => void;
   dueTodayCount: number;
 }
 
@@ -62,6 +64,7 @@ export function TableToolbar({
   onOpenWorksheet,
   onOpenBulkPaste,
   onOpenStrokePractice,
+  onOpenExams,
   dueTodayCount,
 }: TableToolbarProps) {
   const [showColMenu, setShowColMenu] = useState(false);
@@ -301,16 +304,19 @@ export function TableToolbar({
 
           <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Stroke Order Writing Button */}
-          {onOpenStrokePractice && (
+          {/* Kho Đề Thi Button (Replaces Tập viết chữ next to Thêm từ) */}
+          {onOpenExams && (
             <button
               type="button"
-              onClick={onOpenStrokePractice}
-              title="Mở bảng hướng dẫn & tập viết từng nét chữ Hán"
-              className="px-2.5 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 cursor-pointer font-medium transition-colors"
+              onClick={onOpenExams}
+              title="Kho Đề Thi HSK Tuyển Chọn (Đề thi thật, đề thử BLCU, kèm file nghe MP3 & đáp án)"
+              className="px-2.5 py-1.5 rounded-md border border-emerald-400 dark:border-emerald-700 bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5 cursor-pointer font-semibold shadow-2xs transition-all btn-press"
             >
-              <PenTool size={13} className="text-emerald-600 dark:text-emerald-400" />
-              <span>Tập viết chữ</span>
+              <GraduationCap size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Kho đề thi</span>
+              <span className="text-[9.5px] font-extrabold bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-1 py-0.2 rounded">
+                Mới
+              </span>
             </button>
           )}
 

@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserFeedback, PracticedWordRecord } from '@/types/auth';
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
+import { ExamItem } from '@/types/exam';
 import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
 
@@ -1337,6 +1338,205 @@ export function deleteFeedback(feedbackId: string): boolean {
   const filtered = list.filter((f) => f.id !== feedbackId);
   if (filtered.length === list.length) return false;
   writeJsonFile('feedbacks.json', filtered);
+  return true;
+}
+
+// -------------------------------------------------------------
+// EXAM REPOSITORY & SHARING HUB MANAGEMENT
+// -------------------------------------------------------------
+
+const INITIAL_STARTER_EXAMS: ExamItem[] = [
+  {
+    id: 'exam-hsk1-official-2023',
+    title: 'Đề thi thật HSK 1 chính thức — Kỳ thi Chuẩn hóa H11001',
+    hskLevel: 1,
+    category: 'official',
+    year: 2023,
+    source: 'Viện Khổng Tử & Hanban',
+    durationMinutes: 40,
+    questionCount: 40,
+    description: 'Đề thi thật chính thức chuẩn hóa HSK 1 với 20 câu Nghe hiểu (kèm file audio MP3 gốc) và 20 câu Đọc hiểu. Kèm bảng đáp án chuẩn.',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_1_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK1_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_1_Answers.pdf',
+    isPinned: true,
+    status: 'published',
+    viewsCount: 342,
+    downloadsCount: 128,
+    createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'exam-hsk2-official-2023',
+    title: 'Đề thi thật HSK 2 — Mã đề chính quy H21002',
+    hskLevel: 2,
+    category: 'official',
+    year: 2023,
+    source: 'Trung tâm Khảo thí Quốc tế HSK',
+    durationMinutes: 55,
+    questionCount: 60,
+    description: 'Đề thi HSK 2 chuẩn gồm 35 câu Nghe hiểu và 25 câu Đọc hiểu. Trọng tâm đánh giá từ vựng 300 từ ngữ cốt lõi.',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_2_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK2_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_2_Answers.pdf',
+    isPinned: false,
+    status: 'published',
+    viewsCount: 289,
+    downloadsCount: 95,
+    createdAt: new Date(Date.now() - 25 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 25 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'exam-hsk3-mock-blcu-01',
+    title: 'Bộ đề thi thử HSK 3 Chuẩn Quốc tế — ĐH Ngôn ngữ Bắc Kinh Số 01',
+    hskLevel: 3,
+    category: 'mock',
+    year: 2024,
+    source: 'Đại học Ngôn ngữ Bắc Kinh (BLCU)',
+    durationMinutes: 90,
+    questionCount: 80,
+    description: 'Bộ đề mô phỏng chuẩn xác độ khó và ma trận đề thi HSK 3 mới. Đầy đủ phần Nghe hiểu (40 câu), Đọc hiểu (30 câu) và Viết hoàn thành câu (10 câu).',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_3_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK3_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_3_Answers.pdf',
+    isPinned: true,
+    status: 'published',
+    viewsCount: 512,
+    downloadsCount: 230,
+    createdAt: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'exam-hsk4-official-2023-12',
+    title: 'Đề thi thật HSK 4 — Kỳ thi Quốc tế Tháng 12/2023',
+    hskLevel: 4,
+    category: 'official',
+    year: 2023,
+    source: 'Hanban / CTI Quốc Tế',
+    durationMinutes: 105,
+    questionCount: 100,
+    description: 'Đề thi thật HSK 4 tháng 12/2023. Đầy đủ file nghe tốc độ chuẩn, bài đọc phân tích cấu trúc câu và bảng đáp án giải thích chi tiết tapescript.',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_4_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK4_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_4_Answers.pdf',
+    isPinned: true,
+    status: 'published',
+    viewsCount: 864,
+    downloadsCount: 412,
+    createdAt: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'exam-hsk5-mock-advance-02',
+    title: 'Bộ đề rèn luyện nâng cao HSK 5 — Đề thi chuẩn hóa Số 02',
+    hskLevel: 5,
+    category: 'mock',
+    year: 2024,
+    source: 'Trung tâm Khảo thí Ngôn ngữ CTI',
+    durationMinutes: 125,
+    questionCount: 100,
+    description: 'Đề thi mô phỏng độ khó HSK 5 cấp độ 2.500 từ vựng. Đầy đủ bài nghe đoạn văn dài, bài đọc nghị luận và phần viết tự luận theo hình ảnh.',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_5_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK5_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_5_Answers.pdf',
+    isPinned: false,
+    status: 'published',
+    viewsCount: 420,
+    downloadsCount: 198,
+    createdAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'exam-hsk6-elite-2024',
+    title: 'Đề thi tinh hoa HSK 6 — Mô phỏng kỳ thi chứng chỉ cao cấp 2024',
+    hskLevel: 6,
+    category: 'mock',
+    year: 2024,
+    source: 'Viện Giáo dục Quốc tế BLCU',
+    durationMinutes: 140,
+    questionCount: 101,
+    description: 'Đề thi HSK cấp 6 toàn diện 5.000 từ vựng. Đầy đủ phần nghe bài giảng học thuật, phần đọc tìm lỗi sai ngữ pháp và phần viết tóm tắt văn bản 1.000 chữ thành 400 chữ.',
+    pdfUrl: 'https://hsk.academy/static/mock-exams/HSK_6_Exam.pdf',
+    audioUrl: 'https://archive.org/download/hsk-1-listening/HSK6_Sample_Audio.mp3',
+    answerUrl: 'https://hsk.academy/static/mock-exams/HSK_6_Answers.pdf',
+    isPinned: true,
+    status: 'published',
+    viewsCount: 650,
+    downloadsCount: 310,
+    createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+  },
+];
+
+export function getAllExams(): ExamItem[] {
+  const stored = readJsonFile<ExamItem[]>('exams.json', []);
+  if (!stored || stored.length === 0) {
+    // Seed initial starter exams
+    writeJsonFile('exams.json', INITIAL_STARTER_EXAMS);
+    return INITIAL_STARTER_EXAMS;
+  }
+  return stored;
+}
+
+export function getExamById(id: string): ExamItem | null {
+  const exams = getAllExams();
+  return exams.find((e) => e.id === id) || null;
+}
+
+export function saveExam(data: Omit<ExamItem, 'id' | 'createdAt' | 'updatedAt' | 'viewsCount' | 'downloadsCount'> & { id?: string }): ExamItem {
+  const exams = getAllExams();
+  const id = data.id?.trim() || `exam-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const now = new Date().toISOString();
+
+  const newExam: ExamItem = {
+    ...data,
+    id,
+    viewsCount: 0,
+    downloadsCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  exams.unshift(newExam);
+  writeJsonFile('exams.json', exams);
+  return newExam;
+}
+
+export function updateExam(id: string, updates: Partial<Omit<ExamItem, 'id' | 'createdAt'>>): ExamItem | null {
+  const exams = getAllExams();
+  const index = exams.findIndex((e) => e.id === id);
+  if (index === -1) return null;
+
+  exams[index] = {
+    ...exams[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  writeJsonFile('exams.json', exams);
+  return exams[index];
+}
+
+export function deleteExam(id: string): boolean {
+  const exams = getAllExams();
+  const filtered = exams.filter((e) => e.id !== id);
+  if (filtered.length === exams.length) return false;
+  writeJsonFile('exams.json', filtered);
+  return true;
+}
+
+export function incrementExamStats(id: string, type: 'view' | 'download'): boolean {
+  const exams = getAllExams();
+  const exam = exams.find((e) => e.id === id);
+  if (!exam) return false;
+
+  if (type === 'view') {
+    exam.viewsCount = (exam.viewsCount || 0) + 1;
+  } else if (type === 'download') {
+    exam.downloadsCount = (exam.downloadsCount || 0) + 1;
+  }
+
+  writeJsonFile('exams.json', exams);
   return true;
 }
 
