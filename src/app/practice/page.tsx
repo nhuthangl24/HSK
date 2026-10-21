@@ -33,7 +33,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { getStoredVocab, saveStoredVocab } from '@/lib/storage';
 import { tts } from '@/lib/tts';
 import { quizSound } from '@/lib/quiz-sound';
-import { chunkSentence, shuffleChunks, SentencePuzzle } from '@/lib/sentence-chunker';
+import {
+  chunkSentence,
+  shuffleChunks,
+  getChunkPinyin,
+  SentencePuzzle,
+  ChunkToken,
+} from '@/lib/sentence-chunker';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 
 // ----------------------------------------------------------------------
@@ -89,6 +95,45 @@ export default function PracticePage() {
   const [isLoadingVocab, setIsLoadingVocab] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Pinyin visibility toggle (persisted in localStorage, default = true for beginners)
+  const [showPinyin, setShowPinyin] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const stored = localStorage.getItem('hsk_practice_show_pinyin');
+      return stored !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  const togglePinyin = () => {
+    quizSound.playTap();
+    setShowPinyin((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('hsk_practice_show_pinyin', String(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  // Fast Pinyin Map built from 11,000 vocab items
+  const pinyinMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const w of vocabList) {
+      if (w.hanzi && w.pinyin) {
+        const cleanH = w.hanzi.trim();
+        const cleanP = w.pinyin.trim();
+        if (cleanH && cleanP && !map.has(cleanH)) {
+          map.set(cleanH, cleanP);
+        }
+      }
+    }
+    return map;
+  }, [vocabList]);
+
   // Mistakes Storage
   const [mistakes, setMistakes] = useState<PracticeMistake[]>([]);
 
@@ -118,8 +163,8 @@ export default function PracticePage() {
 
   const [puzzles, setPuzzles] = useState<SentencePuzzle[]>([]);
   const [currentPIndex, setCurrentPIndex] = useState(0);
-  const [userPlacedChunks, setUserPlacedChunks] = useState<{ id: string; text: string }[]>([]);
-  const [bankChunks, setBankChunks] = useState<{ id: string; text: string }[]>([]);
+  const [userPlacedChunks, setUserPlacedChunks] = useState<ChunkToken[]>([]);
+  const [bankChunks, setBankChunks] = useState<ChunkToken[]>([]);
   const [orderCheckStatus, setOrderCheckStatus] = useState<'correct' | 'wrong' | null>(null);
   const [orderScore, setOrderScore] = useState(0);
   const [orderStreak, setOrderStreak] = useState(0);
@@ -457,25 +502,56 @@ export default function PracticePage() {
         pool = vocabList.filter((w) => w.example && w.example.trim().length >= 5);
       }
 
-      const shuffledWords = [...pool].sort(() => Math.random() - 0.5);
-      const chosen = shuffledWords.slice(0, Math.min(orderCount, shuffledWords.length));
+      let generatedPuzzles: SentencePuzzle[] = [];
 
-      const generatedPuzzles: SentencePuzzle[] = chosen.map((w, idx) => {
-        const rawExample = w.example!.trim();
-        const chunks = chunkSentence(rawExample, w.hanzi);
-        const shuffled = shuffleChunks(chunks);
+      if (customSentences && customSentences.length > 0) {
+        generatedPuzzles = customSentences
+          .filter((m) => m.type === 'sentence' && m.sentence)
+          .map((m, idx) => {
+            const s = m.sentence!;
+            const chunks = chunkSentence(s.original);
+            const shuffled = shuffleChunks(chunks, pinyinMap);
+            const computedPinyin = chunks
+              .map((c) => getChunkPinyin(c, pinyinMap))
+              .filter(Boolean)
+              .join(' ');
 
-        return {
-          id: `puzzle-${idx}-${w.id}`,
-          originalSentence: rawExample,
-          pinyin: w.examplePinyin || w.pinyin,
-          meaning: w.exampleMeaning || w.meaning,
-          targetWord: w.hanzi,
-          hskLevel: Number(w.hskLevel) || 1,
-          chunks,
-          shuffledChunks: shuffled,
-        };
-      });
+            return {
+              id: `puzzle-mistake-${idx}-${m.id}`,
+              originalSentence: s.original,
+              pinyin: s.pinyin || computedPinyin,
+              meaning: s.meaning,
+              targetWord: '',
+              hskLevel: s.hskLevel,
+              chunks,
+              shuffledChunks: shuffled,
+            };
+          });
+      } else {
+        const shuffledWords = [...pool].sort(() => Math.random() - 0.5);
+        const chosen = shuffledWords.slice(0, Math.min(orderCount, shuffledWords.length));
+
+        generatedPuzzles = chosen.map((w, idx) => {
+          const rawExample = w.example!.trim();
+          const chunks = chunkSentence(rawExample, w.hanzi);
+          const shuffled = shuffleChunks(chunks, pinyinMap);
+          const computedPinyin = chunks
+            .map((c) => getChunkPinyin(c, pinyinMap))
+            .filter(Boolean)
+            .join(' ');
+
+          return {
+            id: `puzzle-${idx}-${w.id}`,
+            originalSentence: rawExample,
+            pinyin: w.examplePinyin || computedPinyin || w.pinyin,
+            meaning: w.exampleMeaning || w.meaning,
+            targetWord: w.hanzi,
+            hskLevel: Number(w.hskLevel) || 1,
+            chunks,
+            shuffledChunks: shuffled,
+          };
+        });
+      }
 
       setPuzzles(generatedPuzzles);
       setCurrentPIndex(0);
@@ -491,7 +567,7 @@ export default function PracticePage() {
 
       setOrderState('playing');
     },
-    [vocabList, orderLevel, orderCount]
+    [vocabList, orderLevel, orderCount, pinyinMap]
   );
 
   // Setup current puzzle tokens when moving to next puzzle
@@ -508,7 +584,7 @@ export default function PracticePage() {
   );
 
   // Click chunk in bank -> move to placed
-  const handlePlaceChunk = (chunk: { id: string; text: string }) => {
+  const handlePlaceChunk = (chunk: ChunkToken) => {
     if (orderCheckStatus === 'correct') return;
     quizSound.playTap();
     setOrderCheckStatus(null);
@@ -517,7 +593,7 @@ export default function PracticePage() {
   };
 
   // Click chunk in placed -> return to bank
-  const handleUnplaceChunk = (chunk: { id: string; text: string }) => {
+  const handleUnplaceChunk = (chunk: ChunkToken) => {
     if (orderCheckStatus === 'correct') return;
     quizSound.playTap();
     setOrderCheckStatus(null);
@@ -606,6 +682,23 @@ export default function PracticePage() {
 
           {/* Quick Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Pinyin Toggle */}
+            <button
+              type="button"
+              onClick={togglePinyin}
+              className={`px-2.5 py-1.5 rounded-xl border cursor-pointer transition-colors text-xs font-bold flex items-center gap-1.5 ${
+                showPinyin
+                  ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-400'
+              }`}
+              title={showPinyin ? 'Tắt Pinyin (phiên âm)' : 'Bật Pinyin (phiên âm)'}
+            >
+              <span className="font-mono text-[11px] font-bold px-1 py-0.2 rounded bg-purple-200/60 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200">
+                拼
+              </span>
+              <span className="hidden sm:inline">Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
+            </button>
+
             {/* Sound Toggle */}
             <button
               type="button"
@@ -868,7 +961,7 @@ export default function PracticePage() {
                   return (
                     <div className="bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-sm mb-4">
                       {/* Badge question type */}
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                         <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {q.type === 'hanzi_to_meaning' && 'Nhìn Chữ Hán ➔ Chọn Nghĩa'}
                           {q.type === 'meaning_to_hanzi' && 'Chọn Chữ Hán Tương Ứng'}
@@ -876,9 +969,23 @@ export default function PracticePage() {
                           {q.type === 'cloze' && 'Điền Từ Vào Câu Ngữ Cảnh'}
                         </span>
 
-                        <span className="text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded">
-                          HSK {q.target.hskLevel}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={togglePinyin}
+                            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors inline-flex items-center gap-1 ${
+                              showPinyin
+                                ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                            title="Bật/Tắt Pinyin"
+                          >
+                            <span>🔤 Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
+                          </button>
+                          <span className="text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded">
+                            HSK {q.target.hskLevel}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Main Prompt Presentation */}
@@ -902,7 +1009,7 @@ export default function PracticePage() {
                             <h3 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                               {q.prompt}
                             </h3>
-                            {q.promptSub && (
+                            {q.promptSub && (showPinyin || isAnswered || q.type !== 'hanzi_to_meaning') && (
                               <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 font-medium">
                                 {q.promptSub}
                               </p>
@@ -958,8 +1065,8 @@ export default function PracticePage() {
                                   <div className="font-bold text-sm sm:text-base leading-snug truncate">
                                     {opt.label}
                                   </div>
-                                  {opt.sub && (
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  {opt.sub && (showPinyin || isAnswered || q.type === 'listen_to_hanzi') && (
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 font-mono">
                                       {opt.sub}
                                     </div>
                                   )}
@@ -1204,15 +1311,30 @@ export default function PracticePage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    Mẹo: Chạm vào từ để đưa lên dòng ghép câu hoặc chạm để trả về hàng đợi.
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={togglePinyin}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border cursor-pointer transition-all flex items-center gap-1.5 ${
+                        showPinyin
+                          ? 'bg-purple-100 dark:bg-purple-950/80 border-purple-400 dark:border-purple-700 text-purple-800 dark:text-purple-200 shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+                      }`}
+                      title="Bật/Tắt Pinyin trên các khối từ"
+                    >
+                      <span>🔤 Phiên âm Pinyin:</span>
+                      <span className="font-extrabold">{showPinyin ? 'Đang Bật' : 'Đang Tắt'}</span>
+                    </button>
+                    <span className="text-[11px] text-slate-400 hidden sm:inline">
+                      (Chạm để đổi, dành cho người mới học)
+                    </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => startWordOrderChallenge()}
                     disabled={isLoadingVocab || vocabList.length === 0}
-                    className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm flex items-center gap-2 cursor-pointer shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                   >
                     <span>Bắt Đầu Ghép Câu</span>
                     <ArrowRight size={16} />
@@ -1257,12 +1379,31 @@ export default function PracticePage() {
                     <div className="bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-sm mb-4">
                       {/* Hint meaning banner */}
                       <div className="mb-6 text-center">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 inline-block mb-2">
-                          HSK {p.hskLevel} • Nghĩa tiếng Việt
-                        </span>
+                        <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
+                          <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 inline-block">
+                            HSK {p.hskLevel} • Nghĩa tiếng Việt
+                          </span>
+                          <button
+                            type="button"
+                            onClick={togglePinyin}
+                            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors inline-flex items-center gap-1 ${
+                              showPinyin
+                                ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700 hover:border-slate-400'
+                            }`}
+                            title="Bật hoặc Tắt Pinyin cho các khối từ"
+                          >
+                            <span>🔤 Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
+                          </button>
+                        </div>
                         <h3 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white leading-relaxed">
                           &ldquo;{p.meaning}&rdquo;
                         </h3>
+                        {showPinyin && p.pinyin && (
+                          <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-mono font-medium mt-1.5 select-none animate-fadeIn">
+                            {p.pinyin}
+                          </div>
+                        )}
                       </div>
 
                       {/* Placed Words Dropzone */}
@@ -1301,7 +1442,7 @@ export default function PracticePage() {
                                 type="button"
                                 onClick={() => handleUnplaceChunk(chunk)}
                                 disabled={orderCheckStatus === 'correct'}
-                                className={`px-4 py-2.5 rounded-xl text-base sm:text-lg font-bold border cursor-pointer transition-all animate-scaleIn ${
+                                className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border cursor-pointer transition-all animate-scaleIn flex flex-col items-center justify-center min-w-[50px] ${
                                   orderCheckStatus === 'correct'
                                     ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                                     : orderCheckStatus === 'wrong'
@@ -1309,7 +1450,18 @@ export default function PracticePage() {
                                     : 'bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-700 text-purple-900 dark:text-purple-200 hover:scale-95 shadow-xs'
                                 }`}
                               >
-                                {chunk.text}
+                                {showPinyin && chunk.pinyin && (
+                                  <span
+                                    className={`text-[10px] sm:text-[11px] font-mono font-semibold leading-none mb-1 select-none ${
+                                      orderCheckStatus === 'correct'
+                                        ? 'text-emerald-100 opacity-90'
+                                        : 'text-purple-600 dark:text-purple-400'
+                                    }`}
+                                  >
+                                    {chunk.pinyin}
+                                  </span>
+                                )}
+                                <span className="text-base sm:text-lg font-bold leading-tight">{chunk.text}</span>
                               </button>
                             ))
                           )}
@@ -1327,9 +1479,14 @@ export default function PracticePage() {
                               key={chunk.id}
                               type="button"
                               onClick={() => handlePlaceChunk(chunk)}
-                              className="px-4 py-2.5 rounded-xl text-base sm:text-lg font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[50px]"
                             >
-                              {chunk.text}
+                              {showPinyin && chunk.pinyin && (
+                                <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-purple-600 dark:text-purple-400 leading-none mb-1 select-none">
+                                  {chunk.pinyin}
+                                </span>
+                              )}
+                              <span className="text-base sm:text-lg font-bold leading-tight">{chunk.text}</span>
                             </button>
                           ))}
                         </div>
@@ -1560,26 +1717,44 @@ export default function PracticePage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 gap-2">
                     <span>Tổng số: {mistakes.length} câu cần khắc phục</span>
-                    {mistakes.filter((m) => m.type === 'vocab').length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const vocabItems = mistakes
-                            .filter((m) => m.type === 'vocab' && m.vocab)
-                            .map((m) => m.vocab!);
-                          if (vocabItems.length > 0) {
-                            setActiveTab('vocab-quiz');
-                            startVocabQuiz(vocabItems);
-                          }
-                        }}
-                        className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer hover:bg-emerald-700 shadow-xs"
-                      >
-                        <RotateCcw size={12} />
-                        <span>Ôn riêng các từ này ({mistakes.filter((m) => m.type === 'vocab').length})</span>
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {mistakes.filter((m) => m.type === 'vocab').length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const vocabItems = mistakes
+                              .filter((m) => m.type === 'vocab' && m.vocab)
+                              .map((m) => m.vocab!);
+                            if (vocabItems.length > 0) {
+                              setActiveTab('vocab-quiz');
+                              startVocabQuiz(vocabItems);
+                            }
+                          }}
+                          className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer hover:bg-emerald-700 shadow-xs"
+                        >
+                          <RotateCcw size={12} />
+                          <span>Ôn từ vựng ({mistakes.filter((m) => m.type === 'vocab').length})</span>
+                        </button>
+                      )}
+                      {mistakes.filter((m) => m.type === 'sentence').length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sentenceMistakes = mistakes.filter((m) => m.type === 'sentence');
+                            if (sentenceMistakes.length > 0) {
+                              setActiveTab('word-order');
+                              startWordOrderChallenge(sentenceMistakes);
+                            }
+                          }}
+                          className="px-3 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer hover:bg-purple-700 shadow-xs"
+                        >
+                          <RotateCcw size={12} />
+                          <span>Ôn câu ghép ({mistakes.filter((m) => m.type === 'sentence').length})</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
@@ -1623,6 +1798,11 @@ export default function PracticePage() {
                                   {m.sentence.original}
                                 </span>
                               </div>
+                              {showPinyin && m.sentence.pinyin && (
+                                <div className="text-purple-600 dark:text-purple-400 font-mono text-[11px] mt-0.5 select-none">
+                                  {m.sentence.pinyin}
+                                </div>
+                              )}
                               <div className="text-slate-600 dark:text-slate-300 mt-1">
                                 &ldquo;{m.sentence.meaning}&rdquo;
                               </div>
