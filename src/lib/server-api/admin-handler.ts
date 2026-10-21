@@ -178,7 +178,7 @@ export async function handleAdmin(request: Request, subSlug: string[]): Promise<
 
     // 7. /api/admin/users
     if (section === 'users') {
-      const { isAdmin, userId, email, role: callerRole } = authenticateAdmin(request);
+      const { isAdmin } = authenticateAdmin(request);
       if (!isAdmin) {
         return NextResponse.json({ success: false, message: 'Truy cập bị từ chối.' }, { status: 403 });
       }
@@ -188,25 +188,13 @@ export async function handleAdmin(request: Request, subSlug: string[]): Promise<
       const role = searchParams.get('role');
 
       let users = getAllUsers();
-      if (users.length === 0 && (callerRole === 'admin' || isAdmin)) {
-        users = [
-          {
-            id: userId,
-            email,
-            name: email.split('@')[0] || 'Quản trị viên',
-            role: 'admin',
-            streakDays: 1,
-            totalMastered: 0,
-            createdAt: new Date().toISOString(),
-          },
-        ];
-      }
 
       if (q) {
         users = users.filter(
           (u) =>
             (u.name && u.name.toLowerCase().includes(q)) ||
-            (u.email && u.email.toLowerCase().includes(q))
+            (u.email && u.email.toLowerCase().includes(q)) ||
+            (u.id && u.id.toLowerCase().includes(q))
         );
       }
       if (role && role !== 'all') users = users.filter((u) => u.role === role);
@@ -349,6 +337,17 @@ export async function handleAdmin(request: Request, subSlug: string[]): Promise<
 
       try {
         const body = await request.json();
+
+        // Support bulk sync
+        if (Array.isArray(body.users)) {
+          syncUsersToServer(body.users);
+          return NextResponse.json({
+            success: true,
+            count: body.users.length,
+            message: `Đã đồng bộ ${body.users.length} người dùng thành công.`,
+          });
+        }
+
         const { name, email, password, role } = body;
 
         if (!name || !email || !password) {
@@ -457,17 +456,23 @@ export async function handleAdmin(request: Request, subSlug: string[]): Promise<
 
       try {
         const body = await request.json();
-        const { id, updates } = body;
+        const targetId = body.id || body.targetUserId;
+        const updates = body.updates || {
+          ...(body.role ? { role: body.role } : {}),
+          ...(typeof body.isLocked === 'boolean' ? { isLocked: body.isLocked } : {}),
+          ...(body.name ? { name: body.name } : {}),
+          ...(typeof body.targetHsk === 'number' ? { targetHsk: body.targetHsk } : {}),
+        };
 
-        if (!id || !updates) {
+        if (!targetId || Object.keys(updates).length === 0) {
           return NextResponse.json({ success: false, message: 'Thiếu thông tin cập nhật.' }, { status: 400 });
         }
 
-        if (id === userId && (updates.role === 'user' || updates.isLocked === true)) {
+        if (targetId === userId && (updates.role === 'user' || updates.isLocked === true)) {
           return NextResponse.json({ success: false, message: 'Không thể tự hạ quyền hoặc tự khóa tài khoản của chính mình.' }, { status: 400 });
         }
 
-        const updated = updateUser(id, updates);
+        const updated = updateUser(targetId, updates);
         addAuditLog('CẬP_NHẬT_NGƯỜI_DÙNG', callerEmail, updated.email, JSON.stringify(updates));
         return NextResponse.json({ success: true, user: updated });
       } catch (err: unknown) {

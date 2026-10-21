@@ -79,7 +79,17 @@ export default function AdminPage() {
   const [loadingStats, setLoadingStats] = useState(false);
   const [timePeriodFilter, setTimePeriodFilter] = useState<'all' | '30d' | '7d' | 'today'>('all');
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const cached = localStorage.getItem('hsk_admin_users_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const [vocabList, setVocabList] = useState<VocabItem[]>([]);
@@ -132,19 +142,87 @@ export default function AdminPage() {
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const res = await fetch('/api/admin/users', { headers: getClientAuthHeaders(user) });
-      const json = await res.json();
-      if (json.success && json.users) {
-        setUsers(json.users);
-      } else {
-        const data = await loadAllUsersFromFirestore();
-        if (data && data.length > 0) setUsers(data);
-      }
-    } catch {
+      // 1. Fetch from Firestore (where all registered student accounts are stored!)
+      let firestoreUsers: User[] = [];
       try {
-        const data = await loadAllUsersFromFirestore();
-        if (data && data.length > 0) setUsers(data);
-      } catch {}
+        firestoreUsers = await loadAllUsersFromFirestore();
+      } catch (err) {
+        console.warn('Failed to load users from Firestore:', err);
+      }
+
+      // 2. Fetch from server API
+      let apiUsers: User[] = [];
+      try {
+        const res = await fetch('/api/admin/users', { headers: getClientAuthHeaders(user) });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.users)) {
+          apiUsers = json.users;
+        }
+      } catch (err) {
+        console.warn('Failed to load users from API:', err);
+      }
+
+      // 3. Read cached users
+      let cachedUsers: User[] = [];
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('hsk_admin_users_cache');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) cachedUsers = parsed;
+          }
+        } catch {}
+      }
+
+      // 4. Merge all sources, deduplicating by ID or Email
+      const userMap = new Map<string, User>();
+
+      // Server API users
+      for (const u of apiUsers) {
+        const key = (u.id || u.email || '').toLowerCase().trim();
+        if (key) userMap.set(key, u);
+      }
+
+      // Cached users
+      for (const u of cachedUsers) {
+        const key = (u.id || u.email || '').toLowerCase().trim();
+        if (key) {
+          const existing = userMap.get(key);
+          userMap.set(key, { ...(existing || {}), ...u });
+        }
+      }
+
+      // Firestore users (highest authority for real registered student accounts)
+      for (const u of firestoreUsers) {
+        const key = (u.id || u.email || '').toLowerCase().trim();
+        if (key) {
+          const existing = userMap.get(key);
+          userMap.set(key, { ...(existing || {}), ...u });
+        }
+      }
+
+      const merged = Array.from(userMap.values());
+      if (merged.length > 0) {
+        setUsers(merged);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('hsk_admin_users_cache', JSON.stringify(merged));
+          } catch {}
+        }
+
+        // Sync merged users to server DB so server also has all of them
+        if (firestoreUsers.length > 0 || cachedUsers.length > 0) {
+          fetch('/api/admin/users', {
+            method: 'POST',
+            headers: getClientAuthHeaders(user),
+            body: JSON.stringify({ users: merged }),
+          }).catch(() => {});
+        }
+      } else if (apiUsers.length > 0) {
+        setUsers(apiUsers);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
     } finally {
       setLoadingUsers(false);
     }
@@ -482,7 +560,7 @@ export default function AdminPage() {
         logout();
       }}
       stats={{
-        totalUsers: stats?.totalUsers || users.length,
+        totalUsers: Math.max(stats?.totalUsers || 0, users.length),
         totalSystemWords: stats?.totalSystemWords || vocabList.length,
         totalCustomWords: stats?.totalCustomWords,
       }}
