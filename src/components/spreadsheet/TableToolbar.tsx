@@ -295,7 +295,7 @@ export function TableToolbar({
 
           <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Kho Đề Thi Button (Replaces Tập viết chữ next to Thêm từ) */}
+          {/* Kho Đề Thi Button */}
           <Link
             href="/exams"
             onClick={() => onOpenExams?.()}
@@ -304,7 +304,17 @@ export function TableToolbar({
           >
             <GraduationCap size={14} className="text-emerald-600 dark:text-emerald-400" />
             <span>Kho đề thi</span>
-            <span className="text-[9.5px] font-extrabold bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-1 py-0.2 rounded">
+          </Link>
+
+          {/* Luyện Trắc Nghiệm Button */}
+          <Link
+            href="/practice"
+            title="Luyện tập trắc nghiệm & Ghép câu tiếng Trung (Phản xạ từ vựng & Ngữ pháp)"
+            className="px-2.5 py-1.5 rounded-md border border-purple-400 dark:border-purple-700 bg-purple-50/80 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-200 flex items-center gap-1.5 cursor-pointer font-semibold shadow-2xs transition-all btn-press"
+          >
+            <Sparkles size={14} className="text-purple-600 dark:text-purple-400" />
+            <span>Trắc nghiệm</span>
+            <span className="text-[9.5px] font-extrabold bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 px-1 py-0.2 rounded">
               Mới
             </span>
           </Link>
