@@ -48,6 +48,8 @@ interface TableToolbarProps {
   onOpenStrokePractice?: () => void;
   onOpenExams?: () => void;
   dueTodayCount: number;
+  isGuest?: boolean;
+  onRequireAuth?: () => void;
 }
 
 export function TableToolbar({
@@ -67,6 +69,8 @@ export function TableToolbar({
   onOpenStrokePractice,
   onOpenExams,
   dueTodayCount,
+  isGuest,
+  onRequireAuth,
 }: TableToolbarProps) {
   const [showColMenu, setShowColMenu] = useState(false);
 
@@ -115,6 +119,12 @@ export function TableToolbar({
           {/* Dedicated Flashcard Study Link */}
           <Link
             href="/study"
+            onClick={(e) => {
+              if (isGuest) {
+                e.preventDefault();
+                onRequireAuth?.();
+              }
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
             title="Luyện lật thẻ ghi nhớ từ vựng (Flashcards)"
           >
@@ -309,6 +319,12 @@ export function TableToolbar({
           {/* Luyện Trắc Nghiệm Button */}
           <Link
             href="/practice"
+            onClick={(e) => {
+              if (isGuest) {
+                e.preventDefault();
+                onRequireAuth?.();
+              }
+            }}
             title="Luyện tập trắc nghiệm & Ghép câu tiếng Trung (Phản xạ từ vựng & Ngữ pháp)"
             className="px-2.5 py-1.5 rounded-md border border-purple-400 dark:border-purple-700 bg-purple-50/80 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-200 flex items-center gap-1.5 cursor-pointer font-semibold shadow-2xs transition-all btn-press"
           >

@@ -2866,7 +2866,8 @@ function isNotificationDbInitialized(): boolean {
   try {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, 'notifications.json');
-    return fs.existsSync(filePath);
+    const repoFilePath = path.join(process.cwd(), '.data', 'notifications.json');
+    return fs.existsSync(filePath) || fs.existsSync(repoFilePath);
   } catch {
     return false;
   }
@@ -2877,8 +2878,8 @@ export function getAllNotifications(): AppNotification[] {
     writeJsonFile('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
     return INITIAL_STARTER_NOTIFICATIONS;
   }
-  const stored = readJsonFile<AppNotification[]>('notifications.json', []);
-  if (!Array.isArray(stored) || stored.length === 0) {
+  const stored = readJsonFile<AppNotification[]>('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
+  if (!Array.isArray(stored)) {
     writeJsonFile('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
     return INITIAL_STARTER_NOTIFICATIONS;
   }

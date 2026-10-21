@@ -93,11 +93,11 @@ export function NotificationBell({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Delete/dismiss a notification
-  const handleDeleteNotification = async (id: string, e?: React.MouseEvent) => {
+  // Delete/dismiss a notification for this user
+  const handleDeleteNotification = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
 
-    // 1. Locally dismiss immediately
+    // Locally dismiss for current user
     setDismissedIds((prev) => {
       const next = new Set(prev);
       next.add(id);
@@ -106,22 +106,11 @@ export function NotificationBell({
       }
       return next;
     });
-
-    // 2. If it's a server notification, call DELETE API with auth headers
-    try {
-      await fetch(`/api/notifications?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        headers: getClientAuthHeaders(),
-      });
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    } catch (err) {
-      console.error('Delete notification error:', err);
-    }
   };
 
-  const handleClearAll = async (e?: React.MouseEvent) => {
+  const handleClearAll = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm('Bạn có chắc chắn muốn dọn sạch tất cả thông báo?')) return;
+    if (!confirm('Bạn có chắc chắn muốn dọn sạch tất cả thông báo trong danh sách của bạn?')) return;
 
     const allIds = allCombinedNotifications.map((n) => n.id);
     setDismissedIds((prev) => {
@@ -132,16 +121,6 @@ export function NotificationBell({
       }
       return next;
     });
-
-    try {
-      await fetch('/api/notifications?all=true', {
-        method: 'DELETE',
-        headers: getClientAuthHeaders(),
-      });
-      setNotifications([]);
-    } catch (err) {
-      console.error('Clear all notifications error:', err);
-    }
   };
 
   // Generate dynamic study & streak notifications (excluding dismissed ones)

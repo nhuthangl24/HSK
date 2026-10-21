@@ -44,4 +44,5 @@ next-env.d.ts
 .data/*
 !.data/system_vocab.json
 !.data/exams.json
+!.data/notifications.json
 

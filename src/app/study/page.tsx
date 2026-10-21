@@ -595,8 +595,18 @@ export default function StudyPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, isFlipped, currentCard, showSettingsModal, strokeModalItem, handleFlipCard, handleGradeCard, playAudio]);
 
+  // Auth Checking State
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-black flex flex-col items-center justify-center p-4">
+        <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang kiểm tra trạng thái đăng nhập...</p>
+      </div>
+    );
+  }
+
   // Auth Guard — require login before allowing access
-  if (!isAuthLoading && !user) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-slate-50/70 dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 flex flex-col antialiased transition-colors">
         {/* Header */}

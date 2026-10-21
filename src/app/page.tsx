@@ -1000,6 +1000,8 @@ function MainApp() {
             }}
             onOpenExams={() => router.push('/exams')}
             dueTodayCount={stats.dueTodayCount}
+            isGuest={isGuest}
+            onRequireAuth={() => setIsAuthModalOpen(true)}
           />
 
           {/* Firestore Permission Banner */}
