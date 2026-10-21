@@ -3086,13 +3086,14 @@ export function checkSystemHealth(): SystemHealthReport {
       message: `Hoạt động hoàn hảo • ${usersCount} người dùng • ${vocabCount.toLocaleString()} từ vựng HSK 1–9`,
       details: { usersCount, vocabCount, latencyMs: dbLatency },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     services.push({
       name: 'Cơ sở Dữ liệu Hệ thống (.data/)',
       status: 'degraded',
       latencyMs: Date.now() - dbStart,
       lastCheckedAt: checkedAt,
-      message: `Cảnh báo truy xuất dữ liệu: ${err.message}`,
+      message: `Cảnh báo truy xuất dữ liệu: ${errMsg}`,
     });
   }
 
@@ -3113,13 +3114,14 @@ export function checkSystemHealth(): SystemHealthReport {
       message: `${pdfCount} tệp PDF đề thi • ${audioCount} tệp âm thanh MP3 phòng thi sẵn sàng`,
       details: { pdfCount, audioCount },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     services.push({
       name: 'Lưu trữ Tài liệu Đề thi (/exam-files)',
       status: 'unavailable',
       latencyMs: 2,
       lastCheckedAt: checkedAt,
-      message: `Không thể đọc thư mục exam-files: ${err.message}`,
+      message: `Không thể đọc thư mục exam-files: ${errMsg}`,
     });
   }
 
@@ -3135,13 +3137,14 @@ export function checkSystemHealth(): SystemHealthReport {
       message: `${wsList.length} học viên có không gian học tập • ${customWordsTotal.toLocaleString()} từ vựng cá nhân lưu trữ`,
       details: { workspacesCount: wsList.length, customWordsTotal },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     services.push({
       name: 'Không gian Học tập & Sổ từ (Workspaces)',
       status: 'degraded',
       latencyMs: 2,
       lastCheckedAt: checkedAt,
-      message: `Lỗi đọc workspaces: ${err.message}`,
+      message: `Lỗi đọc workspaces: ${errMsg}`,
     });
   }
 
@@ -3265,14 +3268,15 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
         : `Phát hiện bất thường: ${missingHanzi} từ thiếu Hanzi, ${missingPinyin} từ thiếu Pinyin`,
       details: { totalWords: vocab.length, missingHanzi, missingPinyin, missingMeaning },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     checks.push({
       id: 'chk-vocab-integrity',
       name: 'Toàn vẹn Bộ Từ vựng Chuẩn HSK 1–9',
       category: 'database',
       status: 'fail',
       latencyMs: Math.max(1, Date.now() - t2),
-      message: `Lỗi đọc tệp system_vocabulary.json: ${err.message}`,
+      message: `Lỗi đọc tệp system_vocabulary.json: ${errMsg}`,
     });
   }
 
@@ -3293,14 +3297,15 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
         : `Cảnh báo: Chưa tìm thấy tài khoản Quản trị viên cấp cao trong users.json`,
       details: { totalUsers: users.length, adminUsers: admins.length },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     checks.push({
       id: 'chk-users-security',
       name: 'Cơ sở Dữ liệu Người dùng & Phân quyền Quản trị',
       category: 'security',
       status: 'fail',
       latencyMs: Math.max(1, Date.now() - t3),
-      message: `Lỗi đọc users.json: ${err.message}`,
+      message: `Lỗi đọc users.json: ${errMsg}`,
     });
   }
 
@@ -3331,14 +3336,15 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
         : `Tìm thấy ${pdfFiles.length} PDFs, ${audioFiles.length} MP3s (phát hiện ${zeroByteCount} tệp rỗng)`,
       details: { pdfFilesCount: pdfFiles.length, audioFilesCount: audioFiles.length, zeroByteCount },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     checks.push({
       id: 'chk-exam-assets',
       name: 'Kho Tài nguyên Đề thi PDF & File Nghe MP3',
       category: 'storage',
       status: 'fail',
       latencyMs: Math.max(1, Date.now() - t4),
-      message: `Lỗi kiểm tra thư mục exam-files: ${err.message}`,
+      message: `Lỗi kiểm tra thư mục exam-files: ${errMsg}`,
     });
   }
 
@@ -3355,14 +3361,15 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
       message: `Hệ thống Workspace hoạt động ổn định với ${ws.length} không gian học tập độc lập.`,
       details: { workspacesCount: ws.length },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     checks.push({
       id: 'chk-workspaces',
       name: 'Tính Khả dụng Hệ thống Không gian Học tập (Workspaces)',
       category: 'workspaces',
       status: 'warning',
       latencyMs: Math.max(1, Date.now() - t5),
-      message: `Cảnh báo đọc workspaces.json: ${err.message}`,
+      message: `Cảnh báo đọc workspaces.json: ${errMsg}`,
     });
   }
 
@@ -3384,14 +3391,15 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
         : `Hệ thống ghi nhận sự cố hoạt động chuẩn xác: ${openErrors.length} sự cố đang mở, không có lỗi nghiêm trọng.`,
       details: { totalLogs: errorLogs.length, openCount: openErrors.length, hasCritical },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     checks.push({
       id: 'chk-error-incidents',
       name: 'Đường truyền Nhật ký Sự cố & Báo cáo Lỗi Hệ thống',
       category: 'errors',
       status: 'fail',
       latencyMs: Math.max(1, Date.now() - t6),
-      message: `Lỗi đọc error_logs.json: ${err.message}`,
+      message: `Lỗi đọc error_logs.json: ${errMsg}`,
     });
   }
 

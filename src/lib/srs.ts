@@ -66,7 +66,8 @@ export function calculateAnkiSrs(
   currentSrs: SrsData,
   rating: AnkiRating
 ): { nextSrs: SrsData; intervalDays: number; hanziStatus: ReviewResult } {
-  let { repetition, interval, easeFactor } = currentSrs;
+  let { repetition, easeFactor } = currentSrs;
+  const { interval } = currentSrs;
   let intervalDays = 1;
   let hanziStatus: ReviewResult = 'correct';
   let isCorrect = true;

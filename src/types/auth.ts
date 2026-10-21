@@ -141,7 +141,7 @@ export interface ServiceHealthStatus {
   lastCheckedAt?: string;
   lastCheck?: string;
   message?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface SystemHealthReport {
@@ -176,7 +176,7 @@ export interface DiagnosticCheckItem {
   status: 'pass' | 'warning' | 'fail';
   latencyMs: number;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface DeepDiagnosticResult {
