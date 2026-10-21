@@ -314,7 +314,8 @@ export default function PracticePage() {
 
       // Shuffle pool
       const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
-      const targetItems = shuffledPool.slice(0, Math.min(quizCount, shuffledPool.length));
+      const safeCount = Math.max(1, quizCount || 10);
+      const targetItems = shuffledPool.slice(0, Math.min(safeCount, shuffledPool.length));
 
       // Generate question for each target item
       const typesList: VocabQuestionType[] = [
@@ -529,7 +530,8 @@ export default function PracticePage() {
           });
       } else {
         const shuffledWords = [...pool].sort(() => Math.random() - 0.5);
-        const chosen = shuffledWords.slice(0, Math.min(orderCount, shuffledWords.length));
+        const safeCount = Math.max(1, orderCount || 5);
+        const chosen = shuffledWords.slice(0, Math.min(safeCount, shuffledWords.length));
 
         generatedPuzzles = chosen.map((w, idx) => {
           const rawExample = w.example!.trim();
@@ -853,14 +855,22 @@ export default function PracticePage() {
 
                   {/* Number of questions */}
                   <div className="mb-6">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
-                      2. Số Lượng Câu Hỏi
-                    </label>
-                    <div className="grid grid-cols-3 gap-3 max-w-md">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        2. Số Lượng Câu Hỏi
+                      </label>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                        Đang chọn: {quizCount > 0 ? `${quizCount} câu` : 'Tùy chỉnh'}
+                      </span>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mb-3">
                       {[
                         { count: 10, label: '10 Câu', desc: '~2 phút' },
                         { count: 20, label: '20 Câu', desc: '~5 phút' },
                         { count: 30, label: '30 Câu', desc: '~8 phút' },
+                        { count: 50, label: '50 Câu', desc: '~15 phút' },
                       ].map((item) => (
                         <button
                           key={item.count}
@@ -876,6 +886,37 @@ export default function PracticePage() {
                           <div className="text-[11px] opacity-70">{item.desc}</div>
                         </button>
                       ))}
+                    </div>
+
+                    {/* Manual Custom Input */}
+                    <div className="flex items-center gap-2.5 max-w-sm">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        Hoặc tự nhập số câu:
+                      </span>
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={quizCount > 0 ? quizCount : ''}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val)) {
+                              setQuizCount(0);
+                            } else {
+                              setQuizCount(Math.max(1, Math.min(100, val)));
+                            }
+                          }}
+                          onBlur={() => {
+                            if (!quizCount || quizCount < 1) setQuizCount(10);
+                          }}
+                          placeholder="Nhập số (1-100)..."
+                          className="w-full pl-3 pr-10 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
+                          câu
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -1285,14 +1326,22 @@ export default function PracticePage() {
 
                 {/* Number of puzzles */}
                 <div className="mb-6">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
-                    2. Số Lượng Câu Ghép
-                  </label>
-                  <div className="grid grid-cols-3 gap-3 max-w-md">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      2. Số Lượng Câu Ghép
+                    </label>
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 font-mono">
+                      Đang chọn: {orderCount > 0 ? `${orderCount} câu` : 'Tùy chỉnh'}
+                    </span>
+                  </div>
+
+                  {/* Presets */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mb-3">
                     {[
                       { count: 5, label: '5 Câu', desc: 'Khởi động' },
                       { count: 10, label: '10 Câu', desc: 'Tiêu chuẩn' },
                       { count: 15, label: '15 Câu', desc: 'Thử thách' },
+                      { count: 20, label: '20 Câu', desc: 'Chuyên sâu' },
                     ].map((item) => (
                       <button
                         key={item.count}
@@ -1308,6 +1357,37 @@ export default function PracticePage() {
                         <div className="text-[11px] opacity-70">{item.desc}</div>
                       </button>
                     ))}
+                  </div>
+
+                  {/* Manual Custom Input */}
+                  <div className="flex items-center gap-2.5 max-w-sm">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      Hoặc tự nhập số câu:
+                    </span>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={orderCount > 0 ? orderCount : ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (isNaN(val)) {
+                            setOrderCount(0);
+                          } else {
+                            setOrderCount(Math.max(1, Math.min(50, val)));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!orderCount || orderCount < 1) setOrderCount(5);
+                        }}
+                        placeholder="Nhập số (1-50)..."
+                        className="w-full pl-3 pr-10 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
+                        câu
+                      </span>
+                    </div>
                   </div>
                 </div>
 
