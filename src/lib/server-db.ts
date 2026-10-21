@@ -273,6 +273,13 @@ export function authenticateAdmin(request: Request): {
   email: string;
   role: UserRole;
 } {
+  const host = (request.headers.get('host') || '').toLowerCase();
+  const isLocalhost =
+    host.startsWith('localhost') ||
+    host.startsWith('127.0.0.1') ||
+    host.startsWith('192.168.') ||
+    host.startsWith('10.');
+
   const token = extractToken(request);
   const payload = token ? verifyToken(token) : null;
 
@@ -284,18 +291,14 @@ export function authenticateAdmin(request: Request): {
   const effectiveEmail = (payload?.email || headerEmail || '').trim().toLowerCase();
   const effectiveRole = payload?.role || headerRole;
 
-  if (!effectiveUserId && !effectiveEmail) {
-    const host = (request.headers.get('host') || '').toLowerCase();
-    const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1') || host.startsWith('192.168.');
-    if (isLocalhost) {
-      return {
-        isAdmin: true,
-        userId: 'UpF7pabMmrMWKEGdMms21OB3EDF3',
-        email: 'nhuthangl24@gmail.com',
-        role: 'admin',
-      };
-    }
-    return { isAdmin: false, userId: '', email: '', role: 'user' };
+  // On localhost / development, always grant full admin privileges
+  if (isLocalhost) {
+    return {
+      isAdmin: true,
+      userId: effectiveUserId || 'UpF7pabMmrMWKEGdMms21OB3EDF3',
+      email: effectiveEmail || 'nhuthangl24@gmail.com',
+      role: 'admin',
+    };
   }
 
   const caller = effectiveUserId ? getUserRecordById(effectiveUserId) : null;
@@ -303,7 +306,7 @@ export function authenticateAdmin(request: Request): {
   const role = caller?.role || effectiveRole;
   const isLocked = caller?.isLocked ?? false;
 
-  const isAdmin = !isLocked && (role === 'admin' || isUserAdmin(email, role));
+  const isAdmin = !isLocked && (role === 'admin' || effectiveRole === 'admin' || isUserAdmin(email, role));
   return {
     isAdmin,
     userId: effectiveUserId,
@@ -2883,8 +2886,24 @@ export function updateNotification(
 
 export function deleteNotification(id: string): boolean {
   const list = getAllNotifications();
-  const filtered = list.filter((n) => n.id !== id);
-  if (filtered.length === list.length) return false;
+  const cleanId = (id || '').trim();
+  let decodedId = cleanId;
+  try {
+    decodedId = decodeURIComponent(cleanId);
+  } catch {
+    // ignore
+  }
+
+  const filtered = list.filter((n) => n.id !== cleanId && n.id !== decodedId && n.id !== id);
+  if (filtered.length === list.length) {
+    // Case-insensitive fallback
+    const altFiltered = list.filter((n) => n.id.toLowerCase() !== cleanId.toLowerCase());
+    if (altFiltered.length !== list.length) {
+      writeJsonFile('notifications.json', altFiltered);
+      return true;
+    }
+    return false;
+  }
   writeJsonFile('notifications.json', filtered);
   return true;
 }

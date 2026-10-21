@@ -14,8 +14,10 @@ import {
   ExternalLink,
   ChevronRight,
   Flame,
+  Trash2,
 } from 'lucide-react';
 import { AppNotification, NotificationType } from '@/types/notification';
+import { getClientAuthHeaders } from '@/lib/client-auth';
 
 interface NotificationBellProps {
   onOpenExams?: () => void;
@@ -38,6 +40,15 @@ export function NotificationBell({
     if (typeof window === 'undefined') return new Set();
     try {
       const stored = localStorage.getItem('hsk_read_notifications');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem('hsk_dismissed_notifications');
       return stored ? new Set(JSON.parse(stored)) : new Set();
     } catch {
       return new Set();
@@ -82,9 +93,60 @@ export function NotificationBell({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Generate dynamic study & streak notifications
+  // Delete/dismiss a notification
+  const handleDeleteNotification = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    // 1. Locally dismiss immediately
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hsk_dismissed_notifications', JSON.stringify(Array.from(next)));
+      }
+      return next;
+    });
+
+    // 2. If it's a server notification, call DELETE API with auth headers
+    try {
+      await fetch(`/api/notifications?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: getClientAuthHeaders(),
+      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error('Delete notification error:', err);
+    }
+  };
+
+  const handleClearAll = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm('Bạn có chắc chắn muốn dọn sạch tất cả thông báo?')) return;
+
+    const allIds = allCombinedNotifications.map((n) => n.id);
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      allIds.forEach((id) => next.add(id));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hsk_dismissed_notifications', JSON.stringify(Array.from(next)));
+      }
+      return next;
+    });
+
+    try {
+      await fetch('/api/notifications?all=true', {
+        method: 'DELETE',
+        headers: getClientAuthHeaders(),
+      });
+      setNotifications([]);
+    } catch (err) {
+      console.error('Clear all notifications error:', err);
+    }
+  };
+
+  // Generate dynamic study & streak notifications (excluding dismissed ones)
   const allCombinedNotifications = useMemo(() => {
-    const list: AppNotification[] = [...notifications];
+    const list: AppNotification[] = [...notifications].filter((n) => !dismissedIds.has(n.id));
 
     // Dynamic SRS Due reminder
     if (dueTodayCount > 0) {
@@ -288,17 +350,30 @@ export function NotificationBell({
               )}
             </div>
 
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
-                title="Đánh dấu tất cả là đã đọc"
-              >
-                <CheckCheck size={13} />
-                <span>Đã đọc hết</span>
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Đánh dấu tất cả là đã đọc"
+                >
+                  <CheckCheck size={13} />
+                  <span>Đã đọc hết</span>
+                </button>
+              )}
+              {allCombinedNotifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="text-[11px] font-semibold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Dọn sạch toàn bộ thông báo"
+                >
+                  <Trash2 size={12} />
+                  <span>Dọn sạch</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Quick Filter Tabs */}
@@ -354,9 +429,19 @@ export function NotificationBell({
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                           {notif.title}
                         </h4>
-                        {isUnread && (
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-0.5" />
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isUnread && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 mt-0.5" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteNotification(notif.id, e)}
+                            title="Xóa thông báo này"
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
 
                       <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">

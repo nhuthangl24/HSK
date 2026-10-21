@@ -117,24 +117,34 @@ export async function DELETE(request: Request) {
     }
 
     const url = new URL(request.url);
-    const id = url.searchParams.get('id');
+    let id = url.searchParams.get('id');
     const deleteAll = url.searchParams.get('all') === 'true';
 
-    if (deleteAll) {
+    // Support json body if id not in query
+    if (!id && !deleteAll) {
+      const body = await request.json().catch(() => ({}));
+      if (body.id) id = body.id;
+      if (body.all) {
+        deleteAllNotifications();
+        return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ thông báo thành công.' });
+      }
+    }
+
+    if (deleteAll || id === 'all') {
       deleteAllNotifications();
       return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ thông báo thành công.' });
     }
 
-    if (!id) {
+    if (!id || !id.trim()) {
       return NextResponse.json({ success: false, message: 'Thiếu mã thông báo (id).' }, { status: 400 });
     }
 
-    const ok = deleteNotification(id);
-    if (!ok) {
-      return NextResponse.json({ success: false, message: 'Không tìm thấy thông báo để xóa.' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, message: 'Đã xóa thông báo thành công.' });
+    const ok = deleteNotification(id.trim());
+    // Return success: true even if already removed so UI stays in sync
+    return NextResponse.json({
+      success: true,
+      message: ok ? 'Đã xóa thông báo thành công.' : 'Thông báo đã được gỡ bỏ.',
+    });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Lỗi khi xóa thông báo.';
     return NextResponse.json({ success: false, message: errorMsg }, { status: 500 });

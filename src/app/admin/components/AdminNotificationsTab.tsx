@@ -240,11 +240,12 @@ export default function AdminNotificationsTab() {
         method: 'DELETE',
         headers: authHeaders,
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success !== false) {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
-        toast.success('Đã xóa thông báo thành công');
+        toast.success(data.message || 'Đã xóa thông báo thành công');
       } else {
-        toast.error('Xóa thông báo thất bại');
+        toast.error(data.message || 'Xóa thông báo thất bại');
       }
     } catch {
       toast.error('Lỗi khi xóa thông báo');
