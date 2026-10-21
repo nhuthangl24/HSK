@@ -893,30 +893,25 @@ export default function PracticePage() {
                       <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
                         Hoặc tự nhập số câu:
                       </span>
-                      <div className="relative flex-1">
-                        <input
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={quizCount > 0 ? quizCount : ''}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (isNaN(val)) {
-                              setQuizCount(0);
-                            } else {
-                              setQuizCount(Math.max(1, Math.min(100, val)));
-                            }
-                          }}
-                          onBlur={() => {
-                            if (!quizCount || quizCount < 1) setQuizCount(10);
-                          }}
-                          placeholder="Nhập số (1-100)..."
-                          className="w-full pl-3 pr-10 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
-                          câu
-                        </span>
-                      </div>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={quizCount > 0 ? quizCount : ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (isNaN(val)) {
+                            setQuizCount(0);
+                          } else {
+                            setQuizCount(Math.max(1, Math.min(100, val)));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!quizCount || quizCount < 1) setQuizCount(10);
+                        }}
+                        placeholder="Nhập số câu (1-100)..."
+                        className="flex-1 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                     </div>
                   </div>
 
@@ -1364,30 +1359,25 @@ export default function PracticePage() {
                     <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       Hoặc tự nhập số câu:
                     </span>
-                    <div className="relative flex-1">
-                      <input
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={orderCount > 0 ? orderCount : ''}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (isNaN(val)) {
-                            setOrderCount(0);
-                          } else {
-                            setOrderCount(Math.max(1, Math.min(50, val)));
-                          }
-                        }}
-                        onBlur={() => {
-                          if (!orderCount || orderCount < 1) setOrderCount(5);
-                        }}
-                        placeholder="Nhập số (1-50)..."
-                        className="w-full pl-3 pr-10 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-all"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">
-                        câu
-                      </span>
-                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={orderCount > 0 ? orderCount : ''}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val)) {
+                          setOrderCount(0);
+                        } else {
+                          setOrderCount(Math.max(1, Math.min(50, val)));
+                        }
+                      }}
+                      onBlur={() => {
+                        if (!orderCount || orderCount < 1) setOrderCount(5);
+                      }}
+                      placeholder="Nhập số câu (1-50)..."
+                      className="flex-1 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
 
