@@ -12,7 +12,6 @@ import {
   Settings,
   Sun,
   Moon,
-  Sparkles,
   ClipboardPaste,
 } from 'lucide-react';
 
@@ -99,16 +98,6 @@ export function Header({
             <span className="font-bold text-blue-600 dark:text-blue-400">{stats.retentionRate}%</span>
           </div>
         </div>
-
-        {/* Luyện Trắc Nghiệm Button */}
-        <Link
-          href="/practice"
-          title="Luyện tập trắc nghiệm & Ghép câu HSK"
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-purple-800/80 bg-purple-50/80 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-        >
-          <Sparkles size={14} className="text-purple-600 dark:text-purple-400" />
-          <span>Luyện trắc nghiệm</span>
-        </Link>
 
         {/* Quick Theme Toggle Button */}
         <button
