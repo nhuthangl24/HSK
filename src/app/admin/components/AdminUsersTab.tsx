@@ -63,6 +63,15 @@ export default function AdminUsersTab({
     newRole: UserRole;
   } | null>(null);
 
+  // Quick KPI metrics
+  const userMetrics = useMemo(() => {
+    const total = users.length;
+    const admins = users.filter((u) => u.role === 'admin').length;
+    const learners = users.filter((u) => u.role !== 'admin').length;
+    const locked = users.filter((u) => u.isLocked).length;
+    return { total, admins, learners, locked };
+  }, [users]);
+
   // Filtered and Sorted Users
   const filteredUsers = useMemo(() => {
     let result = [...users];
@@ -136,30 +145,135 @@ export default function AdminUsersTab({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
-            <Users size={20} />
+      {/* Top Banner & Quick KPI Cards */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
+              <Users size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Quản Trị Người Dùng & Học Viên
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Quản lý tài khoản, phân quyền, xem nhanh không gian học tập và an toàn dữ liệu.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Quản Trị Người Dùng & Học Viên
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Quản lý tài khoản, điều chỉnh phân quyền, giám sát tiến trình học tập và an toàn dữ liệu.
-            </p>
-          </div>
+
+          <button
+            type="button"
+            onClick={onRefreshUsers}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors self-start sm:self-center cursor-pointer"
+          >
+            <RefreshCw size={13} className={loadingUsers ? 'animate-spin text-emerald-600' : ''} />
+            <span>Làm mới danh sách</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onRefreshUsers}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors self-start sm:self-center"
-        >
-          <RefreshCw size={13} className={loadingUsers ? 'animate-spin text-emerald-600' : ''} />
-          <span>Làm mới danh sách</span>
-        </button>
+        {/* 4 Quick Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setRoleFilter('all');
+              setStatusFilter('all');
+              setPage(1);
+            }}
+            className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
+              roleFilter === 'all' && statusFilter === 'all'
+                ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
+                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Tổng người dùng</span>
+              <Users size={16} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">
+              {userMetrics.total}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Tất cả tài khoản trong hệ thống
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setRoleFilter('admin');
+              setStatusFilter('all');
+              setPage(1);
+            }}
+            className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
+              roleFilter === 'admin'
+                ? 'bg-purple-50/70 dark:bg-purple-950/40 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
+                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Quản trị viên</span>
+              <Shield size={16} className="text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="text-2xl font-black text-purple-700 dark:text-purple-300">
+              {userMetrics.admins}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Quyền cấu hình và kiểm toán
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setRoleFilter('user');
+              setStatusFilter('all');
+              setPage(1);
+            }}
+            className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
+              roleFilter === 'user' && statusFilter === 'all'
+                ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-500/50 shadow-xs ring-1 ring-blue-500/30'
+                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Học viên thường</span>
+              <UserCheck size={16} className="text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="text-2xl font-black text-blue-700 dark:text-blue-300">
+              {userMetrics.learners}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Tài khoản học từ vựng HSK
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setRoleFilter('all');
+              setStatusFilter('locked');
+              setPage(1);
+            }}
+            className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
+              statusFilter === 'locked'
+                ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
+                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between text-slate-400 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Bị khóa</span>
+              <Lock size={16} className="text-rose-600 dark:text-rose-400" />
+            </div>
+            <div className="text-2xl font-black text-rose-700 dark:text-rose-300">
+              {userMetrics.locked}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Tạm ngừng truy cập hệ thống
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -170,29 +284,49 @@ export default function AdminUsersTab({
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên học viên, email hoặc ID..."
+              placeholder="Tìm kiếm theo tên học viên, email hoặc ID..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-10 pr-9 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          {/* Role Filter */}
-          <select
-            value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value);
-              setPage(1);
-            }}
-            className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
-          >
-            <option value="all">Tất cả vai trò</option>
-            <option value="admin">Quản trị viên (Admin)</option>
-            <option value="user">Học viên (User)</option>
-          </select>
+          {/* Quick filter buttons */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            {[
+              { id: 'all', label: 'Tất cả vai trò', role: 'all' },
+              { id: 'admin', label: '👑 Admin', role: 'admin' },
+              { id: 'user', label: '🎓 Học viên', role: 'user' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => {
+                  setRoleFilter(f.role);
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  roleFilter === f.role
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
 
           {/* Status Filter */}
           <select
@@ -228,13 +362,13 @@ export default function AdminUsersTab({
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800 uppercase tracking-wider text-[11px] font-semibold">
               <tr>
-                <th className="py-3 px-4">Học viên</th>
-                <th className="py-3 px-4">Email</th>
-                <th className="py-3 px-4">Vai trò</th>
-                <th className="py-3 px-4">Mục tiêu</th>
-                <th className="py-3 px-4">Chuỗi Streak</th>
-                <th className="py-3 px-4">Trạng thái</th>
-                <th className="py-3 px-4 text-right">Thao tác</th>
+                <th className="py-3.5 px-4">Học viên</th>
+                <th className="py-3.5 px-4">Email</th>
+                <th className="py-3.5 px-4">Vai trò</th>
+                <th className="py-3.5 px-4">Mục tiêu</th>
+                <th className="py-3.5 px-4">Chuỗi Streak</th>
+                <th className="py-3.5 px-4">Trạng thái</th>
+                <th className="py-3.5 px-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
@@ -259,24 +393,24 @@ export default function AdminUsersTab({
                   return (
                     <tr
                       key={u.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       {/* Name with initial avatar */}
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <button
                           type="button"
                           onClick={() => setInspectUser(u)}
-                          className="flex items-center gap-2.5 text-left group cursor-pointer"
+                          className="flex items-center gap-3 text-left group cursor-pointer"
                         >
-                          <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-emerald-100 group-hover:text-emerald-800 dark:group-hover:bg-emerald-950 dark:group-hover:text-emerald-300 transition-colors">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                             {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                            <span className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs sm:text-sm">
                               {u.name || u.email?.split('@')[0] || 'Học viên'}
                             </span>
                             {isCurrentAdmin && (
-                              <span className="ml-1.5 text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
+                              <span className="ml-2 text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold">
                                 Bạn
                               </span>
                             )}
@@ -285,14 +419,14 @@ export default function AdminUsersTab({
                       </td>
 
                       {/* Email */}
-                      <td className="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         {u.email || '—'}
                       </td>
 
                       {/* Role */}
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-bold inline-flex items-center gap-1 ${
                             u.role === 'admin'
                               ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
@@ -300,7 +434,7 @@ export default function AdminUsersTab({
                         >
                           {u.role === 'admin' ? (
                             <>
-                              <Shield size={10} /> Quản trị viên
+                              <Shield size={11} /> Quản trị viên
                             </>
                           ) : (
                             'Học viên'
@@ -309,34 +443,47 @@ export default function AdminUsersTab({
                       </td>
 
                       {/* Target HSK */}
-                      <td className="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">
+                      <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
                         HSK {u.targetHsk || 3}
                       </td>
 
                       {/* Streak */}
-                      <td className="py-3 px-4 font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                      <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300 font-mono">
                         {u.streakDays || 0} ngày
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         {u.isLocked ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60">
                             <Lock size={12} /> Đã khóa
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle2 size={12} /> Bình thường
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Bình thường
                           </span>
                         )}
                       </td>
 
                       {/* Action Buttons */}
-                      <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                        {/* Open Workspace directly */}
+                        {onOpenWorkspace && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenWorkspace(u.id)}
+                            className="px-2.5 py-1 text-purple-700 dark:text-purple-300 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/60 rounded-lg text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            title="Mở Không gian học viên này"
+                          >
+                            <FolderKanban size={12} />
+                            <span>Không gian</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => setInspectUser(u)}
-                          className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-semibold transition-colors"
+                          className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
                         >
                           Chi tiết
                         </button>
@@ -351,7 +498,7 @@ export default function AdminUsersTab({
                                   newRole: u.role === 'admin' ? 'user' : 'admin',
                                 })
                               }
-                              className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-medium transition-colors"
+                              className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-medium transition-colors cursor-pointer"
                             >
                               {u.role === 'admin' ? 'Hạ User' : 'Nâng Admin'}
                             </button>
@@ -359,7 +506,7 @@ export default function AdminUsersTab({
                             <button
                               type="button"
                               onClick={() => onToggleLockUser(u)}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
                                 u.isLocked
                                   ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                   : 'bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -374,7 +521,7 @@ export default function AdminUsersTab({
                                 setDeleteTargetUser(u);
                                 setDeleteConfirmInput('');
                               }}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 transition-colors"
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 transition-colors cursor-pointer"
                               title="Xóa vĩnh viễn tài khoản"
                             >
                               Xóa

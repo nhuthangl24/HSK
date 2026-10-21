@@ -586,10 +586,11 @@ export default function AdminWorkspacesTab({
       {/* Master-Detail Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: User List (4 cols) */}
-        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 space-y-3">
+        <div className="lg:col-span-4 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs p-4 space-y-3.5">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Danh sách học viên ({filteredSummaries.length})
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <FolderKanban size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Danh sách học viên ({filteredSummaries.length})</span>
             </h3>
           </div>
 
@@ -601,20 +602,29 @@ export default function AdminWorkspacesTab({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo tên hoặc email..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden"
+              className="w-full pl-8 pr-8 py-2 text-xs border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:border-emerald-500 focus:outline-hidden transition-all"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
 
           {/* User List Scrollable */}
-          <div className="space-y-1.5 max-h-[600px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[620px] overflow-y-auto pr-1">
             {loadingList && summaries.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-400">
-                <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 Đang tải danh sách học viên...
               </div>
             ) : filteredSummaries.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400">
-                Không tìm thấy học viên nào.
+                Không tìm thấy học viên nào phù hợp.
               </div>
             ) : (
               filteredSummaries.map((u) => {
@@ -623,38 +633,45 @@ export default function AdminWorkspacesTab({
                   <div
                     key={u.userId}
                     onClick={() => handleSelectUser(u.userId)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer text-xs ${
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-xs ${
                       isSelected
-                        ? 'bg-emerald-50/70 border-emerald-400 shadow-xs ring-1 ring-emerald-400'
-                        : 'bg-white hover:bg-slate-50 border-slate-100 hover:border-slate-200'
+                        ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-600 shadow-xs ring-1 ring-emerald-500/30'
+                        : 'bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-slate-200/80 dark:border-slate-800'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-900 truncate max-w-[170px]">
-                        {u.name}
-                      </span>
-                      {u.isLocked ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center gap-0.5">
-                          <Lock size={10} /> Đã khóa
-                        </span>
-                      ) : (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
-                          Bình thường
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                        {(u.name || u.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
+                            {u.name}
+                          </span>
+                          {u.isLocked ? (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400 font-bold shrink-0 flex items-center gap-0.5">
+                              <Lock size={10} /> Đã khóa
+                            </span>
+                          ) : (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-medium shrink-0">
+                              Bình thường
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate font-mono">
+                          {u.email || u.userId}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-400 truncate mb-2 font-mono">
-                      {u.email || u.userId}
-                    </p>
 
-                    <div className="flex items-center gap-2 text-[11px] text-slate-600 pt-1.5 border-t border-slate-100/80 flex-wrap">
-                      <span className="font-semibold text-emerald-700">
+                    <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                         {u.customWordsCount} từ riêng
                       </span>
-                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-300 dark:text-slate-700">•</span>
                       <span>{u.customHskCount} nhóm HSK</span>
-                      <span className="text-slate-300">•</span>
-                      <span className="flex items-center gap-0.5 text-amber-600 font-semibold">
+                      <span className="text-slate-300 dark:text-slate-700">•</span>
+                      <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-semibold">
                         <Flame size={11} /> {u.streakDays}d
                       </span>
                     </div>
@@ -666,10 +683,10 @@ export default function AdminWorkspacesTab({
         </div>
 
         {/* Right Column: Detail Inspector (8 cols) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-6">
+        <div className="lg:col-span-8 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs p-6 space-y-6 text-slate-900 dark:text-white">
           {!selectedUserId ? (
             <div className="py-24 text-center text-xs text-slate-400">
-              <FolderKanban size={36} className="mx-auto text-slate-300 mb-2" />
+              <FolderKanban size={36} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
               Chọn một học viên từ danh sách bên trái để kiểm tra không gian làm việc.
             </div>
           ) : loadingDetail && !workspaceData ? (
@@ -680,14 +697,14 @@ export default function AdminWorkspacesTab({
           ) : workspaceData ? (
             <>
               {/* Alert Header */}
-              <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-start justify-between gap-3 shadow-xs">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                    <Shield size={20} />
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-start justify-between gap-3 shadow-sm border border-slate-700/60">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <Shield size={22} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-bold text-white">
+                      <h3 className="text-base font-bold text-white">
                         Không gian làm việc: {workspaceData.user.name}
                       </h3>
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 font-bold">
@@ -713,104 +730,108 @@ export default function AdminWorkspacesTab({
 
               {/* Stats KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center justify-between text-slate-400 mb-1">
                     <span className="text-[10px] font-bold uppercase">Từ đã học & làm</span>
-                    <BookOpen size={14} className="text-emerald-600" />
+                    <BookOpen size={14} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="text-2xl font-black text-slate-900">
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
                     {practicedStats.total}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center justify-between text-slate-400 mb-1">
                     <span className="text-[10px] font-bold uppercase">Từ đã thuộc</span>
-                    <CheckCircle2 size={14} className="text-emerald-600" />
+                    <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="text-2xl font-black text-emerald-700">
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     {practicedStats.mastered}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center justify-between text-slate-400 mb-1">
                     <span className="text-[10px] font-bold uppercase">Từ vựng riêng</span>
-                    <FileText size={14} className="text-blue-600" />
+                    <FileText size={14} className="text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="text-2xl font-black text-slate-900">
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
                     {workspaceData.customWords.length}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center justify-between text-slate-400 mb-1">
                     <span className="text-[10px] font-bold uppercase">Lượt ôn tập</span>
-                    <GraduationCap size={14} className="text-purple-600" />
+                    <GraduationCap size={14} className="text-purple-600 dark:text-purple-400" />
                   </div>
-                  <div className="text-2xl font-black text-slate-900">
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
                     {workspaceData.totalReviews}
                   </div>
                 </div>
               </div>
 
               {/* Sub-tabs Navigation */}
-              <div className="flex border-b border-slate-200 text-xs overflow-x-auto">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/80 rounded-xl overflow-x-auto text-xs">
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('practiced')}
-                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'practiced'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <Sparkles size={14} className={workspaceSubTab === 'practiced' ? 'text-emerald-600' : 'text-slate-400'} />
-                  <span>Từ vựng đã làm & Luyện tập ({practicedStats.total})</span>
+                  <Sparkles size={14} className={workspaceSubTab === 'practiced' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
+                  <span>Từ vựng đã làm ({practicedStats.total})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('words')}
-                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'words'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Từ vựng riêng ({workspaceData.customWords.length})
+                  <BookOpen size={14} className={workspaceSubTab === 'words' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
+                  <span>Từ vựng riêng ({workspaceData.customWords.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('hsk')}
-                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'hsk'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Nhóm HSK riêng ({workspaceData.customHskGroups.length})
+                  <Layers size={14} className={workspaceSubTab === 'hsk' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
+                  <span>Nhóm HSK ({workspaceData.customHskGroups.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('topics')}
-                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'topics'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Chủ đề riêng ({workspaceData.customTopics.length})
+                  <Tag size={14} className={workspaceSubTab === 'topics' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
+                  <span>Chủ đề ({workspaceData.customTopics.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('settings')}
-                  className={`px-4 py-2.5 font-bold transition-all border-b-2 cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'settings'
-                      ? 'border-emerald-600 text-emerald-700'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Thiết lập cá nhân
+                  <Settings size={14} className={workspaceSubTab === 'settings' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
+                  <span>Thiết lập cá nhân</span>
                 </button>
               </div>
 

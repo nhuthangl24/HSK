@@ -980,7 +980,7 @@ export default function PracticePage() {
                             }`}
                             title="Bật/Tắt Pinyin"
                           >
-                            <span>🔤 Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
+                            <span>Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
                           </button>
                           <span className="text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded">
                             HSK {q.target.hskLevel}
@@ -1323,7 +1323,7 @@ export default function PracticePage() {
                       }`}
                       title="Bật/Tắt Pinyin trên các khối từ"
                     >
-                      <span>🔤 Phiên âm Pinyin:</span>
+                      <span>Phiên âm Pinyin:</span>
                       <span className="font-extrabold">{showPinyin ? 'Đang Bật' : 'Đang Tắt'}</span>
                     </button>
                     <span className="text-[11px] text-slate-400 hidden sm:inline">
@@ -1393,7 +1393,7 @@ export default function PracticePage() {
                             }`}
                             title="Bật hoặc Tắt Pinyin cho các khối từ"
                           >
-                            <span>🔤 Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
+                            <span>Pinyin: {showPinyin ? 'Bật' : 'Tắt'}</span>
                           </button>
                         </div>
                         <h3 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white leading-relaxed">

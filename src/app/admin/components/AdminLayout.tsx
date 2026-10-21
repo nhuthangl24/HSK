@@ -272,41 +272,41 @@ export default function AdminLayout({
         {/* Navigation Sidebar */}
         <aside
           className={`fixed inset-y-0 left-0 z-30 ${
-            sidebarCollapsed ? 'md:w-16' : 'md:w-60'
-          } w-60 bg-white dark:bg-[#0f172a] border-r border-[#e2e8f0] dark:border-[#1e293b] transform transition-all duration-200 md:translate-x-0 md:static shrink-0 select-none overflow-y-auto ${
+            sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+          } w-64 bg-white dark:bg-[#0f172a] border-r border-[#e2e8f0] dark:border-[#1e293b] transform transition-all duration-200 md:translate-x-0 md:static shrink-0 select-none overflow-y-auto ${
             mobileMenuOpen ? 'translate-x-0 top-[49px]' : '-translate-x-full md:translate-x-0'
           }`}
         >
           {/* Collapse Toggle Bar */}
-          <div className="hidden md:flex items-center justify-between p-2.5 border-b border-[#f1f5f9] dark:border-[#1e293b]">
+          <div className="hidden md:flex items-center justify-between p-3 border-b border-[#f1f5f9] dark:border-[#1e293b]">
             {!sidebarCollapsed && (
-              <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pl-1">
+              <span className="text-[10px] font-extrabold text-[#94a3b8] dark:text-[#64748b] uppercase tracking-wider pl-1">
                 Menu Quản Trị
               </span>
             )}
             <button
               type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={`p-1 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white rounded-md hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors cursor-pointer ${
+              className={`p-1.5 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors cursor-pointer outline-none ${
                 sidebarCollapsed ? 'mx-auto' : ''
               }`}
               title={sidebarCollapsed ? 'Mở rộng thanh menu' : 'Thu gọn thanh menu'}
             >
-              {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+              {sidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
             </button>
           </div>
 
           {/* Nav Items List */}
-          <div className="p-2 space-y-3.5">
+          <div className="p-2.5 space-y-3.5">
             {navGroups.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-0.5">
+              <div key={gIdx} className="space-y-1">
                 {!sidebarCollapsed && (
-                  <div className="text-[9.5px] font-bold text-[#94a3b8] dark:text-[#64748b] uppercase tracking-wider px-2.5 py-1">
+                  <div className="text-[10.5px] font-extrabold text-[#94a3b8] dark:text-[#64748b] uppercase tracking-wider px-3 pt-2 pb-1">
                     {group.group}
                   </div>
                 )}
                 {sidebarCollapsed && gIdx > 0 && (
-                  <div className="w-5 h-px bg-[#e2e8f0] dark:bg-[#1e293b] mx-auto my-2" />
+                  <div className="w-6 h-px bg-[#e2e8f0] dark:bg-[#1e293b] mx-auto my-2" />
                 )}
 
                 {group.items.map((item) => {
@@ -322,22 +322,29 @@ export default function AdminLayout({
                         setMobileMenuOpen(false);
                       }}
                       title={item.label}
-                      className={`flex items-center justify-between rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                      className={`group relative flex items-center justify-between rounded-xl text-xs font-semibold cursor-pointer transition-all outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 select-none ${
                         sidebarCollapsed
-                          ? `w-9 h-9 mx-auto justify-center ${
+                          ? `w-10 h-10 mx-auto justify-center ${
                               isActive
-                                ? 'bg-[#047857] text-white shadow-2xs'
-                                : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]'
+                                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 font-bold'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70'
                             }`
-                          : `w-full px-2.5 py-1.5 ${
+                          : `w-full px-3 py-2.5 min-h-[40px] ${
                               isActive
-                                ? 'bg-[#047857] text-white shadow-2xs font-bold'
-                                : 'text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]'
+                                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25 font-bold'
+                                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
                             }`
                       }`}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Icon size={14} className="shrink-0" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon
+                          size={16}
+                          className={`shrink-0 transition-colors ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                          }`}
+                        />
                         {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                       </div>
 
@@ -345,10 +352,10 @@ export default function AdminLayout({
                         <>
                           {'badge' in item && item.badge && (
                             <span
-                              className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold ${
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 transition-colors ${
                                 isActive
-                                  ? 'bg-[#065f46] text-white'
-                                  : 'bg-[#ecfdf5] dark:bg-[#064e3b]/40 text-[#047857] dark:text-[#34d399]'
+                                  ? 'bg-white/20 text-white ring-1 ring-white/20'
+                                  : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
                               }`}
                             >
                               {item.badge}
@@ -356,10 +363,10 @@ export default function AdminLayout({
                           )}
                           {'count' in item && typeof item.count === 'number' && item.count > 0 && (
                             <span
-                              className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono ${
+                              className={`text-[11px] px-2 py-0.5 rounded-full font-mono shrink-0 transition-colors ${
                                 isActive
-                                  ? 'bg-[#065f46] text-white font-bold'
-                                  : 'bg-[#f1f5f9] dark:bg-[#1e293b] text-[#64748b] dark:text-[#94a3b8]'
+                                  ? 'bg-white/20 text-white font-bold ring-1 ring-white/20'
+                                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700/80 group-hover:text-slate-900 dark:group-hover:text-slate-200 font-semibold'
                               }`}
                             >
                               {item.count > 999 ? `${Math.round(item.count / 1000)}k` : item.count}
