@@ -25,6 +25,8 @@ import {
   Moon,
   Info,
   Check,
+  Lock,
+  LogIn,
 } from 'lucide-react';
 
 import { VocabItem } from '@/types/vocabulary';
@@ -41,6 +43,7 @@ import {
   ChunkToken,
 } from '@/lib/sentence-chunker';
 import { NotificationBell } from '@/components/layout/NotificationBell';
+import { AuthModal } from '@/components/modals/AuthModal';
 
 // ----------------------------------------------------------------------
 // Types
@@ -86,8 +89,12 @@ interface PracticeMistake {
 const STORAGE_MISTAKES_KEY = 'hsk_practice_mistakes_v1';
 
 export default function PracticePage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
+
+  // Auth modal for login gating
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   // Navigation & Data
   const [activeTab, setActiveTab] = useState<PracticeTab>('vocab-quiz');
@@ -733,13 +740,99 @@ export default function PracticePage() {
               <ArrowLeft size={13} />
               <span className="hidden sm:inline">Bảng từ vựng</span>
             </Link>
+
+            {/* User Profile or Login button */}
+            {user ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
+                  {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden md:inline truncate max-w-[100px]">{user.name || user.email?.split('@')[0]}</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+              >
+                <LogIn size={13} />
+                <span>Đăng nhập</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
-        {/* Navigation Mode Tabs */}
+        {isAuthLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center my-auto">
+            <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Đang kiểm tra trạng thái đăng nhập...</p>
+          </div>
+        ) : !user ? (
+          <div className="flex-1 flex items-center justify-center py-10 px-2 my-auto">
+            <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl text-center space-y-5">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
+                <Lock size={30} />
+              </div>
+
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  Yêu Cầu Đăng Nhập Để Luyện Tập
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                  Để tham gia <strong>Luyện Thi Trắc Nghiệm</strong> và <strong>Ghép Câu Tiếng Trung</strong>, bạn vui lòng đăng nhập tài khoản nhằm tự động lưu kết quả, tính chuỗi ngày Streak và ghi lại Sổ tay câu sai (错题本).
+                </p>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-left text-xs space-y-2.5 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                  <span>Đồng bộ điểm số & tiến độ học tập lên Cloud</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                  <span>Tự động lưu lại các câu làm sai vào Sổ tay để ôn tập lại</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                  <span>Tích lũy chuỗi ngày học Streak liên tục</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalMode('login');
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/20 cursor-pointer transition-all flex items-center justify-center gap-2"
+                >
+                  <LogIn size={15} />
+                  <span>Đăng Nhập Ngay</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalMode('register');
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer transition-all"
+                >
+                  Tạo tài khoản mới miễn phí
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Navigation Mode Tabs */}
         <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6">
           <div className="flex items-center gap-1 sm:gap-2 bg-slate-200/60 dark:bg-slate-900/80 p-1 rounded-xl">
             <button
@@ -1912,7 +2005,16 @@ export default function PracticePage() {
             </div>
           </div>
         )}
+          </>
+        )}
       </main>
+
+      {/* Auth Modal for Login / Registration */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
     </div>
   );
 }

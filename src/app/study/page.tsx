@@ -33,6 +33,8 @@ import {
   Calendar,
   Compass,
   TrendingUp,
+  Lock,
+  LogIn,
 } from 'lucide-react';
 
 import { VocabItem, DeckStatistics, ReviewResult } from '@/types/vocabulary';
@@ -53,6 +55,7 @@ import {
 import { StrokeOrderModal } from '@/components/modals/StrokeOrderModal';
 import { batchSaveUserProgressToFirestore } from '@/lib/firebase-db';
 import { getFirebaseServices } from '@/lib/firebase';
+import { AuthModal } from '@/components/modals/AuthModal';
 
 // -------------------------------------------------------------
 // Type Definitions
@@ -69,9 +72,13 @@ interface SessionRatingRecord {
 
 export default function StudyPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { effectiveTheme, setTheme, hanziFont, setHanziFont } = useTheme();
   const toast = useToast();
+
+  // Auth Modal for Require Login
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   // -------------------------------------------------------------
   // State: Vocabulary & Views
@@ -588,6 +595,114 @@ export default function StudyPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, isFlipped, currentCard, showSettingsModal, strokeModalItem, handleFlipCard, handleGradeCard, playAudio]);
 
+  // Auth Guard — require login before allowing access
+  if (!isAuthLoading && !user) {
+    return (
+      <div className="min-h-screen bg-slate-50/70 dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 flex flex-col antialiased transition-colors">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-6 py-2.5 transition-colors">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Quay lại Bảng Từ Vựng"
+              >
+                <ArrowLeft size={18} />
+              </Link>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center text-white shadow-xs shrink-0">
+                  <Brain size={18} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                    Thẻ Ghi Nhớ HSK
+                  </h1>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    Ghi nhớ thông minh
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTheme(effectiveTheme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer"
+                title="Đổi giao diện Sáng / Tối"
+              >
+                {effectiveTheme === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+              >
+                <LogIn size={13} />
+                <span>Đăng nhập</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Lock Gate */}
+        <div className="flex-1 flex items-center justify-center py-10 px-4">
+          <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-xl p-8 flex flex-col items-center text-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
+              <Lock size={30} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                Yêu Cầu Đăng Nhập Để Ôn Tập
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-zinc-400 leading-relaxed">
+                Đăng nhập để truy cập hệ thống thẻ ghi nhớ SRS, theo dõi tiến độ và đồng bộ dữ liệu của bạn.
+              </p>
+            </div>
+
+            {/* Benefits */}
+            <ul className="w-full space-y-2.5 text-left">
+              {[
+                { icon: <Brain size={15} className="text-emerald-500 shrink-0" />, text: 'Thuật toán SRS Anki tự động lên lịch ôn tập tối ưu' },
+                { icon: <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />, text: 'Lưu tiến độ & lịch sử ôn tập trên đám mây' },
+                { icon: <Flame size={15} className="text-emerald-500 shrink-0" />, text: 'Theo dõi streak và thống kê học tập của bạn' },
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl px-3 py-2.5">
+                  {item.icon}
+                  <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">{item.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="w-full space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+                className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                <LogIn size={16} />
+                Đăng Nhập Ngay
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
+                className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-[.98] text-slate-700 dark:text-zinc-200 font-bold text-sm transition-all cursor-pointer"
+              >
+                Tạo tài khoản mới miễn phí
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode={authModalMode}
+        />
+      </div>
+    );
+  }
+
   // Loading State
   if (isLoadingVocab) {
     return (
@@ -671,6 +786,28 @@ export default function StudyPage() {
             >
               {effectiveTheme === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
             </button>
+
+            {/* User Profile or Login button */}
+            {user ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-zinc-800 text-xs font-bold text-slate-800 dark:text-zinc-200">
+                <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
+                  {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden md:inline truncate max-w-[100px]">{user.name || user.email?.split('@')[0]}</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+              >
+                <LogIn size={13} />
+                <span>Đăng nhập</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -1407,6 +1544,13 @@ export default function StudyPage() {
           item={strokeModalItem}
         />
       )}
+
+      {/* AUTH MODAL */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
     </div>
   );
 }
