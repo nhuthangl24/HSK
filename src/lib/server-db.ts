@@ -2792,6 +2792,31 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
 
 const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   {
+    id: 'notif-practice-and-quiz-launch',
+    title: '🚀 Ra mắt: Luyện Thi Trắc Nghiệm & Ghép Câu Tiếng Trung!',
+    message: 'Hệ thống vừa ra mắt bộ công cụ luyện tập tương tác mới: Trắc nghiệm từ vựng 4 dạng (Hán tự, Pinyin, Dịch nghĩa, Nghe âm), Luyện ghép câu tiếng Trung chuẩn ngữ pháp HSK 1 - 6 (kèm nút Bật/Tắt Pinyin), tự nhập số lượng câu hỏi và Sổ tay câu sai (错题本) tự động lưu lại các câu làm sai để ôn tập củng cố kiến thức!',
+    type: 'feature',
+    priority: 'urgent',
+    isPinned: true,
+    actionLabel: 'Luyện tập ngay',
+    actionLink: '/practice',
+    actionType: 'link',
+    actionPayload: '/practice',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'notif-workspace-saas-upgrade',
+    title: '✨ Nâng cấp: Không Gian Học Tập & Tiến Độ SRS Cá Nhân',
+    message: 'Giao diện không gian học viên vừa được nâng cấp toàn diện: Bổ sung thống kê chi tiết số từ vựng cá nhân, tiến độ ghi nhớ SRS, nhóm HSK riêng, chuỗi ngày streak học tập và tích hợp phát âm nhanh 🔊.',
+    type: 'update',
+    priority: 'high',
+    actionLabel: 'Xem không gian',
+    actionLink: '/study',
+    actionType: 'link',
+    actionPayload: '/study',
+    createdAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+  },
+  {
     id: 'notif-welcome',
     title: 'Chào mừng bạn đến với HSK Master! 🎉',
     message: 'Nền tảng học tiếng Trung tương tác thông minh với bảng tính flashcard, hệ thống lặp lại ngắt quãng SRS và luyện viết chữ Hán chuyên nghiệp.',
@@ -2840,7 +2865,11 @@ export function getAllNotifications(): AppNotification[] {
     return INITIAL_STARTER_NOTIFICATIONS;
   }
   const stored = readJsonFile<AppNotification[]>('notifications.json', []);
-  return Array.isArray(stored) ? stored : [];
+  if (!Array.isArray(stored) || stored.length === 0) {
+    writeJsonFile('notifications.json', INITIAL_STARTER_NOTIFICATIONS);
+    return INITIAL_STARTER_NOTIFICATIONS;
+  }
+  return stored;
 }
 
 export function deleteAllNotifications(): boolean {

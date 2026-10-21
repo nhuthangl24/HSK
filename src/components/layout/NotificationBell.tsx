@@ -303,6 +303,12 @@ export function NotificationBell({
             <FileText size={16} />
           </div>
         );
+      case 'feature':
+        return (
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Sparkles size={16} />
+          </div>
+        );
       case 'system':
       default:
         return (
