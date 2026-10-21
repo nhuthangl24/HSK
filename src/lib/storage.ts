@@ -21,55 +21,171 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'actions', label: 'Thao tác', width: 80, minWidth: 70, visible: true, align: 'center' },
 ];
 
+export interface UserProgressData {
+  hanziPracticeInput?: string;
+  hanziStatus?: 'correct' | 'wrong' | 'uncertain' | 'unlearned';
+  translationPracticeInput?: string;
+  translationStatus?: 'correct' | 'review' | 'unanswered';
+  favorite?: boolean;
+  notes?: string;
+  srs?: VocabItem['srs'];
+  updatedAt?: string;
+}
+
+export type UserProgressMap = Record<string, UserProgressData>;
+
+const STORAGE_KEY_PROGRESS_PREFIX = 'hsk_progress_map_v2_';
+const STORAGE_KEY_CUSTOM_WORDS_PREFIX = 'hsk_custom_words_v2_';
+
+export function recoverLegacyProgress(userId?: string): UserProgressMap {
+  if (typeof window === 'undefined') return {};
+  const progressMap: UserProgressMap = {};
+
+  try {
+    const keysToCheck = [
+      userId ? `hsk_vocab_user_${userId}` : null,
+      userId ? `hsk_vocab_${userId}` : null,
+      STORAGE_KEY_VOCAB,
+      'hsk_vocab_data_v6',
+      'hsk_vocab_data_v5',
+      'hsk_vocab_data_v4',
+      'hsk_vocab_data_v3',
+      'hsk_vocab_data_v2',
+      'hsk_vocab_data_v1',
+    ].filter(Boolean) as string[];
+
+    for (const key of keysToCheck) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          for (const item of list) {
+            if (!item || !item.id) continue;
+            const hasInput = !!item.hanziPracticeInput && item.hanziPracticeInput.trim().length > 0;
+            const hasStatus = item.hanziStatus && item.hanziStatus !== 'unlearned';
+            const hasTranslation = !!item.translationPracticeInput && item.translationPracticeInput.trim().length > 0;
+            const hasFav = !!item.favorite;
+            const hasNotes = !!item.notes && item.notes.trim().length > 0;
+
+            if (hasInput || hasStatus || hasTranslation || hasFav || hasNotes) {
+              if (!progressMap[item.id]) {
+                progressMap[item.id] = {
+                  hanziPracticeInput: item.hanziPracticeInput || '',
+                  hanziStatus: item.hanziStatus || 'unlearned',
+                  translationPracticeInput: item.translationPracticeInput || '',
+                  translationStatus: item.translationStatus || 'unanswered',
+                  favorite: !!item.favorite,
+                  notes: item.notes || '',
+                  srs: item.srs,
+                  updatedAt: item.updatedAt || new Date().toISOString(),
+                };
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.warn('Recovery error:', err);
+  }
+
+  return progressMap;
+}
+
+export function getUserProgressMap(userId?: string): UserProgressMap {
+  if (typeof window === 'undefined') return {};
+  const key = `${STORAGE_KEY_PROGRESS_PREFIX}${userId || 'guest'}`;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return parsed;
+    }
+    // Attempt auto-recovery from legacy cache keys if empty
+    const recovered = recoverLegacyProgress(userId);
+    if (Object.keys(recovered).length > 0) {
+      try {
+        localStorage.setItem(key, JSON.stringify(recovered));
+      } catch {}
+      return recovered;
+    }
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveUserProgressMap(progressMap: UserProgressMap, userId?: string): void {
+  if (typeof window === 'undefined') return;
+  const key = `${STORAGE_KEY_PROGRESS_PREFIX}${userId || 'guest'}`;
+  try {
+    localStorage.setItem(key, JSON.stringify(progressMap));
+  } catch (err) {
+    console.error('Failed to save user progress map:', err);
+  }
+}
+
+export function saveSingleUserProgress(
+  vocabId: string,
+  progress: Partial<UserProgressData>,
+  userId?: string
+): void {
+  if (typeof window === 'undefined' || !vocabId) return;
+  try {
+    const currentMap = getUserProgressMap(userId);
+    currentMap[vocabId] = {
+      ...(currentMap[vocabId] || {}),
+      ...progress,
+      updatedAt: new Date().toISOString(),
+    };
+    saveUserProgressMap(currentMap, userId);
+  } catch (err) {
+    console.error('Failed to save single progress:', err);
+  }
+}
+
 export function getStoredVocab(userId?: string): VocabItem[] {
   if (typeof window === 'undefined') return [];
   try {
-    localStorage.removeItem('hsk_vocab_data_v1');
-    localStorage.removeItem('hsk_vocab_data_v2');
-    localStorage.removeItem('hsk_vocab_data_v3');
-    localStorage.removeItem('hsk_vocab_data_v4');
-    localStorage.removeItem('hsk_vocab_data_v5');
-
-    // 1. Check user-specific cache first
-    if (userId) {
-      const userRaw = localStorage.getItem(`hsk_vocab_user_${userId}`);
-      if (userRaw) {
-        const parsed = JSON.parse(userRaw);
-        if (Array.isArray(parsed) && parsed.length >= 11000 && parsed[10]?.example) {
-          // Strictly isolate: only system words OR words created by THIS user
-          const filtered = parsed.filter(
-            (item: VocabItem) => item.isSystem !== false || (item.userId && item.userId === userId)
-          );
-          return filtered;
-        } else {
-          localStorage.removeItem(`hsk_vocab_user_${userId}`);
-        }
-      }
-    }
-
-    // 2. Fall back to general cache: STRICTLY CLEAN SYSTEM WORDS ONLY (no user practice results)
     const raw = localStorage.getItem(STORAGE_KEY_VOCAB);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length >= 11000) {
-        // Strip out any custom words (isSystem === false) AND any user practice results
-        const cleanSystemOnly = parsed
-          .filter((item: VocabItem) => item.isSystem !== false)
-          .map((item: VocabItem) => ({
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length < 11000) return [];
+
+    const progressMap = getUserProgressMap(userId);
+    const customWordsRaw = localStorage.getItem(`${STORAGE_KEY_CUSTOM_WORDS_PREFIX}${userId || 'guest'}`);
+    const customWords: VocabItem[] = customWordsRaw ? JSON.parse(customWordsRaw) : [];
+
+    const mergedSystem = parsed
+      .filter((item: VocabItem) => item.isSystem !== false)
+      .map((item: VocabItem) => {
+        const p = progressMap[item.id];
+        if (p) {
+          return {
             ...item,
-            hanziPracticeInput: '',
-            hanziStatus: 'unlearned' as const,
-            translationPracticeInput: '',
-            translationStatus: 'unanswered' as const,
-            favorite: false,
-            notes: '',
-          }));
-        return cleanSystemOnly;
-      } else {
-        localStorage.removeItem(STORAGE_KEY_VOCAB);
-      }
-    }
-    return [];
+            hanziPracticeInput: p.hanziPracticeInput ?? '',
+            hanziStatus: p.hanziStatus ?? 'unlearned',
+            translationPracticeInput: p.translationPracticeInput ?? '',
+            translationStatus: p.translationStatus ?? 'unanswered',
+            favorite: typeof p.favorite === 'boolean' ? p.favorite : false,
+            notes: p.notes ?? '',
+            srs: p.srs ?? item.srs,
+            updatedAt: p.updatedAt || item.updatedAt,
+          };
+        }
+        return {
+          ...item,
+          hanziPracticeInput: '',
+          hanziStatus: 'unlearned' as const,
+          translationPracticeInput: '',
+          translationStatus: 'unanswered' as const,
+          favorite: false,
+          notes: '',
+        };
+      });
+
+    return [...customWords, ...mergedSystem];
   } catch (e) {
     console.error('Failed to parse stored vocab:', e);
     return [];
@@ -79,28 +195,57 @@ export function getStoredVocab(userId?: string): VocabItem[] {
 export function saveStoredVocab(items: VocabItem[], userId?: string): void {
   if (typeof window === 'undefined' || !items || items.length === 0) return;
   try {
-    // 1. If user is logged in, save their personalized set (system words + their own custom words + practice results)
-    if (userId) {
-      const userItems = items.filter(
-        (item: VocabItem) => item.isSystem !== false || (item.userId && item.userId === userId)
-      );
-      localStorage.setItem(`hsk_vocab_user_${userId}`, JSON.stringify(userItems));
+    // 1. Extract and save user progress map (lightweight, zero quota risk)
+    const progressMap = getUserProgressMap(userId);
+    let changed = false;
+    for (const item of items) {
+      const hasInput = !!item.hanziPracticeInput && item.hanziPracticeInput.trim().length > 0;
+      const hasStatus = item.hanziStatus && item.hanziStatus !== 'unlearned';
+      const hasTranslation = !!item.translationPracticeInput && item.translationPracticeInput.trim().length > 0;
+      const hasFav = !!item.favorite;
+      const hasNotes = !!item.notes && item.notes.trim().length > 0;
+      if (hasInput || hasStatus || hasTranslation || hasFav || hasNotes) {
+        progressMap[item.id] = {
+          hanziPracticeInput: item.hanziPracticeInput || '',
+          hanziStatus: item.hanziStatus || 'unlearned',
+          translationPracticeInput: item.translationPracticeInput || '',
+          translationStatus: item.translationStatus || 'unanswered',
+          favorite: !!item.favorite,
+          notes: item.notes || '',
+          srs: item.srs,
+          updatedAt: item.updatedAt || new Date().toISOString(),
+        };
+        changed = true;
+      }
+    }
+    if (changed) {
+      saveUserProgressMap(progressMap, userId);
     }
 
-    // 2. The general cache MUST ONLY EVER contain CLEAN system words (no practice results!)
-    const cleanSystemWordsOnly = items
-      .filter((item: VocabItem) => item.isSystem !== false)
-      .map((item: VocabItem) => ({
-        ...item,
-        hanziPracticeInput: '',
-        hanziStatus: 'unlearned' as const,
-        translationPracticeInput: '',
-        translationStatus: 'unanswered' as const,
-        favorite: false,
-        notes: '',
-      }));
-    if (cleanSystemWordsOnly.length > 0) {
-      localStorage.setItem(STORAGE_KEY_VOCAB, JSON.stringify(cleanSystemWordsOnly));
+    // 2. Save any custom words
+    const customWords = items.filter((item) => item.isSystem === false);
+    if (customWords.length > 0) {
+      try {
+        localStorage.setItem(`${STORAGE_KEY_CUSTOM_WORDS_PREFIX}${userId || 'guest'}`, JSON.stringify(customWords));
+      } catch {}
+    }
+
+    // 3. Keep base clean system vocab in general cache
+    if (!localStorage.getItem(STORAGE_KEY_VOCAB)) {
+      const cleanSystemWordsOnly = items
+        .filter((item: VocabItem) => item.isSystem !== false)
+        .map((item: VocabItem) => ({
+          ...item,
+          hanziPracticeInput: '',
+          hanziStatus: 'unlearned' as const,
+          translationPracticeInput: '',
+          translationStatus: 'unanswered' as const,
+          favorite: false,
+          notes: '',
+        }));
+      if (cleanSystemWordsOnly.length > 0) {
+        localStorage.setItem(STORAGE_KEY_VOCAB, JSON.stringify(cleanSystemWordsOnly));
+      }
     }
   } catch (e) {
     console.error('Failed to save vocab to localStorage:', e);

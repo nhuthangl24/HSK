@@ -17,6 +17,8 @@ import {
   saveStoredColumns,
   getStoredVocab,
   saveStoredVocab,
+  getUserProgressMap,
+  saveSingleUserProgress,
   DEFAULT_COLUMNS,
 } from '@/lib/storage';
 import { calculateDeckStats, isItemDueForReview } from '@/lib/srs';
@@ -249,8 +251,6 @@ function MainApp() {
                 favorite: false,
                 notes: '',
               }));
-            setItems(currentCleanSystemWords);
-            saveStoredVocab(currentCleanSystemWords, uid);
             setFirestoreError(null);
           }
         }
@@ -259,18 +259,39 @@ function MainApp() {
       }
     }
 
-    // If guest (logged out), strictly show ONLY clean unlearned system words
+    // Step 2: Overlay persistent user progress map from localStorage (instant display of all user inputs)
+    const progressMap = getUserProgressMap(uid);
+    const wordsWithProgress = currentCleanSystemWords.map((w) => {
+      const p = progressMap[w.id];
+      if (p) {
+        return {
+          ...w,
+          hanziPracticeInput: p.hanziPracticeInput ?? '',
+          hanziStatus: p.hanziStatus ?? 'unlearned',
+          translationPracticeInput: p.translationPracticeInput ?? '',
+          translationStatus: p.translationStatus ?? 'unanswered',
+          favorite: typeof p.favorite === 'boolean' ? p.favorite : false,
+          notes: p.notes ?? '',
+          srs: p.srs ?? w.srs,
+          updatedAt: p.updatedAt || w.updatedAt,
+        };
+      }
+      return w;
+    });
+
+    setItems(wordsWithProgress);
+
+    // If guest (logged out), display local progress and stop background cloud sync
     if (!uid) {
-      setItems(currentCleanSystemWords);
       setIsLoadingVocab(false);
       return;
     }
 
-    // Step 2: Background sync user learning progress & custom words from Firestore (< 100ms)
+    // Step 3: Background sync user learning progress & custom words from Firestore (< 100ms)
     if (getFirebaseServices().isConfigured) {
       try {
-        const res = await loadVocabularyForUser(uid, currentCleanSystemWords);
-        if (!res.error && res.items && res.items.length >= currentCleanSystemWords.length) {
+        const res = await loadVocabularyForUser(uid, wordsWithProgress);
+        if (!res.error && res.items && res.items.length >= wordsWithProgress.length) {
           // Strictly isolate: only system words or this user's custom words
           const sanitized = res.items.filter((w) => w.isSystem !== false || w.userId === uid);
           setFirestoreError(null);
@@ -336,6 +357,22 @@ function MainApp() {
         setIsAuthModalOpen(true);
         return;
       }
+
+      // 1. Immediately save progress record to localStorage (instant, safe, zero quota issues)
+      saveSingleUserProgress(
+        updated.id,
+        {
+          hanziPracticeInput: updated.hanziPracticeInput,
+          hanziStatus: updated.hanziStatus,
+          translationPracticeInput: updated.translationPracticeInput,
+          translationStatus: updated.translationStatus,
+          favorite: updated.favorite,
+          notes: updated.notes,
+          srs: updated.srs,
+        },
+        user?.id
+      );
+
       setItems((prev) => {
         const next = prev.map((i) => (i.id === updated.id ? updated : i));
         saveStoredVocab(next, user?.id);
@@ -362,6 +399,26 @@ function MainApp() {
             srs: updated.srs,
           }).catch((err) => console.error('Auto-sync progress to Firestore failed:', err));
         }
+      }
+
+      // Sync progress to server API as persistent backup
+      if (user) {
+        fetch('/api/vocab', {
+          method: 'PUT',
+          headers: getClientAuthHeaders(user),
+          body: JSON.stringify({
+            progressUpdate: {
+              vocabId: updated.id,
+              hanziPracticeInput: updated.hanziPracticeInput,
+              hanziStatus: updated.hanziStatus,
+              translationPracticeInput: updated.translationPracticeInput,
+              translationStatus: updated.translationStatus,
+              favorite: updated.favorite,
+              notes: updated.notes,
+              srs: updated.srs,
+            },
+          }),
+        }).catch(() => {});
       }
     },
     [isGuest, user]
@@ -392,6 +449,12 @@ function MainApp() {
       batchSaveUserProgressToFirestore(user.id, records).catch((err) =>
         console.error('Auto-sync batch progress to Firestore failed:', err)
       );
+
+      fetch('/api/vocab', {
+        method: 'PUT',
+        headers: getClientAuthHeaders(user),
+        body: JSON.stringify({ batchProgress: records }),
+      }).catch(() => {});
     }
   };
 
