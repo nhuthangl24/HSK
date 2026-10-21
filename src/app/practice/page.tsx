@@ -1514,11 +1514,6 @@ export default function PracticePage() {
                         <h3 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white leading-relaxed">
                           &ldquo;{p.meaning}&rdquo;
                         </h3>
-                        {showPinyin && p.pinyin && (
-                          <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-mono font-medium mt-1.5 select-none animate-fadeIn">
-                            {p.pinyin}
-                          </div>
-                        )}
                       </div>
 
                       {/* Placed Words Dropzone */}
