@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSystemConfig } from '@/lib/server-db';
 
-export async function GET() {
+export async function handleSystemConfig(): Promise<Response> {
   const config = getSystemConfig();
   return NextResponse.json({
     success: true,
