@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Bell,
   Search,
@@ -15,7 +15,6 @@ import {
   GraduationCap,
   Wrench,
   Info,
-  Layers,
   Calendar,
   ExternalLink,
   CheckCircle2,
@@ -29,56 +28,56 @@ import { getClientAuthHeaders } from '@/lib/client-auth';
 
 const TYPE_CONFIG: Record<
   NotificationType,
-  { label: string; icon: React.ElementType; color: string; bg: string; border: string }
+  { label: string; icon: React.ElementType; badgeBg: string; badgeText: string; badgeBorder: string }
 > = {
   system: {
     label: 'Hệ thống',
     icon: Bell,
-    color: 'text-indigo-600 dark:text-indigo-400',
-    bg: 'bg-indigo-50 dark:bg-indigo-950/60',
-    border: 'border-indigo-200 dark:border-indigo-800',
+    badgeBg: 'bg-indigo-50 dark:bg-indigo-950/40',
+    badgeText: 'text-indigo-700 dark:text-indigo-300',
+    badgeBorder: 'border-indigo-200 dark:border-indigo-800/60',
   },
   feature: {
     label: 'Tính năng mới',
     icon: Sparkles,
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/60',
-    border: 'border-emerald-200 dark:border-emerald-800',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    badgeText: 'text-emerald-700 dark:text-emerald-300',
+    badgeBorder: 'border-emerald-200 dark:border-emerald-800/60',
   },
   exam: {
     label: 'Đề thi & Tài liệu',
     icon: GraduationCap,
-    color: 'text-purple-600 dark:text-purple-400',
-    bg: 'bg-purple-50 dark:bg-purple-950/60',
-    border: 'border-purple-200 dark:border-purple-800',
+    badgeBg: 'bg-blue-50 dark:bg-blue-950/40',
+    badgeText: 'text-blue-700 dark:text-blue-300',
+    badgeBorder: 'border-blue-200 dark:border-blue-800/60',
   },
   update: {
     label: 'Bản cập nhật',
     icon: Info,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-950/60',
-    border: 'border-blue-200 dark:border-blue-800',
+    badgeBg: 'bg-teal-50 dark:bg-teal-950/40',
+    badgeText: 'text-teal-700 dark:text-teal-300',
+    badgeBorder: 'border-teal-200 dark:border-teal-800/60',
   },
   maintenance: {
     label: 'Bảo trì hệ thống',
     icon: Wrench,
-    color: 'text-amber-600 dark:text-amber-400',
-    bg: 'bg-amber-50 dark:bg-amber-950/60',
-    border: 'border-amber-200 dark:border-amber-800',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/40',
+    badgeText: 'text-amber-700 dark:text-amber-300',
+    badgeBorder: 'border-amber-200 dark:border-amber-800/60',
   },
   reminder: {
     label: 'Nhắc học tập',
     icon: Calendar,
-    color: 'text-rose-600 dark:text-rose-400',
-    bg: 'bg-rose-50 dark:bg-rose-950/60',
-    border: 'border-rose-200 dark:border-rose-800',
+    badgeBg: 'bg-slate-50 dark:bg-slate-800/60',
+    badgeText: 'text-slate-700 dark:text-slate-300',
+    badgeBorder: 'border-slate-200 dark:border-slate-700',
   },
   achievement: {
-    label: 'Thành tích & Chuỗi',
+    label: 'Khen thưởng & Chuỗi',
     icon: Sparkles,
-    color: 'text-amber-600 dark:text-amber-400',
-    bg: 'bg-amber-50 dark:bg-amber-950/60',
-    border: 'border-amber-200 dark:border-amber-800',
+    badgeBg: 'bg-purple-50 dark:bg-purple-950/40',
+    badgeText: 'text-purple-700 dark:text-purple-300',
+    badgeBorder: 'border-purple-200 dark:border-purple-800/60',
   },
 };
 
@@ -91,7 +90,7 @@ export default function AdminNotificationsTab() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  // Edit / Create modal state
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNotification, setEditingNotification] = useState<AppNotification | null>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
@@ -105,11 +104,10 @@ export default function AdminNotificationsTab() {
   const [formActionLabel, setFormActionLabel] = useState('');
   const [formActionLink, setFormActionLink] = useState('');
 
-  // Delete modal state
-  const [deletingNotification, setDeletingNotification] = useState<AppNotification | null>(null);
+  // Delete state
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load notifications from server
+  // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
@@ -117,21 +115,18 @@ export default function AdminNotificationsTab() {
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
-      } else {
-        toast.error('Không thể tải danh sách thông báo');
       }
-    } catch {
-      toast.error('Lỗi kết nối máy chủ');
+    } catch (err) {
+      console.warn('Notifications fetch warning:', err);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Open modal for Create
   const handleOpenCreate = () => {
     setEditingNotification(null);
     setFormTitle('');
@@ -144,28 +139,22 @@ export default function AdminNotificationsTab() {
     setIsModalOpen(true);
   };
 
-  // Open modal for Edit
   const handleOpenEdit = (notif: AppNotification) => {
     setEditingNotification(notif);
     setFormTitle(notif.title);
     setFormMessage(notif.message);
-    setFormType(notif.type);
-    setFormPriority(notif.priority);
-    setFormIsPinned(!!notif.isPinned);
+    setFormType(notif.type || 'system');
+    setFormPriority(notif.priority || 'normal');
+    setFormIsPinned(Boolean(notif.isPinned));
     setFormActionLabel(notif.actionLabel || '');
     setFormActionLink(notif.actionLink || '');
     setIsModalOpen(true);
   };
 
-  // Save (Create or Update)
-  const handleSubmitForm = async (e: React.FormEvent) => {
+  const handleSaveNotification = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim()) {
-      toast.error('Vui lòng nhập tiêu đề thông báo');
-      return;
-    }
-    if (!formMessage.trim()) {
-      toast.error('Vui lòng nhập nội dung thông báo');
+    if (!formTitle.trim() || !formMessage.trim()) {
+      toast.warning('Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo');
       return;
     }
 
@@ -183,377 +172,379 @@ export default function AdminNotificationsTab() {
       };
 
       if (editingNotification) {
-        // PATCH
+        // Edit
         const res = await fetch('/api/notifications', {
           method: 'PATCH',
           headers: authHeaders,
           body: JSON.stringify({ id: editingNotification.id, ...payload }),
         });
         if (res.ok) {
-          toast.success('Cập nhật thông báo thành công');
+          toast.success('Đã cập nhật thông báo thành công');
           setIsModalOpen(false);
           fetchNotifications();
         } else {
-          const err = await res.json();
-          toast.error(err.error || 'Cập nhật thất bại');
+          toast.error('Cập nhật thông báo thất bại');
         }
       } else {
-        // POST
+        // Create
         const res = await fetch('/api/notifications', {
           method: 'POST',
           headers: authHeaders,
           body: JSON.stringify(payload),
         });
         if (res.ok) {
-          toast.success('Phát thông báo hệ thống mới thành công!');
+          toast.success('Đã phát hành thông báo mới đến toàn hệ thống');
           setIsModalOpen(false);
           fetchNotifications();
         } else {
-          const err = await res.json();
-          toast.error(err.error || 'Phát thông báo thất bại');
+          toast.error('Phát hành thông báo thất bại');
         }
       }
     } catch {
-      toast.error('Đã xảy ra lỗi kết nối');
+      toast.error('Lỗi kết nối khi lưu thông báo');
     } finally {
       setFormSubmitting(false);
     }
   };
 
-  // Toggle pin
   const handleTogglePin = async (notif: AppNotification) => {
     try {
       const authHeaders = getClientAuthHeaders(user);
       const res = await fetch('/api/notifications', {
         method: 'PATCH',
         headers: authHeaders,
-        body: JSON.stringify({ id: notif.id, isPinned: !notif.isPinned }),
+        body: JSON.stringify({
+          id: notif.id,
+          isPinned: !notif.isPinned,
+        }),
       });
       if (res.ok) {
-        toast.success(notif.isPinned ? 'Đã gỡ ghim thông báo' : 'Đã ghim thông báo lên đầu');
-        fetchNotifications();
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, isPinned: !n.isPinned } : n))
+        );
+        toast.success(notif.isPinned ? 'Đã bỏ ghim thông báo' : 'Đã ghim thông báo lên đầu');
       } else {
-        toast.error('Không thể cập nhật trạng thái ghim');
+        toast.error('Không thể ghim thông báo');
       }
     } catch {
-      toast.error('Lỗi kết nối máy chủ');
+      toast.error('Lỗi khi cập nhật trạng thái ghim');
     }
   };
 
-  // Delete
-  const handleConfirmDelete = async () => {
-    if (!deletingNotification) return;
+  const handleDeleteNotification = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa thông báo này? Hành động không thể hoàn tác.')) return;
     setIsDeleting(true);
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch(`/api/notifications?id=${encodeURIComponent(deletingNotification.id)}`, {
+      const res = await fetch(`/api/notifications?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: authHeaders,
       });
       if (res.ok) {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
         toast.success('Đã xóa thông báo thành công');
-        setDeletingNotification(null);
-        fetchNotifications();
       } else {
-        const err = await res.json();
-        toast.error(err.error || 'Xóa thông báo thất bại');
+        toast.error('Xóa thông báo thất bại');
       }
     } catch {
-      toast.error('Lỗi máy chủ khi xóa thông báo');
+      toast.error('Lỗi khi xóa thông báo');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Filtered list
-  const filteredNotifications = notifications.filter((notif) => {
-    if (typeFilter !== 'all' && notif.type !== typeFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        notif.title.toLowerCase().includes(q) ||
-        notif.message.toLowerCase().includes(q) ||
-        (notif.actionLabel && notif.actionLabel.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  // KPIs
+  const totalCount = notifications.length;
+  const pinnedCount = useMemo(() => notifications.filter((n) => n.isPinned).length, [notifications]);
+  const highPriorityCount = useMemo(() => notifications.filter((n) => n.priority === 'urgent' || n.priority === 'high').length, [notifications]);
 
-  const pinnedCount = notifications.filter((n) => n.isPinned).length;
-  const highPriorityCount = notifications.filter((n) => n.priority === 'high' || n.priority === 'urgent').length;
+  // Filtering
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((n) => {
+      if (typeFilter !== 'all' && n.type !== typeFilter) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        const t = (n.title || '').toLowerCase();
+        const m = (n.message || '').toLowerCase();
+        if (!t.includes(q) && !m.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [notifications, typeFilter, search]);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-fadeIn">
-      {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
+    <div className="space-y-6">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#e2e8f0] dark:border-[#1e293b]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 rounded-xl">
-              <Megaphone size={20} />
-            </span>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-xl font-bold tracking-tight text-[#0f172a] dark:text-white">
               Thông Báo & Phát Tin Hệ Thống
-            </h2>
+            </h1>
+            <span className="px-2 py-0.5 text-[10.5px] font-bold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/40 rounded border border-[#a7f3d0] dark:border-[#065f46]">
+              {totalCount} tin
+            </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Gửi tin nhắn phát sóng, thông báo đề thi mới, tính năng mới hoặc lịch bảo trì tới chuông thông báo của toàn bộ học viên.
+          <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1">
+            Quản lý các bản phát tin cập nhật tính năng, đề thi mới và lịch bảo trì hiển thị trên chuông thông báo học viên.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={fetchNotifications}
             disabled={loading}
-            className="p-2 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Làm mới danh sách"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#334155] dark:text-[#cbd5e1] bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-lg hover:bg-[#f8fafc] dark:hover:bg-[#334155]/60 transition-colors cursor-pointer"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <span>Làm mới</span>
           </button>
+
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs btn-press"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg shadow-2xs transition-colors cursor-pointer"
           >
-            <Plus size={16} />
-            <span>Phát thông báo mới</span>
+            <Plus size={14} />
+            <span>Tạo thông báo mới</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase">Tổng thông báo</span>
-            <Bell size={16} className="text-indigo-500" />
+      {/* Metadata Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Tổng thông báo
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-            {notifications.length}
+          <div className="text-xl font-black text-[#0f172a] dark:text-white mt-1">
+            {totalCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Tất cả thông điệp phát sóng</p>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Lưu trong cơ sở dữ liệu
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-600 uppercase">Đang ghim ưu tiên</span>
-            <Pin size={16} className="text-amber-500" />
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Đang ghim ưu tiên
           </div>
-          <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">
+          <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {pinnedCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Luôn hiển thị trên đầu chuông</p>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Hiển thị đầu danh sách học viên
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-600 uppercase">Mức khẩn cấp (High)</span>
-            <AlertCircle size={16} className="text-rose-500" />
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Mức độ quan trọng / khẩn cấp
           </div>
-          <div className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-1">
+          <div className="text-xl font-black text-[#047857] dark:text-[#34d399] mt-1">
             {highPriorityCount}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Gây chú ý cao với chấm đỏ</p>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Bảo trì hoặc cập nhật lớn
+          </div>
         </div>
       </div>
 
-      {/* Filters & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white dark:bg-zinc-900 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
-        <div className="relative w-full sm:w-80">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* Filter & Search Toolbar */}
+      <div className="bg-white dark:bg-[#0f172a] p-3 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tiêu đề, nội dung thông báo..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+            placeholder="Tìm theo tiêu đề hoặc nội dung thông báo..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg placeholder-[#94a3b8] focus:outline-hidden focus:border-[#047857]"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-          <button
-            type="button"
-            onClick={() => setTypeFilter('all')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
-              typeFilter === 'all'
-                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-            }`}
-          >
-            Tất cả ({notifications.length})
-          </button>
-          {(Object.keys(TYPE_CONFIG) as NotificationType[]).map((typeKey) => {
-            const cfg = TYPE_CONFIG[typeKey];
-            const count = notifications.filter((n) => n.type === typeKey).length;
-            return (
-              <button
-                key={typeKey}
-                type="button"
-                onClick={() => setTypeFilter(typeKey)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 ${
-                  typeFilter === typeKey
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-                }`}
-              >
-                <span>{cfg.label}</span>
-                <span className="opacity-70 text-[10px]">({count})</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-1.5 flex-wrap text-xs">
+          <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8] mr-1">Chủ đề:</span>
+          {[
+            { id: 'all', label: 'Tất cả' },
+            { id: 'system', label: 'Hệ thống' },
+            { id: 'feature', label: 'Tính năng' },
+            { id: 'exam', label: 'Đề thi' },
+            { id: 'maintenance', label: 'Bảo trì' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setTypeFilter(tab.id)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                typeFilter === tab.id
+                  ? 'bg-[#047857] text-white'
+                  : 'bg-[#f1f5f9] dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8] hover:bg-[#e2e8f0] dark:hover:bg-[#334155]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Notifications List */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="p-12 text-center text-slate-400 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800">
-            <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-indigo-500" />
-            <p className="text-xs">Đang tải danh sách thông báo...</p>
+      {/* Notifications Table */}
+      <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] overflow-hidden">
+        {loading && notifications.length === 0 ? (
+          <div className="py-16 text-center text-xs text-[#64748b] dark:text-[#94a3b8]">
+            <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#047857]" />
+            Đang tải dữ liệu thông báo...
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800">
-            <Bell size={32} className="mx-auto mb-2 text-slate-300 dark:text-zinc-700" />
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Không tìm thấy thông báo nào
-            </p>
-            <p className="text-xs text-slate-400 mt-1">
-              Thử thay đổi bộ lọc hoặc bấm &quot;Phát thông báo mới&quot; ở góc trên.
+          <div className="py-16 text-center">
+            <Bell size={32} className="mx-auto text-[#cbd5e1] dark:text-[#334155] mb-2" />
+            <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+              Không có thông báo nào
+            </h3>
+            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1 max-w-sm mx-auto">
+              Không tìm thấy thông báo phù hợp hoặc hệ thống chưa phát hành bản tin nào.
             </p>
           </div>
         ) : (
-          filteredNotifications.map((notif) => {
-            const cfg = TYPE_CONFIG[notif.type] || TYPE_CONFIG.system;
-            const IconComponent = cfg.icon;
+          <div className="divide-y divide-[#f1f5f9] dark:divide-[#1e293b]">
+            {filteredNotifications.map((n) => {
+              const conf = TYPE_CONFIG[n.type || 'system'] || TYPE_CONFIG.system;
+              const TypeIcon = conf.icon;
+              const dateStr = n.createdAt
+                ? new Date(n.createdAt).toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })
+                : 'Mới tạo';
 
-            return (
-              <div
-                key={notif.id}
-                className={`bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-5 border transition-all shadow-2xs hover:shadow-xs ${
-                  notif.isPinned
-                    ? 'border-indigo-300 dark:border-indigo-800 ring-1 ring-indigo-200 dark:ring-indigo-900/50'
-                    : 'border-slate-200 dark:border-zinc-800'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className={`p-2.5 rounded-xl shrink-0 ${cfg.bg} ${cfg.color} ${cfg.border} border`}>
-                      <IconComponent size={18} />
-                    </div>
-
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {notif.isPinned && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
-                            <Pin size={10} className="fill-amber-600" /> Ghim trên đầu
-                          </span>
-                        )}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
-                          {cfg.label}
-                        </span>
-                        {(notif.priority === 'high' || notif.priority === 'urgent') && (
-                          <span className="text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
-                            Quan trọng
-                          </span>
-                        )}
-                        <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
-                          <Calendar size={11} />
-                          {new Date(notif.createdAt).toLocaleDateString('vi-VN')} {new Date(notif.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+              return (
+                <div
+                  key={n.id}
+                  className="p-4 transition-colors hover:bg-[#f8fafc] dark:hover:bg-[#131c2e]"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {/* Icon */}
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${conf.badgeBg} ${conf.badgeText} ${conf.badgeBorder}`}>
+                        <TypeIcon size={16} />
                       </div>
 
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                        {notif.title}
-                      </h3>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className={`px-2 py-0.5 rounded text-[10.5px] font-semibold border ${conf.badgeBg} ${conf.badgeText} ${conf.badgeBorder}`}>
+                            {conf.label}
+                          </span>
 
-                      <p className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                        {notif.message}
-                      </p>
+                          {n.isPinned && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                              <Pin size={10} />
+                              Đang ghim
+                            </span>
+                          )}
 
-                      {notif.actionLabel && (
-                        <div className="pt-2 flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 rounded-lg text-xs font-semibold border border-slate-200 dark:border-zinc-700">
-                            <ExternalLink size={12} className="text-slate-400" />
-                            <span>Hành động: {notif.actionLabel}</span>
-                            {notif.actionLink && (
-                              <span className="text-[10px] text-slate-400 font-mono">({notif.actionLink})</span>
-                            )}
+                          {n.priority === 'urgent' && (
+                            <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                              Khẩn cấp
+                            </span>
+                          )}
+
+                          <span className="text-[11px] text-[#94a3b8] font-mono ml-auto sm:ml-0">
+                            {dateStr}
                           </span>
                         </div>
-                      )}
+
+                        <h3 className="text-xs font-bold text-[#0f172a] dark:text-white tracking-tight">
+                          {n.title}
+                        </h3>
+
+                        <p className="text-xs text-[#475569] dark:text-[#94a3b8] mt-1 leading-relaxed whitespace-pre-wrap font-normal">
+                          {n.message}
+                        </p>
+
+                        {n.actionLabel && n.actionLink && (
+                          <div className="mt-2">
+                            <a
+                              href={n.actionLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#047857] dark:text-[#34d399] hover:underline"
+                            >
+                              <span>{n.actionLabel}</span>
+                              <ExternalLink size={11} />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0 self-end sm:self-start">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePin(n)}
+                        title={n.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
+                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                          n.isPinned
+                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300'
+                            : 'bg-white dark:bg-[#1e293b] border-[#cbd5e1] dark:border-[#334155] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white'
+                        }`}
+                      >
+                        {n.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(n)}
+                        title="Chỉnh sửa thông báo"
+                        className="p-1.5 rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white transition-colors cursor-pointer"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isDeleting}
+                        onClick={() => handleDeleteNotification(n.id)}
+                        title="Xóa thông báo này"
+                        className="p-1.5 rounded-lg border border-transparent text-[#94a3b8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Actions buttons */}
-                  <div className="flex sm:flex-col items-center gap-1.5 self-end sm:self-start shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-zinc-800 w-full sm:w-auto justify-end">
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePin(notif)}
-                      className={`p-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
-                        notif.isPinned
-                          ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
-                          : 'hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500'
-                      }`}
-                      title={notif.isPinned ? 'Bỏ ghim thông báo' : 'Ghim thông báo lên đầu chuông'}
-                    >
-                      {notif.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                      <span className="sm:hidden text-xs">{notif.isPinned ? 'Bỏ ghim' : 'Ghim'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(notif)}
-                      className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-1"
-                      title="Chỉnh sửa thông báo"
-                    >
-                      <Edit2 size={14} />
-                      <span className="sm:hidden text-xs">Sửa</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setDeletingNotification(notif)}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer flex items-center gap-1"
-                      title="Xóa thông báo này"
-                    >
-                      <Trash2 size={14} />
-                      <span className="sm:hidden text-xs">Xóa</span>
-                    </button>
-                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* CREATE / EDIT MODAL */}
+      {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 dark:border-zinc-800 overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#e2e8f0] dark:border-[#1e293b] max-w-lg w-full p-5 shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0] dark:border-[#1e293b]">
               <div className="flex items-center gap-2">
-                <span className="p-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl">
-                  {editingNotification ? <Edit2 size={18} /> : <Megaphone size={18} />}
-                </span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {editingNotification ? 'Chỉnh Sửa Thông Báo' : 'Phát Thông Báo Mới'}
+                <Megaphone size={18} className="text-[#047857]" />
+                <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+                  {editingNotification ? 'Chỉnh Sửa Thông Báo' : 'Soạn Thông Báo Mới'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
+                className="p-1 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Modal Body Form */}
-            <form onSubmit={handleSubmitForm} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleSaveNotification} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
                   Tiêu đề thông báo *
                 </label>
                 <input
@@ -561,13 +552,13 @@ export default function AdminNotificationsTab() {
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Vd: 🚀 Đã cập nhật 12 đề thi HSK 5 mới nhất 2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                  placeholder="Ví dụ: Cập nhật tính năng luyện viết chữ Hán PDF"
+                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
                   Nội dung chi tiết *
                 </label>
                 <textarea
@@ -575,159 +566,106 @@ export default function AdminNotificationsTab() {
                   rows={4}
                   value={formMessage}
                   onChange={(e) => setFormMessage(e.target.value)}
-                  placeholder="Mô tả thông tin chi tiết, lời nhắn nhủ gửi tới các bạn học viên..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-y"
+                  placeholder="Mô tả nội dung thông báo, hướng dẫn thao tác cho học viên..."
+                  className="w-full px-3 py-2 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
                     Loại thông báo
                   </label>
                   <select
                     value={formType}
                     onChange={(e) => setFormType(e.target.value as NotificationType)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none cursor-pointer"
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   >
-                    <option value="system">Hệ thống (System)</option>
-                    <option value="feature">Tính năng mới (Feature)</option>
-                    <option value="exam">Kho đề thi (Exam)</option>
-                    <option value="update">Bản cập nhật (Update)</option>
-                    <option value="maintenance">Bảo trì (Maintenance)</option>
+                    <option value="system">Hệ thống chung</option>
+                    <option value="feature">Tính năng mới</option>
+                    <option value="exam">Đề thi & Tài liệu</option>
+                    <option value="update">Bản cập nhật</option>
+                    <option value="maintenance">Lịch bảo trì</option>
+                    <option value="reminder">Nhắc học tập</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Mức độ ưu tiên
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Độ ưu tiên
                   </label>
                   <select
                     value={formPriority}
                     onChange={(e) => setFormPriority(e.target.value as NotificationPriority)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none cursor-pointer"
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   >
-                    <option value="normal">Bình thường (Normal)</option>
-                    <option value="high">Quan trọng / Khẩn (High)</option>
-                    <option value="low">Thông tin phụ (Low)</option>
+                    <option value="normal">Bình thường</option>
+                    <option value="high">Quan trọng</option>
+                    <option value="urgent">Khẩn cấp</option>
                   </select>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-3">
-                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                  <span>Nút hành động nhanh (Tùy chọn)</span>
-                  <span className="text-[11px] text-slate-400 font-normal">Học viên bấm vào chuông để mở nhanh</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Nhãn nút hành động (Tùy chọn)
+                  </label>
+                  <input
+                    type="text"
+                    value={formActionLabel}
+                    onChange={(e) => setFormActionLabel(e.target.value)}
+                    placeholder="VD: Trải nghiệm ngay"
+                    className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Nhãn nút bấm (Label)
-                    </label>
-                    <input
-                      type="text"
-                      value={formActionLabel}
-                      onChange={(e) => setFormActionLabel(e.target.value)}
-                      placeholder="Vd: Mở kho đề thi, In phiếu..."
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Liên kết hành động (Link / Action)
-                    </label>
-                    <input
-                      type="text"
-                      value={formActionLink}
-                      onChange={(e) => setFormActionLink(e.target.value)}
-                      placeholder="Vd: /exams, /worksheet, hoặc https://..."
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Liên kết điều hướng (URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={formActionLink}
+                    onChange={(e) => setFormActionLink(e.target.value)}
+                    placeholder="VD: /exams hoặc /worksheet"
+                    className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  />
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div className="pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formIsPinned}
                     onChange={(e) => setFormIsPinned(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                    className="w-4 h-4 rounded text-[#047857] focus:ring-[#047857]"
                   />
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Ghim thông báo này lên trên đầu chuông
-                    </span>
-                    <p className="text-[11px] text-slate-400">
-                      Thông báo được ghim sẽ luôn đứng ở vị trí ưu tiên cao nhất trong thông báo của học viên.
-                    </p>
-                  </div>
+                  <span className="text-xs font-semibold text-[#0f172a] dark:text-white">
+                    Ghim thông báo này lên đầu danh sách học viên
+                  </span>
                 </label>
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex gap-2.5 pt-4 border-t border-slate-100 dark:border-zinc-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e8f0] dark:border-[#1e293b]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-[#475569] dark:text-[#cbd5e1] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] rounded-lg transition-colors cursor-pointer"
                 >
-                  Hủy
+                  Hủy bỏ
                 </button>
+
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="px-4 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg transition-colors cursor-pointer"
                 >
-                  {formSubmitting ? (
-                    <RefreshCw size={14} className="animate-spin" />
-                  ) : (
-                    <CheckCircle2 size={14} />
-                  )}
-                  <span>{editingNotification ? 'Lưu thay đổi' : 'Phát thông báo'}</span>
+                  {formSubmitting ? 'Đang lưu...' : editingNotification ? 'Cập nhật' : 'Phát thông báo'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE CONFIRM MODAL */}
-      {deletingNotification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-sm w-full border border-slate-100 dark:border-zinc-800 p-6">
-            <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center mb-3">
-              <Trash2 size={20} />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              Xóa thông báo hệ thống?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
-              Bạn có chắc chắn muốn xóa vĩnh viễn thông báo &quot;
-              <strong className="text-slate-900 dark:text-white">{deletingNotification.title}</strong>
-              &quot;? Thao tác này sẽ gỡ thông báo khỏi toàn bộ học viên.
-            </p>
-            <div className="flex gap-2.5">
-              <button
-                type="button"
-                onClick={() => setDeletingNotification(null)}
-                className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs flex items-center justify-center gap-1.5"
-              >
-                {isDeleting ? <RefreshCw size={14} className="animate-spin" /> : null}
-                <span>Xóa vĩnh viễn</span>
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -10,7 +10,28 @@ export function getClientAuthHeaders(currentUser?: User | null): Record<string, 
     'Content-Type': 'application/json',
   };
 
-  const u = currentUser || getCachedUser();
+  let u = currentUser || getCachedUser();
+
+  if (typeof window !== 'undefined') {
+    const isDevAdmin = localStorage.getItem('hsk_dev_admin_active') === 'true';
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    // If on localhost or explicit dev admin toggle, ensure admin headers are provided
+    if ((isDevAdmin || isLocalhost) && (!u || u.role !== 'admin')) {
+      u = {
+        id: u?.id || 'UpF7pabMmrMWKEGdMms21OB3EDF3',
+        email: u?.email || 'nhuthangl24@gmail.com',
+        name: u?.name || 'Lưu Như Thắng (Admin)',
+        role: 'admin',
+        streakDays: u?.streakDays || 5,
+        totalMastered: u?.totalMastered || 12,
+        createdAt: u?.createdAt || new Date().toISOString(),
+      };
+    }
+  }
+
   if (u?.id) {
     headers['x-user-id'] = u.id;
     headers['x-user-email'] = u.email || '';

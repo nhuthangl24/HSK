@@ -45,6 +45,7 @@ export interface AuditLog {
   id: string;
   action: string;
   adminEmail: string;
+  admin?: string;
   target?: string;
   details?: string;
   timestamp: string;
@@ -113,5 +114,96 @@ export interface PracticedWordRecord {
     successRate?: number;
   };
   isMastered: boolean;
+}
+
+export interface AdminGuide {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  description?: string;
+  summary?: string;
+  content: string; // Markdown / step-by-step instructions
+  order: number;
+  tags?: string[];
+  icon?: string;
+  isPublished?: boolean;
+  author?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceHealthStatus {
+  name: string;
+  status: 'healthy' | 'degraded' | 'unavailable' | 'unknown' | 'down';
+  latencyMs?: number;
+  lastCheckedAt?: string;
+  lastCheck?: string;
+  message?: string;
+  details?: any;
+}
+
+export interface SystemHealthReport {
+  overallStatus?: 'healthy' | 'degraded' | 'unavailable' | 'down';
+  status?: 'healthy' | 'degraded' | 'down' | 'unavailable';
+  checkedAt: string;
+  uptimeSeconds?: number;
+  uptime?: number;
+  nodeVersion?: string;
+  version?: string;
+  environment?: string;
+  memoryUsageMb?: number;
+  services: ServiceHealthStatus[];
+  recentErrorsCount?: number;
+  metrics?: {
+    memoryRssMb?: number;
+    memoryHeapMb?: number;
+    memoryHeapTotalMb?: number;
+    dbLatencyMs?: number;
+    pdfExamFilesCount?: number;
+    audioExamFilesCount?: number;
+    unresolvedErrorsCount?: number;
+    totalUsersCount?: number;
+    totalVocabCount?: number;
+  };
+}
+
+export interface DiagnosticCheckItem {
+  id: string;
+  name: string;
+  category: 'runtime' | 'database' | 'storage' | 'security' | 'workspaces' | 'errors';
+  status: 'pass' | 'warning' | 'fail';
+  latencyMs: number;
+  message: string;
+  details?: Record<string, any>;
+}
+
+export interface DeepDiagnosticResult {
+  auditedAt: string;
+  allPassed: boolean;
+  scorePercent: number;
+  totalChecks: number;
+  passedChecks: number;
+  warningChecks: number;
+  failedChecks: number;
+  checks: DiagnosticCheckItem[];
+}
+
+export interface SystemErrorLog {
+  id: string;
+  timestamp: string;
+  severity: 'critical' | 'error' | 'warning' | 'info';
+  category?: string;
+  module: string;
+  message: string;
+  stack?: string;
+  path?: string;
+  userId?: string;
+  count: number;
+  status: 'open' | 'acknowledged' | 'resolved';
+  resolvedBy?: string;
+  resolvedAt?: string;
+  details?: string;
 }
 

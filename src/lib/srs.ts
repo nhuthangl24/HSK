@@ -21,6 +21,115 @@ export function createInitialSrs(): SrsData {
   };
 }
 
+export type AnkiRating = 'again' | 'hard' | 'good' | 'easy';
+
+export interface AnkiIntervalPreview {
+  again: string;
+  hard: string;
+  good: string;
+  easy: string;
+}
+
+export function getAnkiIntervalPreview(srs: SrsData): AnkiIntervalPreview {
+  const { repetition, interval, easeFactor } = srs;
+
+  // Again is always < 10m in session, or 1d next day
+  const againText = '< 10 phút';
+
+  // Hard
+  const hardInterval = Math.max(1, Math.round((interval || 1) * 1.2));
+  const hardText = `${hardInterval} ngày`;
+
+  // Good
+  let goodInterval: number;
+  if (repetition === 0) goodInterval = 1;
+  else if (repetition === 1) goodInterval = 3;
+  else goodInterval = Math.max(1, Math.round((interval || 1) * (easeFactor || 2.5)));
+  const goodText = `${goodInterval} ngày`;
+
+  // Easy
+  let easyInterval: number;
+  if (repetition === 0) easyInterval = 4;
+  else if (repetition === 1) easyInterval = 7;
+  else easyInterval = Math.max(2, Math.round((interval || 1) * (easeFactor || 2.5) * 1.3));
+  const easyText = `${easyInterval} ngày`;
+
+  return {
+    again: againText,
+    hard: hardText,
+    good: goodText,
+    easy: easyText,
+  };
+}
+
+export function calculateAnkiSrs(
+  currentSrs: SrsData,
+  rating: AnkiRating
+): { nextSrs: SrsData; intervalDays: number; hanziStatus: ReviewResult } {
+  let { repetition, interval, easeFactor } = currentSrs;
+  let intervalDays = 1;
+  let hanziStatus: ReviewResult = 'correct';
+  let isCorrect = true;
+
+  if (rating === 'again') {
+    repetition = 0;
+    intervalDays = 1;
+    easeFactor = Math.max(1.3, easeFactor - 0.2);
+    hanziStatus = 'wrong';
+    isCorrect = false;
+  } else if (rating === 'hard') {
+    repetition = Math.max(1, repetition);
+    intervalDays = Math.max(1, Math.round((interval || 1) * 1.2));
+    easeFactor = Math.max(1.3, easeFactor - 0.15);
+    hanziStatus = 'uncertain';
+    isCorrect = true;
+  } else if (rating === 'good') {
+    if (repetition === 0) intervalDays = 1;
+    else if (repetition === 1) intervalDays = 3;
+    else intervalDays = Math.max(1, Math.round((interval || 1) * easeFactor));
+    repetition += 1;
+    hanziStatus = 'correct';
+    isCorrect = true;
+  } else if (rating === 'easy') {
+    if (repetition === 0) intervalDays = 4;
+    else if (repetition === 1) intervalDays = 7;
+    else intervalDays = Math.max(2, Math.round((interval || 1) * easeFactor * 1.3));
+    repetition += 1;
+    easeFactor = Math.min(3.0, easeFactor + 0.15);
+    hanziStatus = 'correct';
+    isCorrect = true;
+  }
+
+  const nextDate = new Date();
+  nextDate.setDate(nextDate.getDate() + intervalDays);
+  const dueDate = nextDate.toISOString().split('T')[0];
+  const nowIso = new Date().toISOString();
+
+  const newHistory = [
+    {
+      date: nowIso,
+      mode: 'smart' as const,
+      result: hanziStatus,
+      userAnswer: rating,
+    },
+    ...currentSrs.history.slice(0, 19),
+  ];
+
+  const nextSrs: SrsData = {
+    repetition,
+    interval: intervalDays,
+    easeFactor: Number(easeFactor.toFixed(2)),
+    dueDate,
+    lastReviewedAt: nowIso,
+    totalReviews: currentSrs.totalReviews + 1,
+    correctCount: currentSrs.correctCount + (isCorrect ? 1 : 0),
+    wrongCount: currentSrs.wrongCount + (!isCorrect ? 1 : 0),
+    history: newHistory,
+  };
+
+  return { nextSrs, intervalDays, hanziStatus };
+}
+
 /**
  * SuperMemo SM-2 algorithm implementation
  * quality:

@@ -78,69 +78,59 @@ export function TableToolbar({
     },
     {
       id: 'hanzi_recall',
-      label: 'Ôn chữ Hán',
+      label: 'Luyện gõ chữ Hán',
       icon: <BookOpen size={15} />,
-    },
-    {
-      id: 'meaning_recall',
-      label: 'Nhớ nghĩa',
-      icon: <Languages size={15} />,
-    },
-    {
-      id: 'sentence_translation',
-      label: 'Luyện dịch câu',
-      icon: <Sparkles size={15} />,
-    },
-    {
-      id: 'smart_srs',
-      label: 'Ôn thông minh (SRS)',
-      icon: <RotateCcw size={15} />,
     },
   ];
 
   return (
     <div className="bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 px-4 py-2.5 flex flex-col gap-2.5 shadow-2xs transition-colors">
-      {/* Top row: Study modes tabs & primary study action */}
+      {/* Top row: Table view modes & Anki SRS Flashcard Action */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-x-auto max-w-full scrollbar-none">
-          {studyModes.map((m) => {
-            const isActive = studyMode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => onStudyModeChange(m.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-white dark:bg-zinc-950 text-emerald-800 dark:text-emerald-300 shadow-2xs font-semibold border border-slate-200/80 dark:border-zinc-700'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-zinc-800'
-                }`}
-              >
-                {m.icon}
-                <span>{m.label}</span>
-                {m.id === 'smart_srs' && dueTodayCount > 0 && (
-                  <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5">
-                    {dueTodayCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-
-        {dueTodayCount > 0 && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onStartSmartReview}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold shadow-xs cursor-pointer transition-colors"
-            >
-              <Play size={13} className="fill-white" />
-              Ôn ngay {dueTodayCount} từ đến hạn
-            </button>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Table Modes Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-x-auto max-w-full scrollbar-none">
+            {studyModes.map((m) => {
+              const isActive = studyMode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => onStudyModeChange(m.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-white dark:bg-zinc-950 text-emerald-800 dark:text-emerald-300 shadow-2xs font-semibold border border-slate-200/80 dark:border-zinc-700'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {m.icon}
+                  <span>{m.label}</span>
+                </button>
+              );
+            })}
           </div>
-        )}
+
+          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
+
+          {/* Dedicated Flashcard Study Link */}
+          <Link
+            href="/study"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
+            title="Luyện lật thẻ ghi nhớ từ vựng (Flashcards)"
+          >
+            <RotateCcw size={14} />
+            <span>Thẻ ghi nhớ</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
+                dueTodayCount > 0
+                  ? 'bg-rose-500 text-white'
+                  : 'bg-emerald-500/80 text-white'
+              }`}
+            >
+              {dueTodayCount}
+            </span>
+          </Link>
+        </div>
       </div>
 
       {/* Bottom row: Search query, Quick filters, Column visibility & Data actions */}

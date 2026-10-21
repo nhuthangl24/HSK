@@ -440,12 +440,11 @@ export default function AdminWorkspacesTab({
         )
       );
     } catch (err) {
-      console.error('Fetch detail error:', err);
-      toast.error('Lỗi khi tải chi tiết không gian học viên.');
+      console.warn('Fetch detail error:', err);
     } finally {
       setLoadingDetail(false);
     }
-  }, [user, summaries, propUsers, toast]);
+  }, [user, propUsers]);
 
   useEffect(() => {
     if (selectedUserId) {

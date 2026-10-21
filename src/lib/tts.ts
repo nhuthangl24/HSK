@@ -397,8 +397,22 @@ class ChineseTTS {
 
     const opts = typeof options === 'number' ? { rate: options } : options;
 
+    // Check latest saved rate from settings if not explicitly provided
+    let chosenRate = opts?.rate;
+    if (chosenRate === undefined && typeof window !== 'undefined') {
+      try {
+        const savedRate = localStorage.getItem('hsk_tts_rate');
+        if (savedRate) {
+          const parsed = parseFloat(savedRate);
+          if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 2.0) {
+            chosenRate = parsed;
+          }
+        }
+      } catch {}
+    }
+    if (chosenRate === undefined) chosenRate = this.rate;
+
     const utterance = new SpeechSynthesisUtterance(text);
-    const chosenRate = opts?.rate ?? this.rate;
     utterance.rate = Math.min(Math.max(chosenRate, 0.5), 2.0);
     utterance.pitch = opts?.pitch ?? 1.0;
 
@@ -408,6 +422,19 @@ class ChineseTTS {
         this.voices.find(
           (v) => v.name === opts.voiceName || v.voiceURI === opts.voiceName
         ) || null;
+    }
+
+    // Check latest saved voice name from user settings
+    if (!targetVoice && typeof window !== 'undefined') {
+      try {
+        const savedVoiceName = localStorage.getItem('hsk_tts_voice_name');
+        if (savedVoiceName) {
+          targetVoice =
+            this.voices.find(
+              (v) => v.name === savedVoiceName || v.voiceURI === savedVoiceName
+            ) || null;
+        }
+      } catch {}
     }
 
     if (!targetVoice && this.currentVoice) {

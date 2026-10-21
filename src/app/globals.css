@@ -302,6 +302,20 @@ html {
   transform: translateY(-2px);
 }
 
+/* 3D Card Flip Utilities for Anki SRS Study Subsystem */
+.preserve-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+
 /* Hanzi Printable Writing Worksheet Styles for A4 Paper & PDF */
 @media print {
   @page {

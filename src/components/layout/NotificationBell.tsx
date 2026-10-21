@@ -91,10 +91,10 @@ export function NotificationBell({
       list.unshift({
         id: `dynamic-due-${new Date().toISOString().slice(0, 10)}`,
         title: `⏰ Bạn có ${dueTodayCount} từ vựng cần ôn hôm nay!`,
-        message: 'Ôn tập đúng lúc theo chu kỳ lặp lại ngắt quãng SRS sẽ giúp bạn duy trì trí nhớ dài hạn và không bị quên từ.',
+        message: 'Ôn tập đúng lúc bằng phương pháp lặp lại ngắt quãng sẽ giúp bạn duy trì trí nhớ dài hạn và không bị quên từ.',
         type: 'reminder',
         priority: 'urgent',
-        actionLabel: 'Ôn tập ngay',
+        actionLabel: 'Luyện thẻ ngay',
         actionType: 'open_srs',
         createdAt: new Date().toISOString(),
       });
@@ -173,8 +173,12 @@ export function NotificationBell({
 
     if (notif.actionType === 'open_exams' && onOpenExams) {
       onOpenExams();
-    } else if (notif.actionType === 'open_srs' && onStartSmartReview) {
-      onStartSmartReview();
+    } else if (notif.actionType === 'open_srs') {
+      if (onStartSmartReview) {
+        onStartSmartReview();
+      } else {
+        window.location.href = '/study';
+      }
     } else if (notif.actionType === 'open_worksheet' && onOpenWorksheet) {
       onOpenWorksheet();
     } else if (notif.actionType === 'link' && notif.actionPayload) {

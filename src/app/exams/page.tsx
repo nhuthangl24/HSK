@@ -45,6 +45,8 @@ import {
   Printer,
   ChevronRight,
   AlertCircle,
+  FileSpreadsheet,
+  Compass,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { ExamItem, ExamHskLevel } from '@/types/exam';
@@ -54,89 +56,79 @@ import { useTheme } from '@/context/ThemeContext';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 
 // -------------------------------------------------------------
-// Refined Minimalist Level Design Config
+// Academic Level System Badges
 // -------------------------------------------------------------
-interface LevelBadgeStyle {
+interface AcademicLevelBadge {
   label: string;
   badgeBg: string;
   badgeText: string;
   badgeBorder: string;
-  accentColor: string;
   dotColor: string;
 }
 
-const LEVEL_BADGES: Record<string, LevelBadgeStyle> = {
+const ACADEMIC_LEVEL_CONFIG: Record<string, AcademicLevelBadge> = {
   '1': {
     label: 'HSK 1',
-    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/50',
-    badgeText: 'text-emerald-700 dark:text-emerald-300',
-    badgeBorder: 'border-emerald-200/80 dark:border-emerald-800/60',
-    accentColor: '#059669',
-    dotColor: 'bg-emerald-500',
+    badgeBg: 'bg-sky-50 dark:bg-sky-950/60',
+    badgeText: 'text-sky-800 dark:text-sky-300',
+    badgeBorder: 'border-sky-200 dark:border-sky-800/80',
+    dotColor: 'bg-sky-600 dark:bg-sky-400',
   },
   '2': {
     label: 'HSK 2',
-    badgeBg: 'bg-teal-50 dark:bg-teal-950/50',
-    badgeText: 'text-teal-700 dark:text-teal-300',
-    badgeBorder: 'border-teal-200/80 dark:border-teal-800/60',
-    accentColor: '#0d9488',
-    dotColor: 'bg-teal-500',
+    badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
+    badgeText: 'text-teal-800 dark:text-teal-300',
+    badgeBorder: 'border-teal-200 dark:border-teal-800/80',
+    dotColor: 'bg-teal-600 dark:bg-teal-400',
   },
   '3': {
     label: 'HSK 3',
-    badgeBg: 'bg-sky-50 dark:bg-sky-950/50',
-    badgeText: 'text-sky-700 dark:text-sky-300',
-    badgeBorder: 'border-sky-200/80 dark:border-sky-800/60',
-    accentColor: '#0284c7',
-    dotColor: 'bg-sky-500',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    badgeText: 'text-emerald-800 dark:text-emerald-300',
+    badgeBorder: 'border-emerald-200 dark:border-emerald-800/80',
+    dotColor: 'bg-emerald-600 dark:bg-emerald-400',
   },
   '4': {
     label: 'HSK 4',
-    badgeBg: 'bg-blue-50 dark:bg-blue-950/50',
-    badgeText: 'text-blue-700 dark:text-blue-300',
-    badgeBorder: 'border-blue-200/80 dark:border-blue-800/60',
-    accentColor: '#2563eb',
-    dotColor: 'bg-blue-500',
+    badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
+    badgeText: 'text-blue-800 dark:text-blue-300',
+    badgeBorder: 'border-blue-200 dark:border-blue-800/80',
+    dotColor: 'bg-blue-600 dark:bg-blue-400',
   },
   '5': {
     label: 'HSK 5',
-    badgeBg: 'bg-indigo-50 dark:bg-indigo-950/50',
-    badgeText: 'text-indigo-700 dark:text-indigo-300',
-    badgeBorder: 'border-indigo-200/80 dark:border-indigo-800/60',
-    accentColor: '#4f46e5',
-    dotColor: 'bg-indigo-500',
+    badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60',
+    badgeText: 'text-indigo-800 dark:text-indigo-300',
+    badgeBorder: 'border-indigo-200 dark:border-indigo-800/80',
+    dotColor: 'bg-indigo-600 dark:bg-indigo-400',
   },
   '6': {
     label: 'HSK 6',
-    badgeBg: 'bg-purple-50 dark:bg-purple-950/50',
-    badgeText: 'text-purple-700 dark:text-purple-300',
-    badgeBorder: 'border-purple-200/80 dark:border-purple-800/60',
-    accentColor: '#7c3aed',
-    dotColor: 'bg-purple-500',
+    badgeBg: 'bg-purple-50 dark:bg-purple-950/60',
+    badgeText: 'text-purple-800 dark:text-purple-300',
+    badgeBorder: 'border-purple-200 dark:border-purple-800/80',
+    dotColor: 'bg-purple-600 dark:bg-purple-400',
   },
   '7': {
     label: 'HSK 7–9',
-    badgeBg: 'bg-amber-50 dark:bg-amber-950/50',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
     badgeText: 'text-amber-800 dark:text-amber-300',
-    badgeBorder: 'border-amber-200/80 dark:border-amber-800/60',
-    accentColor: '#d97706',
-    dotColor: 'bg-amber-500',
+    badgeBorder: 'border-amber-200 dark:border-amber-800/80',
+    dotColor: 'bg-amber-600 dark:bg-amber-400',
   },
   '7-9': {
     label: 'HSK 7–9',
-    badgeBg: 'bg-amber-50 dark:bg-amber-950/50',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
     badgeText: 'text-amber-800 dark:text-amber-300',
-    badgeBorder: 'border-amber-200/80 dark:border-amber-800/60',
-    accentColor: '#d97706',
-    dotColor: 'bg-amber-500',
+    badgeBorder: 'border-amber-200 dark:border-amber-800/80',
+    dotColor: 'bg-amber-600 dark:bg-amber-400',
   },
   HSKK: {
     label: 'HSKK',
-    badgeBg: 'bg-rose-50 dark:bg-rose-950/50',
-    badgeText: 'text-rose-700 dark:text-rose-300',
-    badgeBorder: 'border-rose-200/80 dark:border-rose-800/60',
-    accentColor: '#e11d48',
-    dotColor: 'bg-rose-500',
+    badgeBg: 'bg-rose-50 dark:bg-rose-950/60',
+    badgeText: 'text-rose-800 dark:text-rose-300',
+    badgeBorder: 'border-rose-200 dark:border-rose-800/80',
+    dotColor: 'bg-rose-600 dark:bg-rose-400',
   },
 };
 
@@ -152,13 +144,19 @@ export default function ExamsPage() {
   const { user } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
 
+  // -------------------------------------------------------------
+  // Application Data State
+  // -------------------------------------------------------------
   const [exams, setExams] = useState<ExamItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search & Filtering States
   const [search, setSearch] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'level_asc' | 'level_desc' | 'views'>('newest');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'official' | 'mock'>('all');
+  const [onlyAudio, setOnlyAudio] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'level_asc' | 'level_desc' | 'duration' | 'views'>('newest');
+  const [viewMode, setViewMode] = useState<'catalog' | 'cards'>('catalog');
 
   // Audio Player State
   const [activeAudioExam, setActiveAudioExam] = useState<ExamItem | null>(null);
@@ -169,15 +167,19 @@ export default function ExamsPage() {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Virtual Exam Simulator Modal State (Phòng thi trực tuyến)
-  const [simulatorExam, setSimulatorExam] = useState<ExamItem | null>(null);
-  const [showAnswerInSimulator, setShowAnswerInSimulator] = useState(false);
+  // Focused Exam Reading Room / Detail State
+  const [activeExamDetail, setActiveExamDetail] = useState<{
+    exam: ExamItem;
+    activeTab: 'pdf' | 'answer';
+  } | null>(null);
 
   // Share QR Modal State
   const [shareModalExam, setShareModalExam] = useState<ExamItem | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
-  // Fetch Exams from API
+  // -------------------------------------------------------------
+  // Data Fetching
+  // -------------------------------------------------------------
   const fetchExams = useCallback(async () => {
     setLoading(true);
     try {
@@ -188,10 +190,10 @@ export default function ExamsPage() {
           setExams(data.exams);
         }
       } else {
-        toast.error('Không thể tải kho đề thi.');
+        toast.error('Không thể nạp dữ liệu đề thi từ máy chủ.');
       }
     } catch {
-      toast.error('Lỗi kết nối khi tải danh sách đề thi.');
+      toast.error('Lỗi mạng khi tải kho đề thi.');
     } finally {
       setLoading(false);
     }
@@ -201,7 +203,7 @@ export default function ExamsPage() {
     fetchExams();
   }, [fetchExams]);
 
-  // Handle URL Query (?id=xxx to open specific exam share)
+  // Handle URL Query (?id=xxx to auto-open specific exam)
   useEffect(() => {
     if (typeof window !== 'undefined' && exams.length > 0) {
       const params = new URLSearchParams(window.location.search);
@@ -209,13 +211,18 @@ export default function ExamsPage() {
       if (targetId) {
         const found = exams.find((e) => e.id === targetId);
         if (found) {
-          setSimulatorExam(found);
+          setActiveExamDetail({
+            exam: found,
+            activeTab: 'pdf',
+          });
         }
       }
     }
   }, [exams]);
 
-  // Audio Event Listeners
+  // -------------------------------------------------------------
+  // Audio Player Engine
+  // -------------------------------------------------------------
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -235,7 +242,6 @@ export default function ExamsPage() {
     };
   }, [activeAudioExam]);
 
-  // Play / Pause Audio
   const togglePlayAudio = (exam: ExamItem) => {
     if (activeAudioExam?.id === exam.id) {
       if (audioRef.current) {
@@ -276,7 +282,7 @@ export default function ExamsPage() {
     }
   };
 
-  const handleSpeedChange = () => {
+  const handleSpeedCycle = () => {
     const speeds = [0.75, 1.0, 1.25, 1.5];
     const nextIdx = (speeds.indexOf(playbackRate) + 1) % speeds.length;
     const nextSpeed = speeds[nextIdx];
@@ -300,31 +306,28 @@ export default function ExamsPage() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Open PDF / Answer Resource
-  const handleOpenResource = (exam: ExamItem, url?: string, label = 'Tài liệu') => {
+  // Direct Download Engine
+  const handleDownloadFile = (exam: ExamItem, url?: string, customFilename?: string) => {
     if (!url) {
-      toast.error(`Chưa có file ${label} cho đề thi này.`);
+      toast.error('Tài liệu này hiện chưa có file đính kèm.');
       return;
     }
 
-    // Increment download/view count
     fetch('/api/exams', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: exam.id, action: 'increment', type: 'download' }),
     }).catch(() => {});
 
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  // Open Interactive Virtual Exam Room Simulator
-  const handleOpenSimulator = (exam: ExamItem) => {
-    setSimulatorExam(exam);
-    setShowAnswerInSimulator(false);
-    // Auto-start audio if available
-    if (exam.audioUrl) {
-      togglePlayAudio(exam);
-    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = customFilename || url.split('/').pop() || 'HSK_Document.pdf';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success('Đang bắt đầu tải tệp về máy...');
   };
 
   // Share Modal & QR Code
@@ -337,50 +340,99 @@ export default function ExamsPage() {
         width: 320,
         margin: 2,
         color: {
-          dark: '#09090b',
+          dark: '#0f172a',
           light: '#ffffff',
         },
       });
       setQrCodeDataUrl(qr);
     } catch {
-      toast.error('Lỗi khi tạo mã QR.');
+      toast.error('Lỗi khi khởi tạo mã QR.');
     }
   };
 
-  const handleCopyLink = (exam: ExamItem) => {
+  const handleCopyShareLink = (exam: ExamItem) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const shareUrl = `${origin}/exams?id=${encodeURIComponent(exam.id)}`;
-    const copyText = `📚 Luyện Thi HSK: ${exam.title} (${formatLevelLabel(exam.hskLevel)} • Kèm file nghe MP3 & Đáp án chi tiết) 👉 ${shareUrl}`;
+    const copyText = `📚 Đề thi HSK: ${exam.title} (${formatLevelLabel(exam.hskLevel)} • Đầy đủ PDF & Audio MP3) 👉 ${shareUrl}`;
     navigator.clipboard.writeText(copyText);
-    toast.success('Đã sao chép link đề thi vào bộ nhớ tạm!');
+    toast.success('Đã sao chép liên kết đề thi vào bộ nhớ tạm!');
   };
 
-  // Filter & Sort
+  // -------------------------------------------------------------
+  // Data Filtering & Statistics Computations
+  // -------------------------------------------------------------
+  const totalSetsCount = exams.length;
+  const hanbanOfficialCount = useMemo(() => exams.filter((e) => e.category === 'official').length, [exams]);
+  const blcuMockCount = useMemo(() => exams.filter((e) => e.category === 'mock').length, [exams]);
+  const audioFilesCount = useMemo(() => exams.filter((e) => Boolean(e.audioUrl)).length, [exams]);
+
+  const levelCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of exams) {
+      const key = String(e.hskLevel);
+      map[key] = (map[key] || 0) + 1;
+    }
+    return map;
+  }, [exams]);
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      search.trim().length > 0 ||
+      selectedLevel !== 'all' ||
+      selectedCategory !== 'all' ||
+      onlyAudio ||
+      sortBy !== 'newest'
+    );
+  }, [search, selectedLevel, selectedCategory, onlyAudio, sortBy]);
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setSelectedLevel('all');
+    setSelectedCategory('all');
+    setOnlyAudio(false);
+    setSortBy('newest');
+    toast.info('Đã xóa tất cả bộ lọc');
+  };
+
   const filteredExams = useMemo(() => {
-    const res = exams.filter((e) => {
+    const result = exams.filter((e) => {
+      // Level filter
       if (selectedLevel !== 'all') {
         if (selectedLevel === 'HSKK' && e.hskLevel !== 'HSKK') return false;
         if (String(e.hskLevel) !== selectedLevel) return false;
       }
-      if (selectedCategory !== 'all') {
-        if (selectedCategory === 'audio' && !e.audioUrl) return false;
-        if (selectedCategory === 'official' && e.category !== 'official') return false;
-        if (selectedCategory === 'mock' && e.category !== 'mock') return false;
-      }
+
+      // Category filter
+      if (selectedCategory === 'official' && e.category !== 'official') return false;
+      if (selectedCategory === 'mock' && e.category !== 'mock') return false;
+
+      // Audio filter
+      if (onlyAudio && !e.audioUrl) return false;
+
+      // Search query (code, title, source, description)
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchTitle = e.title.toLowerCase().includes(q);
         const matchSource = (e.source || '').toLowerCase().includes(q);
         const matchDesc = (e.description || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchSource && !matchDesc) return false;
+        const matchId = (e.id || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchSource && !matchDesc && !matchId) return false;
       }
+
       return true;
     });
 
-    res.sort((a, b) => {
+    // Sorting
+    result.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
+      if (sortBy === 'newest') {
+        return (b.year || 0) - (a.year || 0) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      if (sortBy === 'oldest') {
+        return (a.year || 9999) - (b.year || 9999) || new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      }
       if (sortBy === 'level_asc') {
         const la = typeof a.hskLevel === 'number' ? a.hskLevel : 99;
         const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 99;
@@ -391,87 +443,84 @@ export default function ExamsPage() {
         const lb = typeof b.hskLevel === 'number' ? b.hskLevel : 99;
         return lb - la;
       }
+      if (sortBy === 'duration') {
+        return (b.durationMinutes || 0) - (a.durationMinutes || 0);
+      }
       if (sortBy === 'views') {
         return b.viewsCount + b.downloadsCount - (a.viewsCount + a.downloadsCount);
       }
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      return 0;
     });
 
-    return res;
-  }, [exams, selectedLevel, selectedCategory, search, sortBy]);
-
-  // Statistics
-  const levelCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const e of exams) {
-      const key = String(e.hskLevel);
-      map[key] = (map[key] || 0) + 1;
-    }
-    return map;
-  }, [exams]);
-
-  const totalAudioCount = useMemo(() => exams.filter((e) => Boolean(e.audioUrl)).length, [exams]);
-  const totalOfficialCount = useMemo(() => exams.filter((e) => e.category === 'official').length, [exams]);
-  const totalMockCount = useMemo(() => exams.filter((e) => e.category === 'mock').length, [exams]);
+    return result;
+  }, [exams, selectedLevel, selectedCategory, onlyAudio, search, sortBy]);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 font-sans selection:bg-slate-900 selection:text-white dark:selection:bg-white dark:selection:text-black">
+    <div className="min-h-screen bg-[#fcfbf9] dark:bg-[#0b0f19] text-[#0f172a] dark:text-[#f8fafc] font-sans transition-colors">
+      <audio ref={audioRef} />
+
       {/* =========================================================================
-          1. MINIMALIST TOP APP BAR
-         ========================================================================= */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800/80 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between gap-4">
-          {/* Left: Back & Breadcrumb */}
+          1. COMPACT ACADEMIC NAVIGATION HEADER
+      ========================================================================= */}
+      <header className="sticky top-0 z-40 bg-[#fcfbf9]/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-[#e2e8f0] dark:border-[#1e293b] px-4 sm:px-6 py-2.5 transition-colors">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          {/* Brand Identity & Breadcrumb */}
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/70 dark:bg-zinc-900 dark:hover:bg-zinc-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-              title="Quay lại bàn học từ vựng"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
+              title="Quay lại Bảng Từ Vựng"
             >
               <ArrowLeft size={14} />
-              <span className="hidden sm:inline">Bàn học</span>
+              <span className="hidden sm:inline">Bảng từ</span>
             </Link>
 
-            <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800" />
+            <span className="text-[#cbd5e1] dark:text-[#334155] select-none">/</span>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-black tracking-tight text-slate-950 dark:text-white">
-                HSK EXAM SUITE
-              </span>
-              <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                Official & BLCU
-              </span>
+              <div className="w-7 h-7 rounded-lg bg-[#047857] flex items-center justify-center text-white font-bold text-xs shadow-2xs shrink-0">
+                <GraduationCap size={15} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-[#0f172a] dark:text-white tracking-tight">
+                  HSK Exam Suite
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-semibold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/40 px-2 py-0.5 rounded border border-[#a7f3d0] dark:border-[#065f46]">
+                  Thư Viện Học Thuật
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Right: Quick Tools */}
+          {/* View Mode Switching Controls & Actions */}
           <div className="flex items-center gap-2">
-
-            {/* View Mode (Grid vs List) */}
-            <div className="hidden sm:flex items-center rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-0.5 text-xs">
+            {/* Catalog vs Cards Mode Switcher */}
+            <div className="flex items-center bg-[#f1f5f9] dark:bg-[#1e293b] p-0.5 rounded-lg border border-[#e2e8f0] dark:border-[#334155] text-xs">
               <button
                 type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-xs'
-                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                onClick={() => setViewMode('catalog')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all ${
+                  viewMode === 'catalog'
+                    ? 'bg-white dark:bg-[#0f172a] text-[#0f172a] dark:text-white shadow-2xs font-bold'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white'
                 }`}
-                title="Dạng lưới thẻ"
+                title="Chế độ Mục lục tra cứu (Catalog)"
               >
-                <LayoutGrid size={14} />
+                <List size={14} />
+                <span className="hidden md:inline">Mục lục</span>
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-xs'
-                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                onClick={() => setViewMode('cards')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all ${
+                  viewMode === 'cards'
+                    ? 'bg-white dark:bg-[#0f172a] text-[#0f172a] dark:text-white shadow-2xs font-bold'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white'
                 }`}
-                title="Dạng danh sách gọn"
+                title="Chế độ Xem Thẻ (Cards)"
               >
-                <List size={14} />
+                <LayoutGrid size={14} />
+                <span className="hidden md:inline">Thẻ đề thi</span>
               </button>
             </div>
 
@@ -479,10 +528,10 @@ export default function ExamsPage() {
             <button
               type="button"
               onClick={() => setTheme(effectiveTheme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-900 cursor-pointer border border-slate-200/80 dark:border-zinc-800 transition-colors"
-              title="Đổi giao diện Sáng / Tối"
+              className="p-1.5 rounded-lg border border-[#e2e8f0] dark:border-[#1e293b] bg-white dark:bg-[#111827] text-[#475569] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f8fafc] dark:hover:bg-[#1e293b] transition-colors cursor-pointer"
+              title={effectiveTheme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
             >
-              {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              {effectiveTheme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
             </button>
 
             {/* Notification Bell */}
@@ -492,7 +541,7 @@ export default function ExamsPage() {
             {user?.role === 'admin' && (
               <Link
                 href="/admin"
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-xl text-xs font-bold"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-xs font-bold transition-colors"
               >
                 <Shield size={12} />
                 <span>Admin</span>
@@ -503,100 +552,108 @@ export default function ExamsPage() {
       </header>
 
       {/* =========================================================================
-          2. EDITORIAL HERO & HEADLINE SECTION
-         ========================================================================= */}
-      <section className="border-b border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#09090b] px-4 sm:px-6 pt-10 pb-8 transition-colors">
-        <div className="max-w-7xl mx-auto">
-          {/* Main Headline */}
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-zinc-900 text-slate-700 dark:text-slate-300 text-xs font-semibold mb-3 border border-slate-200 dark:border-zinc-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Kho Đề Thi Chuẩn Hóa Quốc Tế</span>
+          2. EDITORIAL PAGE INTRODUCTION & EXAM STATISTICS STRIP
+      ========================================================================= */}
+      <section className="border-b border-[#e2e8f0] dark:border-[#1e293b] bg-white dark:bg-[#0e1424] px-4 sm:px-6 pt-7 pb-6 transition-colors">
+        <div className="max-w-7xl mx-auto space-y-5">
+          {/* Editorial Headline */}
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex items-center gap-2 text-[11px] font-bold tracking-wider text-[#047857] dark:text-[#34d399] uppercase select-none">
+              <span>Hệ thống khảo thí Hán ngữ Quốc tế</span>
+              <span>•</span>
+              <span>Tài nguyên học thuật</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
-              Kho Đề Thi HSK Tuyển Chọn & Đề Thử BLCU
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a] dark:text-white tracking-tight">
+              Thư viện đề thi HSK
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed font-normal">
-              Tuyển tập trọn bộ đề thi thật CTI / Hanban và chuỗi đề mô phỏng chuẩn ma trận từ Đại học Ngôn ngữ Bắc Kinh (BLCU). Đầy đủ bản in A4 PDF sắc nét, file nghe Audio MP3 phòng thi và đáp án chi tiết.
+            <p className="text-xs sm:text-sm text-[#475569] dark:text-[#94a3b8] leading-relaxed">
+              Kho tài liệu 65 bộ khảo thí chuẩn hóa quốc tế bao gồm đề thi thật từ Hanban / CTI và các bộ đề thử nghiệm từ NXB Đại học Ngôn ngữ Bắc Kinh (BLCU), kèm tệp nghe audio phòng thi và đáp án chi tiết.
             </p>
           </div>
 
-          {/* Quick Metrics Strip */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-6 pt-5 border-t border-slate-100 dark:border-zinc-800/80 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium">Tổng số:</span>
-              <span className="font-extrabold text-slate-900 dark:text-white bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
-                {exams.length} bộ đề
-              </span>
+          {/* Compact Academic Statistics Strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 p-3 bg-[#f8fafc] dark:bg-[#111827] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] text-xs">
+            <div className="flex flex-col p-2">
+              <span className="text-[11px] font-medium text-[#64748b] dark:text-[#94a3b8]">Tổng số bộ đề thi:</span>
+              <div className="text-lg font-bold text-[#0f172a] dark:text-white mt-0.5">
+                {totalSetsCount} bộ đề
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium">Đề thi thật Hanban:</span>
-              <span className="font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50">
-                {totalOfficialCount} đề
-              </span>
+            <div className="flex flex-col p-2 border-l border-[#e2e8f0] dark:border-[#1e293b]">
+              <span className="text-[11px] font-medium text-[#64748b] dark:text-[#94a3b8]">Đề thi thật Hanban:</span>
+              <div className="text-lg font-bold text-[#047857] dark:text-[#34d399] mt-0.5">
+                {hanbanOfficialCount} đề
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium">Đề thử BLCU:</span>
-              <span className="font-extrabold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/50">
-                {totalMockCount} đề
-              </span>
+            <div className="flex flex-col p-2 border-l border-[#e2e8f0] dark:border-[#1e293b]">
+              <span className="text-[11px] font-medium text-[#64748b] dark:text-[#94a3b8]">Đề mô phỏng BLCU:</span>
+              <div className="text-lg font-bold text-blue-700 dark:text-blue-400 mt-0.5">
+                {blcuMockCount} đề
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium">Kèm Audio MP3:</span>
-              <span className="font-extrabold text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded-md border border-purple-200/60 dark:border-purple-800/50">
-                {totalAudioCount} file nghe
-              </span>
+            <div className="flex flex-col p-2 border-l border-[#e2e8f0] dark:border-[#1e293b]">
+              <span className="text-[11px] font-medium text-[#64748b] dark:text-[#94a3b8]">Tệp âm thanh MP3:</span>
+              <div className="text-lg font-bold text-purple-700 dark:text-purple-400 mt-0.5">
+                {audioFilesCount} file nghe
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Modern Search & Level Tabs */}
-          <div className="mt-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      {/* =========================================================================
+          3. DEDICATED SEARCH & FILTERING SYSTEM
+      ========================================================================= */}
+      <section className="border-b border-[#e2e8f0] dark:border-[#1e293b] bg-[#fcfbf9] dark:bg-[#0b0f19] px-4 sm:px-6 py-4 transition-colors">
+        <div className="max-w-7xl mx-auto space-y-3">
+          {/* Primary Filter Toolbar */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative flex-1 max-w-lg">
               <Search
-                size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none"
               />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo mã đề (vd: H31001, H51001), BLCUP, HSK 5..."
-                className="w-full pl-9.5 pr-8 py-2.5 bg-slate-50 dark:bg-zinc-900/90 text-xs sm:text-sm font-medium rounded-xl border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-white/20 transition-all placeholder:text-slate-400"
+                placeholder="Tìm mã đề (vd: H31001), cấp độ HSK, BLCU..."
+                className="w-full pl-9 pr-8 py-2 bg-white dark:bg-[#111827] text-xs sm:text-sm font-medium rounded-lg border border-[#e2e8f0] dark:border-[#1e293b] text-[#0f172a] dark:text-white placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#047857] transition-all"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white cursor-pointer"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
 
-            {/* Category Filter Pills & Sort */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center rounded-xl bg-slate-100 dark:bg-zinc-900 p-1 border border-slate-200 dark:border-zinc-800 text-xs">
+            {/* Exam Category, Audio Toggle, Sort & Clear Action */}
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              {/* Category Segmented Control */}
+              <div className="flex items-center bg-white dark:bg-[#111827] p-0.5 rounded-lg border border-[#e2e8f0] dark:border-[#1e293b]">
                 {[
-                  { id: 'all', label: 'Tất cả' },
-                  { id: 'official', label: '🏛️ Đề thật' },
-                  { id: 'mock', label: '📘 Đề thử' },
-                  { id: 'audio', label: '🎧 Có Audio' },
+                  { id: 'all' as const, label: 'Tất cả' },
+                  { id: 'official' as const, label: 'Đề thật' },
+                  { id: 'mock' as const, label: 'Đề thử' },
                 ].map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition-all ${
+                    className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all ${
                       selectedCategory === cat.id
-                        ? 'bg-white dark:bg-zinc-800 text-slate-950 dark:text-white shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        ? 'bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] font-bold shadow-2xs'
+                        : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white'
                     }`}
                   >
                     {cat.label}
@@ -604,387 +661,411 @@ export default function ExamsPage() {
                 ))}
               </div>
 
-              {/* Sort Selector */}
+              {/* Audio Filter Pill */}
+              <button
+                type="button"
+                onClick={() => setOnlyAudio(!onlyAudio)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all ${
+                  onlyAudio
+                    ? 'bg-[#ecfdf5] dark:bg-[#064e3b]/40 text-[#047857] dark:text-[#34d399] border-[#a7f3d0] dark:border-[#065f46] font-bold'
+                    : 'bg-white dark:bg-[#111827] text-[#64748b] dark:text-[#94a3b8] border-[#e2e8f0] dark:border-[#1e293b] hover:text-[#0f172a] dark:hover:text-white'
+                }`}
+                title="Chỉ lọc các bộ đề có kèm file âm thanh MP3"
+              >
+                <Headphones size={13} className={onlyAudio ? 'text-[#047857]' : ''} />
+                <span>Có Audio</span>
+              </button>
+
+              {/* Sorting Selector */}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 text-xs font-bold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-slate-300 cursor-pointer outline-none"
+                className="px-2.5 py-1.5 bg-white dark:bg-[#111827] border border-[#e2e8f0] dark:border-[#1e293b] rounded-lg text-xs font-semibold text-[#0f172a] dark:text-white cursor-pointer outline-none"
               >
-                <option value="newest">Mới cập nhật</option>
-                <option value="level_asc">Cấp HSK: 1 → 6</option>
-                <option value="level_desc">Cấp HSK: 6 → 1</option>
+                <option value="newest">Sắp xếp: Mới nhất</option>
+                <option value="oldest">Sắp xếp: Cũ nhất</option>
+                <option value="level_asc">Cấp độ: HSK 1 → 9</option>
+                <option value="level_desc">Cấp độ: HSK 9 → 1</option>
+                <option value="duration">Thời lượng làm bài</option>
                 <option value="views">Lượt xem & tải nhiều</option>
               </select>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="px-2.5 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900 transition-colors"
+                >
+                  Xóa lọc
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Compact Level Navigation Row */}
+          <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#f1f5f9] dark:border-[#1e293b]/50 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5 shrink-0 py-1">
+              <button
+                type="button"
+                onClick={() => setSelectedLevel('all')}
+                className={`px-3 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
+                  selectedLevel === 'all'
+                    ? 'bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] shadow-2xs'
+                    : 'text-[#64748b] dark:text-[#94a3b8] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] hover:text-[#0f172a] dark:hover:text-white'
+                }`}
+              >
+                Tất cả ({totalSetsCount})
+              </button>
+
+              {[
+                { id: '1', label: 'HSK 1' },
+                { id: '2', label: 'HSK 2' },
+                { id: '3', label: 'HSK 3' },
+                { id: '4', label: 'HSK 4' },
+                { id: '5', label: 'HSK 5' },
+                { id: '6', label: 'HSK 6' },
+                { id: '7', label: 'HSK 7–9' },
+                { id: 'HSKK', label: 'HSKK' },
+              ].map((lvl) => {
+                const isActive = selectedLevel === lvl.id;
+                const count = levelCounts[lvl.id] || 0;
+                const config = ACADEMIC_LEVEL_CONFIG[lvl.id] || ACADEMIC_LEVEL_CONFIG['1'];
+
+                return (
+                  <button
+                    key={lvl.id}
+                    type="button"
+                    onClick={() => setSelectedLevel(lvl.id)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer border transition-all ${
+                      isActive
+                        ? 'bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] border-[#0f172a] dark:border-white font-bold shadow-2xs'
+                        : 'bg-white dark:bg-[#111827] text-[#475569] dark:text-[#cbd5e1] border-[#e2e8f0] dark:border-[#1e293b] hover:border-[#cbd5e1] dark:hover:border-[#334155]'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white dark:bg-[#0f172a]' : config.dotColor}`} />
+                    <span>{lvl.label}</span>
+                    <span className={`text-[10px] font-mono ${isActive ? 'opacity-80' : 'text-[#94a3b8]'}`}>
+                      ({count})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Results count indicator */}
+            <div className="text-xs text-[#64748b] dark:text-[#94a3b8] font-medium whitespace-nowrap shrink-0 hidden md:block">
+              Hiển thị <strong className="text-[#0f172a] dark:text-white">{filteredExams.length}</strong> / {totalSetsCount} bộ đề
             </div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          3. HSK LEVEL SEGMENTED TABS (Clean horizontal row)
-         ========================================================================= */}
-      <section className="bg-white dark:bg-[#09090b] border-b border-slate-200/80 dark:border-zinc-800/80 px-4 sm:px-6 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 overflow-x-auto scrollbar-none py-1">
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* All Levels */}
-            <button
-              type="button"
-              onClick={() => setSelectedLevel('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 ${
-                selectedLevel === 'all'
-                  ? 'bg-slate-950 text-white dark:bg-white dark:text-black shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
-              }`}
-            >
-              <span>Tất cả</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono bg-white/20 dark:bg-black/20">
-                {exams.length}
-              </span>
-            </button>
-
-            {/* Individual HSK Levels */}
-            {[
-              { id: '1', label: 'HSK 1' },
-              { id: '2', label: 'HSK 2' },
-              { id: '3', label: 'HSK 3' },
-              { id: '4', label: 'HSK 4' },
-              { id: '5', label: 'HSK 5' },
-              { id: '6', label: 'HSK 6' },
-              { id: '7', label: 'HSK 7–9' },
-              { id: 'HSKK', label: 'HSKK' },
-            ].map((lvl) => {
-              const isActive = selectedLevel === lvl.id;
-              const count = levelCounts[lvl.id] || 0;
-              const badgeStyle = LEVEL_BADGES[lvl.id] || LEVEL_BADGES['1'];
-
-              return (
-                <button
-                  key={lvl.id}
-                  type="button"
-                  onClick={() => setSelectedLevel(lvl.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 border ${
-                    isActive
-                      ? 'bg-slate-950 text-white dark:bg-white dark:text-black border-slate-950 dark:border-white shadow-xs'
-                      : 'border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isActive ? 'bg-white dark:bg-black' : badgeStyle.dotColor
-                    }`}
-                  />
-                  <span>{lvl.label}</span>
-                  {count > 0 && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                        isActive
-                          ? 'bg-white/20 dark:bg-black/20 text-white dark:text-black'
-                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-500'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="text-xs text-slate-400 font-medium whitespace-nowrap hidden lg:block shrink-0">
-            Hiển thị <strong>{filteredExams.length}</strong> bộ đề
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          4. MAIN EXAM CARDS GRID & LIST
-         ========================================================================= */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-32">
+          4. MAIN BROWSING INTERFACE: CATALOG (TABLE) & CARDS
+      ========================================================================= */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-28">
         {loading && exams.length === 0 ? (
-          <div className="h-72 flex flex-col items-center justify-center text-slate-400">
-            <RefreshCw size={24} className="animate-spin text-slate-600 mb-3" />
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Đang đồng bộ kho tài liệu đề thi HSK...
-            </p>
+          <div className="h-64 flex flex-col items-center justify-center text-[#64748b]">
+            <RefreshCw size={22} className="animate-spin text-[#047857] mb-2.5" />
+            <p className="text-xs font-semibold">Đang nạp danh mục đề thi học thuật...</p>
           </div>
         ) : filteredExams.length === 0 ? (
-          <div className="h-80 flex flex-col items-center justify-center text-center max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800">
-            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 text-slate-400 flex items-center justify-center mb-3">
-              <BookOpen size={24} />
-            </div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-              Chưa tìm thấy đề thi phù hợp
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-              Không có bộ đề nào khớp với từ khóa tìm kiếm hoặc cấp độ bạn đã chọn.
+          <div className="h-64 flex flex-col items-center justify-center text-center p-6 bg-white dark:bg-[#111827] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+            <BookOpen size={28} className="text-[#94a3b8] mb-2" />
+            <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">Không tìm thấy bộ đề phù hợp</h3>
+            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1 max-w-sm">
+              Không có tài liệu nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại.
             </p>
             <button
               type="button"
-              onClick={() => {
-                setSelectedLevel('all');
-                setSelectedCategory('all');
-                setSearch('');
-              }}
-              className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-black rounded-xl text-xs font-bold transition-all cursor-pointer"
+              onClick={handleResetFilters}
+              className="mt-3 px-3 py-1.5 bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] rounded-lg text-xs font-bold cursor-pointer"
             >
-              Xem tất cả các đề thi
+              Hiển thị tất cả đề thi
             </button>
           </div>
-        ) : viewMode === 'grid' ? (
-          /* =========================================================================
-             CLEAN MODERN GRID CARDS (MINIMALIST & SOPHISTICATED)
-             ========================================================================= */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        ) : viewMode === 'catalog' ? (
+          /* =======================================================================
+             MODE A: STRUCTURED ACADEMIC CATALOG LAYOUT
+             ======================================================================= */
+          <div className="bg-white dark:bg-[#111827] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] overflow-hidden shadow-2xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-[#e2e8f0] dark:border-[#1e293b] bg-[#f8fafc] dark:bg-[#0e1424] text-[#64748b] dark:text-[#94a3b8] font-bold uppercase tracking-wider text-[11px]">
+                    <th className="py-3 px-4 w-24">Cấp độ</th>
+                    <th className="py-3 px-4 min-w-[280px]">Bộ đề thi & Nguồn phát hành</th>
+                    <th className="py-3 px-4 w-32 hidden md:table-cell">Phân loại</th>
+                    <th className="py-3 px-4 w-32 hidden lg:table-cell">Thông số</th>
+                    <th className="py-3 px-4 w-36">Audio MP3</th>
+                    <th className="py-3 px-4 w-44 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f1f5f9] dark:divide-[#1e293b]">
+                  {filteredExams.map((exam) => {
+                    const isAudioPlaying = activeAudioExam?.id === exam.id && isPlaying;
+                    const config = ACADEMIC_LEVEL_CONFIG[String(exam.hskLevel)] || ACADEMIC_LEVEL_CONFIG['1'];
+
+                    return (
+                      <tr
+                        key={exam.id}
+                        className="hover:bg-[#fcfbf9] dark:hover:bg-[#131b2e] transition-colors group cursor-pointer"
+                        onClick={() => setActiveExamDetail({ exam, activeTab: 'pdf' })}
+                      >
+                        {/* Level badge */}
+                        <td className="py-3.5 px-4 align-top">
+                          <span
+                            className={`inline-block text-xs font-bold px-2 py-0.5 rounded border text-center ${config.badgeBg} ${config.badgeText} ${config.badgeBorder}`}
+                          >
+                            {formatLevelLabel(exam.hskLevel)}
+                          </span>
+                        </td>
+
+                        {/* Title & Metadata */}
+                        <td className="py-3.5 px-4 align-top">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-[#0f172a] dark:text-white group-hover:text-[#047857] dark:group-hover:text-[#34d399] transition-colors line-clamp-1">
+                                {exam.title}
+                              </span>
+                              {exam.isPinned && (
+                                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
+                                  Tuyển chọn
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] flex items-center gap-2 truncate">
+                              {exam.source && <span className="truncate">{exam.source}</span>}
+                              {exam.year && <span>• Năm {exam.year}</span>}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Category */}
+                        <td className="py-3.5 px-4 align-top hidden md:table-cell">
+                          <span
+                            className={`inline-block text-[11px] font-semibold px-2 py-0.5 rounded ${
+                              exam.category === 'official'
+                                ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                            }`}
+                          >
+                            {exam.category === 'official' ? '🏛️ Hanban' : '📘 BLCU'}
+                          </span>
+                        </td>
+
+                        {/* Specs */}
+                        <td className="py-3.5 px-4 align-top hidden lg:table-cell text-[#64748b] dark:text-[#94a3b8]">
+                          <div>{exam.durationMinutes ? `${exam.durationMinutes} phút` : 'Theo chuẩn'}</div>
+                          {exam.questionCount && (
+                            <div className="text-[11px] text-[#94a3b8]">{exam.questionCount} câu hỏi</div>
+                          )}
+                        </td>
+
+                        {/* Audio Status & Play */}
+                        <td
+                          className="py-3.5 px-4 align-top"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {exam.audioUrl ? (
+                            <button
+                              type="button"
+                              onClick={() => togglePlayAudio(exam)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all border ${
+                                isAudioPlaying
+                                  ? 'bg-[#047857] text-white border-[#047857]'
+                                  : 'bg-emerald-50 text-[#047857] border-emerald-200 dark:bg-[#064e3b]/30 dark:text-[#34d399] dark:border-[#065f46] hover:bg-emerald-100'
+                              }`}
+                              title="Nghe file Audio MP3 phòng thi"
+                            >
+                              {isAudioPlaying ? (
+                                <>
+                                  <Pause size={12} />
+                                  <span>Dừng</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play size={12} className="fill-current" />
+                                  <span>Nghe MP3</span>
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-[#94a3b8] text-[11px] italic">—</span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td
+                          className="py-3.5 px-4 align-top text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setActiveExamDetail({ exam, activeTab: 'pdf' })}
+                              className="px-2.5 py-1 rounded bg-[#0f172a] hover:bg-[#1e293b] text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-[#0f172a] text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                              title="Mở tài liệu đọc chi tiết"
+                            >
+                              Xem đề
+                            </button>
+
+                            {exam.answerUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveExamDetail({ exam, activeTab: 'answer' })}
+                                className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold cursor-pointer transition-colors"
+                                title="Xem đáp án"
+                              >
+                                Đáp án
+                              </button>
+                            )}
+
+                            {exam.pdfUrl && (
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(exam, exam.pdfUrl, `${exam.title}.pdf`)}
+                                className="p-1.5 text-[#64748b] hover:text-[#0f172a] dark:text-[#94a3b8] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer transition-colors"
+                                title="Tải file PDF"
+                              >
+                                <Download size={13} />
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenShare(exam)}
+                              className="p-1.5 text-[#64748b] hover:text-[#0f172a] dark:text-[#94a3b8] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer transition-colors"
+                              title="Chia sẻ & Mã QR"
+                            >
+                              <Share2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* =======================================================================
+             MODE B: REFINED EDITORIAL EXAM CARDS LAYOUT
+             ======================================================================= */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredExams.map((exam) => {
-              const isCurrentPlaying = activeAudioExam?.id === exam.id && isPlaying;
-              const badgeStyle = LEVEL_BADGES[String(exam.hskLevel)] || LEVEL_BADGES['1'];
+              const isAudioPlaying = activeAudioExam?.id === exam.id && isPlaying;
+              const config = ACADEMIC_LEVEL_CONFIG[String(exam.hskLevel)] || ACADEMIC_LEVEL_CONFIG['1'];
 
               return (
                 <div
                   key={exam.id}
-                  className="group bg-white dark:bg-zinc-900/90 rounded-2xl border border-slate-200/90 dark:border-zinc-800/90 hover:border-slate-300 dark:hover:border-zinc-700 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between p-5"
+                  className="bg-white dark:bg-[#111827] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] p-4 flex flex-col justify-between hover:border-[#cbd5e1] dark:hover:border-[#334155] shadow-2xs hover:shadow-sm transition-all group"
                 >
                   <div>
-                    {/* Top Row: Level Badge & Meta Tags */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* HSK Level Pill */}
+                    {/* Header: Level & Category & Year */}
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-xs font-black px-2.5 py-0.5 rounded-lg border ${badgeStyle.badgeBg} ${badgeStyle.badgeText} ${badgeStyle.badgeBorder}`}
+                          className={`text-xs font-bold px-2 py-0.5 rounded border ${config.badgeBg} ${config.badgeText} ${config.badgeBorder}`}
                         >
                           {formatLevelLabel(exam.hskLevel)}
                         </span>
-
-                        {/* Category Label */}
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400">
+                        <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8] bg-[#f1f5f9] dark:bg-[#1e293b] px-1.5 py-0.5 rounded">
                           {exam.category === 'official' ? '🏛️ Hanban' : '📘 BLCU'}
                         </span>
-
-                        {/* Year */}
-                        {exam.year && (
-                          <span className="text-[11px] font-mono text-slate-400">
-                            {exam.year}
-                          </span>
-                        )}
                       </div>
 
-                      {/* Share Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenShare(exam)}
-                        className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
-                        title="Chia sẻ link & Mã QR"
-                      >
-                        <Share2 size={13} />
-                      </button>
+                      {exam.year && (
+                        <span className="text-[11px] font-mono text-[#94a3b8]">
+                          {exam.year}
+                        </span>
+                      )}
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
+                    <h3
+                      onClick={() => setActiveExamDetail({ exam, activeTab: 'pdf' })}
+                      className="text-sm font-bold text-[#0f172a] dark:text-white leading-snug line-clamp-2 group-hover:text-[#047857] dark:group-hover:text-[#34d399] transition-colors cursor-pointer mb-2"
+                    >
                       {exam.title}
                     </h3>
 
                     {/* Specs Row */}
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-2.5">
+                    <div className="flex items-center gap-3 text-xs text-[#64748b] dark:text-[#94a3b8] mb-3">
                       {exam.durationMinutes && (
                         <span className="flex items-center gap-1">
-                          <Clock size={12} className="text-slate-400" />
-                          <span>{exam.durationMinutes} phút</span>
+                          <Clock size={12} className="text-[#94a3b8]" />
+                          <span>{exam.durationMinutes}p</span>
                         </span>
                       )}
                       {exam.questionCount && (
                         <span className="flex items-center gap-1">
-                          <FileText size={12} className="text-slate-400" />
+                          <FileText size={12} className="text-[#94a3b8]" />
                           <span>{exam.questionCount} câu</span>
                         </span>
                       )}
-                      {exam.audioUrl && (
-                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                          <Headphones size={12} />
-                          <span>Audio MP3</span>
+                      {exam.source && (
+                        <span className="truncate max-w-[140px] text-[11px] text-[#94a3b8]">
+                          • {exam.source}
                         </span>
                       )}
                     </div>
-
-                    {/* Source */}
-                    {exam.source && (
-                      <div className="text-[11px] text-slate-400 dark:text-zinc-500 mt-2 truncate">
-                        Nguồn: {exam.source}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Card Bottom Actions */}
-                  <div className="pt-4 mt-4 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
-                    {/* Audio Play Button */}
+                  {/* Bottom Actions Row */}
+                  <div className="pt-3 border-t border-[#f1f5f9] dark:border-[#1e293b] flex items-center justify-between gap-2">
+                    {/* Audio play button */}
                     {exam.audioUrl ? (
                       <button
                         type="button"
                         onClick={() => togglePlayAudio(exam)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                          isCurrentPlaying
-                            ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30'
-                            : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all border ${
+                          isAudioPlaying
+                            ? 'bg-[#047857] text-white border-[#047857]'
+                            : 'bg-emerald-50 text-[#047857] border-emerald-200 dark:bg-[#064e3b]/30 dark:text-[#34d399] dark:border-[#065f46] hover:bg-emerald-100'
                         }`}
-                        title="Nghe file Audio MP3 phòng thi"
                       >
-                        {isCurrentPlaying ? (
-                          <>
-                            <Pause size={12} />
-                            <span>Tạm dừng</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play size={12} className="fill-current" />
-                            <span>Nghe MP3</span>
-                          </>
-                        )}
+                        {isAudioPlaying ? <Pause size={12} /> : <Play size={12} className="fill-current" />}
+                        <span>{isAudioPlaying ? 'Dừng' : 'Audio MP3'}</span>
                       </button>
                     ) : (
-                      <span className="text-[11px] text-slate-400 italic">Chỉ có đề đọc</span>
+                      <span className="text-[11px] text-[#94a3b8] italic">Đề đọc viết</span>
                     )}
 
-                    {/* Action Buttons: PDF, Answer, Simulator */}
-                    <div className="flex items-center gap-1.5">
-                      {/* Interactive Simulator / Practice Room Button */}
+                    {/* Primary actions */}
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => handleOpenSimulator(exam)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs"
-                        title="Vào phòng luyện thi trực tuyến (Vừa nghe Audio vừa xem đề PDF)"
+                        onClick={() => setActiveExamDetail({ exam, activeTab: 'pdf' })}
+                        className="px-2.5 py-1 rounded bg-[#0f172a] hover:bg-[#1e293b] text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-[#0f172a] text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                       >
-                        <Maximize2 size={12} />
-                        <span>Làm bài</span>
+                        Xem đề
                       </button>
 
-                      {/* Direct PDF View / Download */}
                       {exam.pdfUrl && (
                         <button
                           type="button"
-                          onClick={() => handleOpenResource(exam, exam.pdfUrl, 'Đề thi PDF')}
-                          className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl cursor-pointer border border-slate-200 dark:border-zinc-700"
-                          title="Tải đề thi PDF (Khổ A4)"
+                          onClick={() => handleDownloadFile(exam, exam.pdfUrl, `${exam.title}.pdf`)}
+                          className="p-1 text-[#64748b] hover:text-[#0f172a] dark:text-[#94a3b8] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer"
+                          title="Tải PDF"
                         >
                           <Download size={13} />
                         </button>
                       )}
 
-                      {/* Answer Key */}
-                      {exam.answerUrl && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenResource(exam, exam.answerUrl, 'Đáp án')}
-                          className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl cursor-pointer border border-slate-200 dark:border-zinc-700"
-                          title="Xem bảng đáp án chi tiết"
-                        >
-                          <KeyRound size={13} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenShare(exam)}
+                        className="p-1 text-[#64748b] hover:text-[#0f172a] dark:text-[#94a3b8] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer"
+                        title="Chia sẻ"
+                      >
+                        <Share2 size={13} />
+                      </button>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* =========================================================================
-             CLEAN HIGH-DENSITY TABLE LIST VIEW
-             ========================================================================= */
-          <div className="bg-white dark:bg-zinc-900/90 rounded-2xl border border-slate-200/90 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800/80 overflow-hidden shadow-2xs">
-            {filteredExams.map((exam) => {
-              const isCurrentPlaying = activeAudioExam?.id === exam.id && isPlaying;
-              const badgeStyle = LEVEL_BADGES[String(exam.hskLevel)] || LEVEL_BADGES['1'];
-
-              return (
-                <div
-                  key={exam.id}
-                  className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 group"
-                >
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <span
-                      className={`text-xs font-black px-2.5 py-1 rounded-lg border shrink-0 text-center min-w-[65px] ${badgeStyle.badgeBg} ${badgeStyle.badgeText} ${badgeStyle.badgeBorder}`}
-                    >
-                      {formatLevelLabel(exam.hskLevel)}
-                    </span>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">
-                          {exam.title}
-                        </h4>
-                        {exam.isPinned && (
-                          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800 shrink-0">
-                            Tuyển chọn
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        <span>{exam.category === 'official' ? '🏛️ Hanban' : '📘 BLCU'}</span>
-                        {exam.year && <span>• Năm {exam.year}</span>}
-                        {exam.durationMinutes && <span>• {exam.durationMinutes} phút</span>}
-                        {exam.questionCount && <span>• {exam.questionCount} câu</span>}
-                        {exam.source && <span className="truncate max-w-[200px]">• {exam.source}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                    {exam.audioUrl && (
-                      <button
-                        type="button"
-                        onClick={() => togglePlayAudio(exam)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                          isCurrentPlaying
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
-                        }`}
-                      >
-                        {isCurrentPlaying ? <Pause size={12} /> : <Play size={12} className="fill-current" />}
-                        <span>{isCurrentPlaying ? 'Tạm dừng' : 'Nghe MP3'}</span>
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSimulator(exam)}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1"
-                      title="Vào phòng thi trực tuyến"
-                    >
-                      <Maximize2 size={12} />
-                      <span>Làm bài</span>
-                    </button>
-
-                    {exam.pdfUrl && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenResource(exam, exam.pdfUrl, 'Đề thi PDF')}
-                        className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl cursor-pointer border border-slate-200 dark:border-zinc-700"
-                        title="Tải PDF"
-                      >
-                        <Download size={13} />
-                      </button>
-                    )}
-
-                    {exam.answerUrl && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenResource(exam, exam.answerUrl, 'Đáp án')}
-                        className="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl cursor-pointer border border-slate-200 dark:border-zinc-700"
-                        title="Xem đáp án"
-                      >
-                        <KeyRound size={13} />
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenShare(exam)}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl cursor-pointer"
-                      title="Chia sẻ"
-                    >
-                      <Share2 size={13} />
-                    </button>
                   </div>
                 </div>
               );
@@ -994,154 +1075,179 @@ export default function ExamsPage() {
       </main>
 
       {/* =========================================================================
-          5. VIRTUAL EXAM SIMULATOR ROOM (Full-Featured In-Browser Practice Room)
-         ========================================================================= */}
-      {simulatorExam && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-white animate-fadeIn">
-          {/* Simulator Top Control Bar */}
-          <div className="h-14 px-4 sm:px-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-lg bg-emerald-500 text-slate-950 shrink-0">
-                {formatLevelLabel(simulatorExam.hskLevel)}
-              </span>
-              <h2 className="text-xs sm:text-sm font-bold text-white truncate max-w-xl">
-                {simulatorExam.title}
-              </h2>
-            </div>
+          5. POLISHED EXAM DETAIL & READING ROOM EXPERIENCE
+      ========================================================================= */}
+      {activeExamDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/80 backdrop-blur-xs p-2 sm:p-4 md:p-6 animate-fadeIn">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-[#cbd5e1] dark:border-[#1e293b] w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden animate-scaleIn">
+            {/* Top Reading Room Header */}
+            <div className="h-14 px-4 sm:px-6 bg-[#f8fafc] dark:bg-[#0b0f19] border-b border-[#e2e8f0] dark:border-[#1e293b] flex items-center justify-between gap-3 shrink-0">
+              {/* Title & Level Badge */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#047857] text-white shrink-0">
+                  {formatLevelLabel(activeExamDetail.exam.hskLevel)}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-[#0f172a] dark:text-white truncate">
+                    {activeExamDetail.exam.title}
+                  </h3>
+                  <div className="text-[11px] text-[#64748b] dark:text-[#94a3b8] truncate hidden sm:block">
+                    {activeExamDetail.exam.source} {activeExamDetail.exam.year ? `• Năm ${activeExamDetail.exam.year}` : ''}
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Answer Key Toggle */}
-              {simulatorExam.answerUrl && (
+              {/* Central Switcher: Exam PDF vs Answer Key */}
+              <div className="flex items-center bg-[#f1f5f9] dark:bg-[#1e293b] p-0.5 rounded-lg border border-[#e2e8f0] dark:border-[#334155] text-xs">
                 <button
                   type="button"
-                  onClick={() => setShowAnswerInSimulator(!showAnswerInSimulator)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 ${
-                    showAnswerInSimulator
-                      ? 'bg-amber-500 text-slate-950'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                  onClick={() => setActiveExamDetail({ ...activeExamDetail, activeTab: 'pdf' })}
+                  className={`px-3 py-1 rounded text-xs font-semibold cursor-pointer transition-all ${
+                    activeExamDetail.activeTab === 'pdf'
+                      ? 'bg-white dark:bg-[#0f172a] text-[#0f172a] dark:text-white font-bold shadow-2xs'
+                      : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white'
                   }`}
                 >
-                  <KeyRound size={13} />
-                  <span>{showAnswerInSimulator ? 'Ẩn đáp án' : 'Bật đáp án'}</span>
+                  Đề thi PDF
                 </button>
-              )}
-
-              {/* Direct Open in New Tab */}
-              <button
-                type="button"
-                onClick={() => handleOpenResource(simulatorExam, simulatorExam.pdfUrl, 'Đề thi PDF')}
-                className="p-2 text-slate-300 hover:text-white rounded-xl hover:bg-slate-800 cursor-pointer transition-colors"
-                title="Mở đề thi tab mới"
-              >
-                <ExternalLink size={15} />
-              </button>
-
-              {/* Exit Simulator */}
-              <button
-                type="button"
-                onClick={() => setSimulatorExam(null)}
-                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 cursor-pointer transition-colors"
-                title="Thoát phòng thi"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          </div>
-
-          {/* Simulator Body: Dual View (Audio Player Header + PDF Frame) */}
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-            {/* Main Test Paper Iframe */}
-            <div className="flex-1 bg-slate-900 relative flex flex-col">
-              {simulatorExam.pdfUrl ? (
-                <iframe
-                  src={`${simulatorExam.pdfUrl}#toolbar=1`}
-                  className="w-full h-full border-0 bg-white"
-                  title={simulatorExam.title}
-                />
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400">
-                  <AlertCircle size={32} className="mb-2 text-amber-400" />
-                  <p className="text-sm font-semibold">Tệp PDF đang được cập nhật</p>
-                </div>
-              )}
-            </div>
-
-            {/* Answer Sheet Side Panel (When Toggled) */}
-            {showAnswerInSimulator && simulatorExam.answerUrl && (
-              <div className="w-full md:w-[480px] border-t md:border-t-0 md:border-l border-slate-800 bg-slate-950 flex flex-col animate-slideInRight">
-                <div className="p-3 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-amber-400">
-                  <span className="flex items-center gap-1.5">
-                    <KeyRound size={14} />
-                    <span>Bảng Đáp Án Đối Chiếu</span>
-                  </span>
+                {activeExamDetail.exam.answerUrl && (
                   <button
                     type="button"
-                    onClick={() => setShowAnswerInSimulator(false)}
-                    className="text-slate-400 hover:text-white"
+                    onClick={() => setActiveExamDetail({ ...activeExamDetail, activeTab: 'answer' })}
+                    className={`px-3 py-1 rounded text-xs font-semibold cursor-pointer transition-all ${
+                      activeExamDetail.activeTab === 'answer'
+                        ? 'bg-white dark:bg-[#0f172a] text-[#0f172a] dark:text-white font-bold shadow-2xs'
+                        : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white'
+                    }`}
                   >
-                    <X size={14} />
+                    Bảng đáp án
                   </button>
-                </div>
-                <iframe
-                  src={`${simulatorExam.answerUrl}#toolbar=0`}
-                  className="flex-1 w-full bg-white border-0"
-                  title="Đáp án"
-                />
+                )}
               </div>
-            )}
+
+              {/* Right Tools: Audio, Download, External Link & Close */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {activeExamDetail.exam.audioUrl && (
+                  <button
+                    type="button"
+                    onClick={() => togglePlayAudio(activeExamDetail.exam)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-[#047857] border border-emerald-200 dark:bg-[#064e3b]/40 dark:text-[#34d399] dark:border-[#065f46] hover:bg-emerald-100 cursor-pointer"
+                  >
+                    {activeAudioExam?.id === activeExamDetail.exam.id && isPlaying ? (
+                      <>
+                        <Pause size={12} />
+                        <span className="hidden sm:inline">Dừng</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play size={12} className="fill-current" />
+                        <span className="hidden sm:inline">Phát Audio</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDownloadFile(
+                      activeExamDetail.exam,
+                      activeExamDetail.activeTab === 'pdf'
+                        ? activeExamDetail.exam.pdfUrl
+                        : activeExamDetail.exam.answerUrl,
+                      `${activeExamDetail.exam.title}_${activeExamDetail.activeTab}.pdf`
+                    )
+                  }
+                  className="flex items-center gap-1 px-2.5 py-1 bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] rounded text-xs font-bold hover:bg-[#1e293b] cursor-pointer shadow-2xs"
+                  title="Tải tệp đang xem về máy"
+                >
+                  <Download size={13} />
+                  <span className="hidden sm:inline">Tải về</span>
+                </button>
+
+                <a
+                  href={
+                    activeExamDetail.activeTab === 'pdf'
+                      ? activeExamDetail.exam.pdfUrl
+                      : activeExamDetail.exam.answerUrl
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-[#64748b] hover:text-[#0f172a] dark:text-[#94a3b8] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer"
+                  title="Mở tài liệu trong tab mới"
+                >
+                  <ExternalLink size={15} />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveExamDetail(null)}
+                  className="p-1.5 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white rounded hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] cursor-pointer ml-1"
+                  title="Đóng xem chi tiết [Esc]"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            </div>
+
+            {/* Reading Room Body: Full-scale PDF Frame */}
+            <div className="flex-1 bg-[#f1f5f9] dark:bg-[#0b0f19] relative overflow-hidden">
+              <iframe
+                src={`${
+                  activeExamDetail.activeTab === 'pdf'
+                    ? activeExamDetail.exam.pdfUrl
+                    : activeExamDetail.exam.answerUrl
+                }#toolbar=1`}
+                className="w-full h-full border-0 bg-white"
+                title={activeExamDetail.exam.title}
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          6. REFINED STICKY FLOATING AUDIO PLAYER (Apple/Spotify Quality)
-         ========================================================================= */}
+          6. FLOATING AUDIO PLAYER DOCK (Restrained, Professional)
+      ========================================================================= */}
       {activeAudioExam && (
-        <div className="fixed bottom-3 left-3 right-3 sm:left-6 sm:right-6 md:left-auto md:right-8 md:max-w-2xl z-40 bg-[#0f172a]/95 dark:bg-[#121215]/95 backdrop-blur-xl text-white border border-white/10 rounded-2xl px-4 py-3 shadow-2xl animate-slideUp">
-          <audio ref={audioRef} />
-
+        <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-[500px] z-40 bg-[#0f172a]/95 dark:bg-[#111827]/95 backdrop-blur-md text-white border border-[#334155] rounded-xl px-4 py-2.5 shadow-xl animate-slideUp">
           <div className="flex items-center justify-between gap-3">
-            {/* Track Info */}
-            <div className="flex items-center gap-2.5 min-w-0 max-w-[180px] sm:max-w-[240px]">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
-                <Headphones size={15} />
+            {/* Title & Timing */}
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-white truncate">
+                {activeAudioExam.title}
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate">
-                  {activeAudioExam.title}
-                </div>
-                <div className="text-[10px] text-emerald-400 font-mono">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </div>
+              <div className="text-[11px] text-[#34d399] font-mono mt-0.5">
+                {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
 
-            {/* Central Controls */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Controls */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => handleSkip(-10)}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer"
-                title="Lùi 10s"
+                className="p-1 text-[#94a3b8] hover:text-white rounded cursor-pointer"
+                title="Lùi 10 giây"
               >
-                <RotateCcw size={14} />
+                <RotateCcw size={13} />
               </button>
 
               <button
                 type="button"
                 onClick={() => togglePlayAudio(activeAudioExam)}
-                className="w-8 h-8 rounded-full bg-white text-slate-950 flex items-center justify-center font-bold hover:scale-105 cursor-pointer shadow-md"
+                className="w-7 h-7 rounded-full bg-white text-[#0f172a] flex items-center justify-center font-bold hover:bg-[#f1f5f9] cursor-pointer shadow-xs"
               >
-                {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
+                {isPlaying ? <Pause size={13} /> : <Play size={13} className="fill-current ml-0.5" />}
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSkip(10)}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white cursor-pointer"
-                title="Tua 10s"
+                className="p-1 text-[#94a3b8] hover:text-white rounded cursor-pointer"
+                title="Tua 10 giây"
               >
-                <RotateCw size={14} />
+                <RotateCw size={13} />
               </button>
 
               {/* Progress Slider */}
@@ -1151,17 +1257,27 @@ export default function ExamsPage() {
                 max={duration || 100}
                 value={currentTime}
                 onChange={handleSeek}
-                className="w-20 sm:w-32 accent-emerald-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg hidden sm:block"
+                className="w-16 sm:w-24 accent-[#34d399] cursor-pointer h-1 bg-[#334155] rounded-lg hidden sm:block"
               />
 
-              {/* Speed Button */}
+              {/* Speed Cycle */}
               <button
                 type="button"
-                onClick={handleSpeedChange}
-                className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-[11px] font-bold cursor-pointer"
+                onClick={handleSpeedCycle}
+                className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold text-[#cbd5e1] hover:text-white cursor-pointer"
                 title="Tốc độ nghe"
               >
                 {playbackRate}x
+              </button>
+
+              {/* Download MP3 */}
+              <button
+                type="button"
+                onClick={() => handleDownloadFile(activeAudioExam, activeAudioExam.audioUrl, `${activeAudioExam.title}_Audio.mp3`)}
+                className="p-1 text-[#94a3b8] hover:text-white rounded cursor-pointer"
+                title="Tải tệp MP3"
+              >
+                <Download size={13} />
               </button>
 
               {/* Close Audio Player */}
@@ -1172,10 +1288,10 @@ export default function ExamsPage() {
                   setActiveAudioExam(null);
                   setIsPlaying(false);
                 }}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 cursor-pointer ml-1"
-                title="Đóng trình phát"
+                className="p-1 text-[#64748b] hover:text-white rounded cursor-pointer ml-1"
+                title="Đóng trình phát âm thanh"
               >
-                <X size={15} />
+                <X size={14} />
               </button>
             </div>
           </div>
@@ -1183,59 +1299,59 @@ export default function ExamsPage() {
       )}
 
       {/* =========================================================================
-          7. MINIMALIST SHARE & QR CODE MODAL
-         ========================================================================= */}
+          7. ACADEMIC SHARE & QR CODE MODAL
+      ========================================================================= */}
       {shareModalExam && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-zinc-800 max-w-sm w-full p-6 text-center animate-scaleIn">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800 mb-4">
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Share2 size={14} className="text-emerald-600" />
-                <span>Chia Sẻ Bộ Đề Thi HSK</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-[#111827] rounded-2xl shadow-xl border border-[#cbd5e1] dark:border-[#1e293b] max-w-sm w-full p-5 text-center animate-scaleIn">
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#f1f5f9] dark:border-[#1e293b] mb-3">
+              <h3 className="text-xs font-bold text-[#0f172a] dark:text-white flex items-center gap-1.5">
+                <Share2 size={13} className="text-[#047857]" />
+                <span>Chia sẻ bộ đề thi HSK</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setShareModalExam(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                className="p-1 text-[#94a3b8] hover:text-[#0f172a] rounded cursor-pointer"
               >
                 <X size={15} />
               </button>
             </div>
 
-            <div className="bg-slate-50 dark:bg-zinc-950 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 mb-4">
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+            <div className="bg-[#f8fafc] dark:bg-[#0b0f19] p-2.5 rounded-lg border border-[#e2e8f0] dark:border-[#1e293b] mb-3">
+              <span className="text-[10px] font-bold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/40 px-1.5 py-0.2 rounded border border-[#a7f3d0] dark:border-[#065f46]">
                 {formatLevelLabel(shareModalExam.hskLevel)}
               </span>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white mt-1.5 line-clamp-2">
+              <h4 className="text-xs font-bold text-[#0f172a] dark:text-white mt-1 line-clamp-2">
                 {shareModalExam.title}
               </h4>
             </div>
 
             {qrCodeDataUrl ? (
-              <div className="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-inner inline-block mx-auto mb-3">
+              <div className="bg-white p-2 rounded-lg border border-[#e2e8f0] shadow-2xs inline-block mx-auto mb-2.5">
                 <img
                   src={qrCodeDataUrl}
                   alt={`QR Code ${shareModalExam.title}`}
-                  className="w-44 h-44 mx-auto"
+                  className="w-40 h-40 mx-auto"
                 />
               </div>
             ) : (
-              <div className="w-44 h-44 bg-slate-100 animate-pulse rounded-2xl mx-auto mb-3 flex items-center justify-center text-slate-400">
-                <QrCode size={28} />
+              <div className="w-40 h-40 bg-[#f1f5f9] animate-pulse rounded-lg mx-auto mb-2.5 flex items-center justify-center text-[#94a3b8]">
+                <QrCode size={26} />
               </div>
             )}
 
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4">
-              Quét bằng Camera điện thoại hoặc Zalo để mở đề thi, nghe file Audio MP3 và làm bài lập tức.
+            <p className="text-[11px] text-[#64748b] dark:text-[#94a3b8] mb-3">
+              Quét mã để truy cập đề thi PDF, nghe audio MP3 và tải tài liệu.
             </p>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => handleCopyLink(shareModalExam)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-slate-950 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs"
+                onClick={() => handleCopyShareLink(shareModalExam)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-[#0f172a] rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-2xs"
               >
-                <Copy size={13} />
+                <Copy size={12} />
                 <span>Sao chép link</span>
               </button>
 
@@ -1243,10 +1359,10 @@ export default function ExamsPage() {
                 <a
                   href={qrCodeDataUrl}
                   download={`HSK_Exam_${shareModalExam.id}.png`}
-                  className="px-3 py-2.5 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-1 cursor-pointer transition-colors"
+                  className="px-2.5 py-2 border border-[#e2e8f0] dark:border-[#334155] rounded-lg text-xs font-bold text-[#475569] dark:text-[#cbd5e1] hover:bg-[#f8fafc] dark:hover:bg-[#1e293b] flex items-center gap-1 cursor-pointer transition-colors"
                 >
-                  <Download size={13} />
-                  <span>Tải ảnh</span>
+                  <Download size={12} />
+                  <span>Ảnh QR</span>
                 </a>
               )}
             </div>

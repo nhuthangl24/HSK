@@ -9,24 +9,20 @@ import {
   Edit2,
   Trash2,
   Pin,
-  Eye,
-  Download,
-  Share2,
-  QrCode,
+  PinOff,
+  Headphones,
   FileText,
-  Volume2,
-  KeyRound,
-  CheckCircle2,
-  X,
-  ExternalLink,
-  Copy,
   Clock,
-  Sparkles,
   Layers,
-  GraduationCap,
+  Award,
+  ExternalLink,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  Volume2,
+  Download,
 } from 'lucide-react';
-import QRCode from 'qrcode';
-import { ExamItem, ExamHskLevel, ExamCategory } from '@/types/exam';
+import { ExamItem, ExamCategory, ExamHskLevel } from '@/types/exam';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { getClientAuthHeaders } from '@/lib/client-auth';
@@ -39,46 +35,34 @@ export default function AdminExamsTab() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Modal states
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState<ExamItem | null>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
 
-  // QR Modal
-  const [qrModalExam, setQrModalExam] = useState<ExamItem | null>(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-
-  // Delete Confirm Modal
-  const [deletingExam, setDeletingExam] = useState<ExamItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Delete All Modal
-  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
-  const [isDeletingAll, setIsDeletingAll] = useState(false);
-
-  // Form fields
+  // Form Fields
   const [formTitle, setFormTitle] = useState('');
   const [formHskLevel, setFormHskLevel] = useState<ExamHskLevel>(1);
   const [formCategory, setFormCategory] = useState<ExamCategory>('official');
   const [formYear, setFormYear] = useState<number>(new Date().getFullYear());
-  const [formSource, setFormSource] = useState('');
-  const [formDuration, setFormDuration] = useState<number | ''>(40);
-  const [formQuestions, setFormQuestions] = useState<number | ''>(40);
-  const [formDescription, setFormDescription] = useState('');
+  const [formSource, setFormSource] = useState('Đề thi chuẩn Hanban');
+  const [formDuration, setFormDuration] = useState<number>(90);
+  const [formQuestions, setFormQuestions] = useState<number>(85);
   const [formPdfUrl, setFormPdfUrl] = useState('');
   const [formAudioUrl, setFormAudioUrl] = useState('');
-  const [formAnswerUrl, setFormAnswerUrl] = useState('');
+  const [formDesc, setFormDesc] = useState('');
   const [formIsPinned, setFormIsPinned] = useState(false);
-  const [formStatus, setFormStatus] = useState<'published' | 'draft'>('published');
+
+  // Delete State
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchExams = useCallback(async () => {
     setLoading(true);
     try {
       const authHeaders = getClientAuthHeaders(user);
       const res = await fetch(`/api/exams?t=${Date.now()}`, {
-        cache: 'no-store',
         headers: authHeaders,
       });
       if (res.ok) {
@@ -86,1022 +70,636 @@ export default function AdminExamsTab() {
         if (data.success && Array.isArray(data.exams)) {
           setExams(data.exams);
         }
-      } else {
-        toast.error('Không thể tải danh sách đề thi.');
       }
     } catch (err) {
-      console.error('Fetch exams error:', err);
-      toast.error('Lỗi khi tải danh sách đề thi.');
+      console.warn('Exams fetch warning:', err);
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
   useEffect(() => {
     fetchExams();
   }, [fetchExams]);
 
-  const handleOpenCreateModal = () => {
+  const handleOpenCreate = () => {
     setEditingExam(null);
     setFormTitle('');
-    setFormHskLevel(1);
+    setFormHskLevel(3);
     setFormCategory('official');
     setFormYear(new Date().getFullYear());
-    setFormSource('Biên soạn bởi HSK Master');
-    setFormDuration(40);
-    setFormQuestions(40);
-    setFormDescription('');
+    setFormSource('Hanban Official');
+    setFormDuration(90);
+    setFormQuestions(80);
     setFormPdfUrl('');
     setFormAudioUrl('');
-    setFormAnswerUrl('');
+    setFormDesc('');
     setFormIsPinned(false);
-    setFormStatus('published');
-    setIsEditModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (exam: ExamItem) => {
+  const handleOpenEdit = (exam: ExamItem) => {
     setEditingExam(exam);
     setFormTitle(exam.title);
     setFormHskLevel(exam.hskLevel);
     setFormCategory(exam.category);
     setFormYear(exam.year || new Date().getFullYear());
-    setFormSource(exam.source || '');
-    setFormDuration(exam.durationMinutes || '');
-    setFormQuestions(exam.questionCount || '');
-    setFormDescription(exam.description || '');
+    setFormSource(exam.source || 'Hanban');
+    setFormDuration(exam.durationMinutes || 90);
+    setFormQuestions(exam.questionCount || 80);
     setFormPdfUrl(exam.pdfUrl || '');
     setFormAudioUrl(exam.audioUrl || '');
-    setFormAnswerUrl(exam.answerUrl || '');
+    setFormDesc(exam.description || '');
     setFormIsPinned(Boolean(exam.isPinned));
-    setFormStatus(exam.status);
-    setIsEditModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleSubmitForm = async (e: React.FormEvent) => {
+  const handleSaveExam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim()) {
-      toast.warning('Vui lòng nhập tiêu đề bộ đề thi.');
+      toast.warning('Vui lòng nhập tên đề thi');
       return;
     }
 
     setFormSubmitting(true);
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const payload = {
+      const payload: Partial<ExamItem> = {
         title: formTitle.trim(),
         hskLevel: formHskLevel,
         category: formCategory,
-        year: formYear ? Number(formYear) : undefined,
+        year: formYear,
         source: formSource.trim(),
-        durationMinutes: formDuration ? Number(formDuration) : undefined,
-        questionCount: formQuestions ? Number(formQuestions) : undefined,
-        description: formDescription.trim(),
-        pdfUrl: formPdfUrl.trim(),
-        audioUrl: formAudioUrl.trim(),
-        answerUrl: formAnswerUrl.trim(),
+        durationMinutes: formDuration,
+        questionCount: formQuestions,
+        pdfUrl: formPdfUrl.trim() || undefined,
+        audioUrl: formAudioUrl.trim() || undefined,
+        description: formDesc.trim() || undefined,
         isPinned: formIsPinned,
-        status: formStatus,
       };
 
       if (editingExam) {
-        // Update existing
         const res = await fetch('/api/exams', {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,
-          },
+          headers: authHeaders,
           body: JSON.stringify({ id: editingExam.id, ...payload }),
         });
-        const data = await res.json();
-        if (data.success) {
-          toast.success('Cập nhật đề thi thành công!');
-          setIsEditModalOpen(false);
+        if (res.ok) {
+          toast.success('Đã cập nhật bộ đề thi thành công');
+          setIsModalOpen(false);
           fetchExams();
         } else {
-          toast.error(data.message || 'Không thể cập nhật đề thi.');
+          toast.error('Cập nhật đề thi thất bại');
         }
       } else {
-        // Create new
         const res = await fetch('/api/exams', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,
-          },
+          headers: authHeaders,
           body: JSON.stringify(payload),
         });
-        const data = await res.json();
-        if (data.success) {
-          toast.success('Tạo bộ đề thi mới thành công!');
-          setIsEditModalOpen(false);
+        if (res.ok) {
+          toast.success('Đã thêm đề thi mới vào thư viện');
+          setIsModalOpen(false);
           fetchExams();
         } else {
-          toast.error(data.message || 'Không thể tạo đề thi.');
+          toast.error('Không thể tạo đề thi mới');
         }
       }
-    } catch (err) {
-      console.error('Save exam error:', err);
-      toast.error('Lỗi khi lưu đề thi.');
+    } catch {
+      toast.error('Lỗi kết nối khi lưu đề thi');
     } finally {
       setFormSubmitting(false);
     }
   };
 
-  const handleTogglePinned = async (exam: ExamItem) => {
+  const handleTogglePin = async (exam: ExamItem) => {
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const nextPinned = !exam.isPinned;
       const res = await fetch('/api/exams', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders,
-        },
-        body: JSON.stringify({ id: exam.id, isPinned: nextPinned }),
+        headers: authHeaders,
+        body: JSON.stringify({
+          id: exam.id,
+          isPinned: !exam.isPinned,
+        }),
       });
       if (res.ok) {
-        toast.success(nextPinned ? 'Đã ghim đề thi lên đầu trang!' : 'Đã bỏ ghim đề thi.');
         setExams((prev) =>
-          prev.map((e) => (e.id === exam.id ? { ...e, isPinned: nextPinned } : e))
+          prev.map((e) => (e.id === exam.id ? { ...e, isPinned: !e.isPinned } : e))
         );
+        toast.success(exam.isPinned ? 'Đã bỏ ghim đề thi' : 'Đã ghim đề thi lên đầu');
       }
     } catch {
-      toast.error('Lỗi khi thay đổi trạng thái ghim.');
+      toast.error('Lỗi khi thay đổi trạng thái ghim');
     }
   };
 
-  const handleToggleStatus = async (exam: ExamItem) => {
+  const handleDeleteExam = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa bộ đề này khỏi Thư viện?')) return;
+    setDeletingId(id);
     try {
       const authHeaders = getClientAuthHeaders(user);
-      const nextStatus = exam.status === 'published' ? 'draft' : 'published';
-      const res = await fetch('/api/exams', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders,
-        },
-        body: JSON.stringify({ id: exam.id, status: nextStatus }),
-      });
-      if (res.ok) {
-        toast.success(nextStatus === 'published' ? 'Đã công khai đề thi!' : 'Đã chuyển thành bản nháp.');
-        setExams((prev) =>
-          prev.map((e) => (e.id === exam.id ? { ...e, status: nextStatus } : e))
-        );
-      }
-    } catch {
-      toast.error('Lỗi khi thay đổi trạng thái.');
-    }
-  };
-
-  const handleDeleteExam = async () => {
-    if (!deletingExam) return;
-    setIsDeleting(true);
-    const targetId = deletingExam.id;
-    try {
-      const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch(`/api/exams?id=${encodeURIComponent(targetId)}`, {
+      const res = await fetch(`/api/exams?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: authHeaders,
       });
       if (res.ok) {
-        toast.success('Đã xóa bộ đề thi.');
-        setDeletingExam(null);
-        setExams((prev) => prev.filter((e) => e.id !== targetId));
-        fetchExams();
+        setExams((prev) => prev.filter((e) => e.id !== id));
+        toast.success('Đã xóa bộ đề thi thành công');
       } else {
-        toast.error('Không thể xóa đề thi.');
+        toast.error('Xóa bộ đề thi thất bại');
       }
     } catch {
-      toast.error('Lỗi khi xóa đề thi.');
+      toast.error('Lỗi kết nối khi xóa đề thi');
     } finally {
-      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
-  const handleDeleteAllExams = async () => {
-    setIsDeletingAll(true);
-    try {
-      const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch('/api/exams?all=true', {
-        method: 'DELETE',
-        headers: authHeaders,
-      });
-      if (res.ok) {
-        toast.success('Đã xóa toàn bộ đề thi thành công!');
-        setExams([]);
-        setIsDeleteAllModalOpen(false);
-        fetchExams();
-      } else {
-        toast.error('Không thể xóa toàn bộ đề thi.');
-      }
-    } catch {
-      toast.error('Lỗi khi xóa đề thi.');
-    } finally {
-      setIsDeletingAll(false);
-    }
-  };
+  // KPIs
+  const totalCount = exams.length;
+  const officialCount = useMemo(() => exams.filter((e) => e.category === 'official').length, [exams]);
+  const mockCount = useMemo(() => exams.filter((e) => e.category === 'mock').length, [exams]);
+  const audioCount = useMemo(() => exams.filter((e) => Boolean(e.audioUrl)).length, [exams]);
 
-  const handleResetStarterExams = async () => {
-    setLoading(true);
-    try {
-      const authHeaders = getClientAuthHeaders(user);
-      const res = await fetch('/api/exams', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ action: 'reset_starter' }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success('Đã nạp lại các bộ đề thi mẫu thành công!');
-        if (data.exams && Array.isArray(data.exams)) {
-          setExams(data.exams);
-        } else {
-          fetchExams();
-        }
-      } else {
-        toast.error('Không thể nạp đề mẫu.');
-      }
-    } catch {
-      toast.error('Lỗi khi nạp đề thi mẫu.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Open QR Share Modal
-  const handleOpenQrModal = async (exam: ExamItem) => {
-    setQrModalExam(exam);
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareUrl = `${origin}?examId=${encodeURIComponent(exam.id)}`;
-    try {
-      const qr = await QRCode.toDataURL(shareUrl, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#0f172a',
-          light: '#ffffff',
-        },
-      });
-      setQrCodeDataUrl(qr);
-    } catch (err) {
-      console.error('Generate QR error:', err);
-    }
-  };
-
-  const handleCopyShareLink = (exam: ExamItem) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareUrl = `${origin}?examId=${encodeURIComponent(exam.id)}`;
-    const copyText = `📚 Luyện Đề Thi HSK: ${exam.title} (HSK ${exam.hskLevel} • Kèm file nghe MP3 & Đáp án chi tiết) 👉 ${shareUrl}`;
-    navigator.clipboard.writeText(copyText);
-    toast.success('Đã sao chép link chia sẻ đề thi vào bộ nhớ tạm!');
-  };
-
-  // Filtered list
+  // Filtering
   const filteredExams = useMemo(() => {
     return exams.filter((e) => {
-      if (levelFilter !== 'all') {
-        if (levelFilter === 'HSKK' && e.hskLevel !== 'HSKK') return false;
-        if (String(e.hskLevel) !== levelFilter) return false;
-      }
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'pinned' && !e.isPinned) return false;
-        if (statusFilter === 'published' && e.status !== 'published') return false;
-        if (statusFilter === 'draft' && e.status !== 'draft') return false;
-      }
+      if (levelFilter !== 'all' && String(e.hskLevel) !== levelFilter) return false;
+      if (categoryFilter !== 'all' && e.category !== categoryFilter) return false;
       if (search.trim()) {
-        const q = search.toLowerCase();
-        const matchTitle = e.title.toLowerCase().includes(q);
-        const matchSource = (e.source || '').toLowerCase().includes(q);
-        const matchDesc = (e.description || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchSource && !matchDesc) return false;
+        const q = search.toLowerCase().trim();
+        const t = e.title.toLowerCase();
+        const s = (e.source || '').toLowerCase();
+        if (!t.includes(q) && !s.includes(q)) return false;
       }
       return true;
     });
-  }, [exams, levelFilter, statusFilter, search]);
-
-  const stats = useMemo(() => {
-    const total = exams.length;
-    const published = exams.filter((e) => e.status === 'published').length;
-    const drafts = exams.filter((e) => e.status === 'draft').length;
-    const views = exams.reduce((acc, cur) => acc + (cur.viewsCount || 0), 0);
-    const downloads = exams.reduce((acc, cur) => acc + (cur.downloadsCount || 0), 0);
-    return { total, published, drafts, views, downloads };
-  }, [exams]);
-
-  const getHskBadge = (level: ExamHskLevel) => {
-    switch (level) {
-      case 1:
-        return 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
-      case 2:
-        return 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800';
-      case 3:
-        return 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800';
-      case 4:
-        return 'bg-pink-100 dark:bg-pink-950/60 text-pink-800 dark:text-pink-300 border-pink-300 dark:border-pink-800';
-      case 5:
-        return 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800';
-      case 6:
-        return 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800';
-      case 'HSKK':
-      default:
-        return 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800';
-    }
-  };
+  }, [exams, levelFilter, categoryFilter, search]);
 
   return (
     <div className="space-y-6">
-      {/* Header & Stats Cards */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#e2e8f0] dark:border-[#1e293b]">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <GraduationCap className="text-emerald-600 dark:text-emerald-400" size={24} />
-            <span>Kho Đề Thi HSK Tuyển Chọn & Chia Sẻ</span>
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Admin tuyển chọn, biên soạn các bộ đề thi HSK 1 - 6 chính thức kèm file Nghe MP3 & Đáp án, chia sẻ link cho toàn bộ học viên.
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-[#0f172a] dark:text-white">
+              Quản Trị Thư Viện Đề Thi HSK
+            </h1>
+            <span className="px-2 py-0.5 text-[10.5px] font-bold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/40 rounded border border-[#a7f3d0] dark:border-[#065f46]">
+              {totalCount} bộ đề
+            </span>
+          </div>
+          <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1">
+            Quản lý tệp đề thi PDF, bản ghi âm MP3 nghe hiểu, đáp án mẫu và chỉ số cấp độ từ HSK 1 đến HSK 7-9 & HSKK.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-auto">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={fetchExams}
             disabled={loading}
-            className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-            title="Làm mới danh sách"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#334155] dark:text-[#cbd5e1] bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-lg hover:bg-[#f8fafc] dark:hover:bg-[#334155]/60 transition-colors cursor-pointer"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <span>Làm mới</span>
           </button>
-
-          {exams.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setIsDeleteAllModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press"
-              title="Xóa toàn bộ đề thi hiện có trong kho"
-            >
-              <Trash2 size={15} />
-              <span className="hidden sm:inline">Xóa tất cả ({exams.length})</span>
-            </button>
-          )}
-
-          {exams.length === 0 && (
-            <button
-              type="button"
-              onClick={handleResetStarterExams}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-2 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-semibold cursor-pointer transition-all btn-press"
-              title="Nạp lại 6 bộ đề thi HSK chuẩn mẫu ban đầu"
-            >
-              <Sparkles size={15} className="text-amber-500" />
-              <span>Nạp lại 6 đề mẫu</span>
-            </button>
-          )}
 
           <button
             type="button"
-            onClick={handleOpenCreateModal}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer shadow-sm transition-all btn-press"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg shadow-2xs transition-colors cursor-pointer"
           >
-            <Plus size={16} />
-            <span>Thêm Bộ Đề Thi Mới</span>
+            <Plus size={14} />
+            <span>Thêm đề thi mới</span>
           </button>
         </div>
       </div>
 
-      {/* Stats Counter Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs">
-          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">TỔNG BỘ ĐỀ</div>
-          <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{stats.total}</div>
+      {/* Metadata Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Tổng đề thi
+          </div>
+          <div className="text-xl font-black text-[#0f172a] dark:text-white mt-1">
+            {totalCount}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Đầy đủ dữ liệu học thuật
+          </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs">
-          <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">ĐÃ CÔNG KHAI</div>
-          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{stats.published}</div>
+
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Đề thật Hanban
+          </div>
+          <div className="text-xl font-black text-[#047857] dark:text-[#34d399] mt-1">
+            {officialCount}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Đề thi chính thức
+          </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs">
-          <div className="text-[11px] font-semibold text-slate-400">BẢN NHÁP</div>
-          <div className="text-xl font-black text-slate-500 mt-0.5">{stats.drafts}</div>
+
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Đề thử nghiệm BLCU
+          </div>
+          <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">
+            {mockCount}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Tuyển tập đại học Bắc Kinh
+          </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs">
-          <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">LƯỢT XEM ĐỀ</div>
-          <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">{stats.views}</div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xs col-span-2 sm:col-span-1">
-          <div className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">LƯỢT TẢI VỀ</div>
-          <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5">{stats.downloads}</div>
+
+        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
+          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+            Bản ghi Audio MP3
+          </div>
+          <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
+            {audioCount}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+            Sẵn sàng nghe trực tuyến
+          </div>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tên đề thi, nguồn đề, năm phát hành..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
-          />
-        </div>
-
-        {/* Level Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <select
-            value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer"
-          >
-            <option value="all">Tất cả cấp độ</option>
-            <option value="1">HSK 1</option>
-            <option value="2">HSK 2</option>
-            <option value="3">HSK 3</option>
-            <option value="4">HSK 4</option>
-            <option value="5">HSK 5</option>
-            <option value="6">HSK 6</option>
-            <option value="HSKK">HSKK</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="pinned">Đang ghim đầu trang</option>
-            <option value="published">Đã công khai</option>
-            <option value="draft">Bản nháp</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Exams List Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
-        {loading && exams.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-emerald-600" />
-            <p className="text-xs">Đang tải kho đề thi...</p>
+      {/* Filter Toolbar */}
+      <div className="bg-white dark:bg-[#0f172a] p-3 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm theo tên đề thi, nhà xuất bản, mã đề..."
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg placeholder-[#94a3b8] focus:outline-hidden focus:border-[#047857]"
+            />
           </div>
-        ) : filteredExams.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <BookOpen size={32} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Không tìm thấy bộ đề thi nào.</p>
-            <p className="text-xs text-slate-400 mt-1">Bấm nút "Thêm Bộ Đề Thi Mới" ở trên để đưa tài liệu lên kho.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredExams.map((exam) => (
-              <div
-                key={exam.id}
-                className={`p-4 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                  exam.isPinned ? 'bg-amber-50/30 dark:bg-amber-950/20' : ''
+
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8]">Phân loại:</span>
+            {[
+              { id: 'all', label: 'Tất cả' },
+              { id: 'official', label: 'Hanban Official' },
+              { id: 'mock', label: 'BLCU Mock' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCategoryFilter(cat.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                  categoryFilter === cat.id
+                    ? 'bg-[#047857] text-white'
+                    : 'bg-[#f1f5f9] dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8] hover:bg-[#e2e8f0] dark:hover:bg-[#334155]'
                 }`}
               >
-                {/* Left: Info & Badges */}
-                <div className="space-y-1.5 min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* HSK Level */}
-                    <span
-                      className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg border ${getHskBadge(
-                        exam.hskLevel
-                      )}`}
-                    >
-                      HSK {exam.hskLevel}
-                    </span>
-
-                    {/* Category */}
-                    <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                      {exam.category === 'official' ? 'Đề thi thật' : exam.category === 'mock' ? 'Đề thi thử' : 'Chuyên đề'}
-                    </span>
-
-                    {/* Status */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(exam)}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-colors ${
-                        exam.status === 'published'
-                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200'
-                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300'
-                      }`}
-                      title="Bấm để bật/tắt trạng thái công khai"
-                    >
-                      {exam.status === 'published' ? '● Công khai' : '○ Bản nháp'}
-                    </button>
-
-                    {/* Pinned Indicator */}
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePinned(exam)}
-                      className={`p-1 rounded-lg cursor-pointer transition-colors ${
-                        exam.isPinned
-                          ? 'text-amber-500 bg-amber-100 dark:bg-amber-950/60'
-                          : 'text-slate-300 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                      title={exam.isPinned ? 'Đang ghim đầu trang (Bấm để bỏ ghim)' : 'Bấm để ghim đề lên đầu'}
-                    >
-                      <Pin size={13} className={exam.isPinned ? 'fill-amber-500' : ''} />
-                    </button>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
-                    {exam.title}
-                  </h3>
-
-                  {/* Meta: Duration, Questions, Source, Year */}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                    {exam.durationMinutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} className="text-slate-400" />
-                        <span>{exam.durationMinutes} phút</span>
-                      </span>
-                    )}
-                    {exam.questionCount && (
-                      <span>• {exam.questionCount} câu</span>
-                    )}
-                    {exam.source && (
-                      <span>• Nguồn: <strong className="text-slate-700 dark:text-slate-300 font-medium">{exam.source}</strong></span>
-                    )}
-                    {exam.year && (
-                      <span>({exam.year})</span>
-                    )}
-                  </div>
-
-                  {/* Resource Badges (PDF, Audio, Answer) */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {exam.pdfUrl ? (
-                      <a
-                        href={exam.pdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/40 hover:underline"
-                      >
-                        <FileText size={12} />
-                        <span>File Đề PDF</span>
-                      </a>
-                    ) : (
-                      <span className="text-[10.5px] text-slate-400 italic">Chưa có PDF</span>
-                    )}
-
-                    {exam.audioUrl ? (
-                      <a
-                        href={exam.audioUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/40 hover:underline"
-                      >
-                        <Volume2 size={12} />
-                        <span>File Nghe MP3</span>
-                      </a>
-                    ) : (
-                      <span className="text-[10.5px] text-slate-400 italic">Không có Audio</span>
-                    )}
-
-                    {exam.answerUrl && (
-                      <a
-                        href={exam.answerUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/40 hover:underline"
-                      >
-                        <KeyRound size={12} />
-                        <span>File Đáp án</span>
-                      </a>
-                    )}
-
-                    <span className="text-[11px] text-slate-400 ml-2">
-                      👁️ {exam.viewsCount || 0} xem • 📥 {exam.downloadsCount || 0} tải
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right: Actions */}
-                <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
-                  {/* Share QR */}
-                  <button
-                    type="button"
-                    onClick={() => handleOpenQrModal(exam)}
-                    className="p-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                    title="Mã QR chia sẻ đề thi"
-                  >
-                    <QrCode size={16} />
-                  </button>
-
-                  {/* Copy Link */}
-                  <button
-                    type="button"
-                    onClick={() => handleCopyShareLink(exam)}
-                    className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                    title="Sao chép link chia sẻ"
-                  >
-                    <Share2 size={16} />
-                  </button>
-
-                  {/* Edit */}
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditModal(exam)}
-                    className="p-2 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                    title="Chỉnh sửa bộ đề"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-
-                  {/* Delete */}
-                  <button
-                    type="button"
-                    onClick={() => setDeletingExam(exam)}
-                    className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
-                    title="Xóa đề thi"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
+                {cat.label}
+              </button>
             ))}
+          </div>
+        </div>
+
+        {/* Level Filters */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-[#f1f5f9] dark:border-[#1e293b]/80 text-xs">
+          <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8] mr-1">Cấp độ:</span>
+          {['all', '1', '2', '3', '4', '5', '6', '7', 'HSKK'].map((lvl) => (
+            <button
+              key={lvl}
+              type="button"
+              onClick={() => setLevelFilter(lvl)}
+              className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                levelFilter === lvl
+                  ? 'bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] font-semibold'
+                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]'
+              }`}
+            >
+              {lvl === 'all' ? 'Tất cả cấp độ' : lvl === '7' ? 'HSK 7–9' : lvl === 'HSKK' ? 'Khẩu ngữ HSKK' : `HSK ${lvl}`}
+            </button>
+          ))}
+          {filteredExams.length !== totalCount && (
+            <span className="ml-auto text-[11px] text-[#64748b] dark:text-[#94a3b8]">
+              Hiển thị {filteredExams.length} / {totalCount}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Catalog Table */}
+      <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] overflow-hidden">
+        {loading && exams.length === 0 ? (
+          <div className="py-16 text-center text-xs text-[#64748b] dark:text-[#94a3b8]">
+            <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#047857]" />
+            Đang tải danh mục đề thi...
+          </div>
+        ) : filteredExams.length === 0 ? (
+          <div className="py-16 text-center">
+            <BookOpen size={32} className="mx-auto text-[#cbd5e1] dark:text-[#334155] mb-2" />
+            <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+              Không tìm thấy đề thi phù hợp
+            </h3>
+            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1 max-w-sm mx-auto">
+              Thử tìm kiếm với từ khóa khác hoặc bỏ chọn bộ lọc cấp độ.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[#f1f5f9] dark:divide-[#1e293b]">
+            {filteredExams.map((e) => {
+              const levelLabel =
+                e.hskLevel === 'HSKK'
+                  ? 'HSKK'
+                  : typeof e.hskLevel === 'number' && e.hskLevel >= 7
+                  ? 'HSK 7–9'
+                  : `HSK ${e.hskLevel}`;
+
+              return (
+                <div
+                  key={e.id}
+                  className="p-3.5 transition-colors hover:bg-[#f8fafc] dark:hover:bg-[#131c2e]"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    {/* Left: Metadata & Title */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* Level Badge */}
+                      <div className="w-12 h-10 rounded-lg bg-[#047857]/10 dark:bg-[#064e3b]/30 text-[#047857] dark:text-[#34d399] border border-[#a7f3d0] dark:border-[#065f46] flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold leading-tight uppercase">{levelLabel}</span>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="text-[10.5px] font-semibold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/30 px-1.5 py-0.2 rounded border border-[#a7f3d0] dark:border-[#065f46]">
+                            {e.category === 'official' ? 'Hanban Official' : 'BLCU Mock'}
+                          </span>
+                          {e.year && (
+                            <span className="text-[11px] text-[#64748b] dark:text-[#94a3b8] font-mono">
+                              Năm {e.year}
+                            </span>
+                          )}
+                          {e.isPinned && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
+                              <Pin size={9} />
+                              Ghim
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-xs font-bold text-[#0f172a] dark:text-white truncate">
+                          {e.title}
+                        </h3>
+
+                        <div className="flex items-center gap-3 text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1 flex-wrap">
+                          <span>Nguồn: {e.source || 'Hanban'}</span>
+                          <span>•</span>
+                          <span>{e.durationMinutes || 90} phút</span>
+                          <span>•</span>
+                          <span>{e.questionCount || 80} câu hỏi</span>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1 font-medium">
+                            <Headphones size={11} className={e.audioUrl ? 'text-[#047857]' : 'text-slate-400'} />
+                            {e.audioUrl ? 'Có Audio MP3' : 'Chưa có Audio'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                      {e.pdfUrl && (
+                        <a
+                          href={e.pdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 rounded-lg border border-[#cbd5e1] dark:border-[#334155] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f8fafc] dark:hover:bg-[#1e293b]"
+                          title="Xem tệp PDF đề thi"
+                        >
+                          <FileText size={13} />
+                        </a>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePin(e)}
+                        title={e.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
+                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                          e.isPinned
+                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300'
+                            : 'bg-white dark:bg-[#1e293b] border-[#cbd5e1] dark:border-[#334155] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white'
+                        }`}
+                      >
+                        {e.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(e)}
+                        title="Chỉnh sửa thông tin đề thi"
+                        className="p-1.5 rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white transition-colors cursor-pointer"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={deletingId === e.id}
+                        onClick={() => handleDeleteExam(e.id)}
+                        title="Xóa đề thi này"
+                        className="p-1.5 rounded-lg text-[#94a3b8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* CREATE / EDIT EXAM MODAL */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                  <GraduationCap size={18} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {editingExam ? 'Chỉnh Sửa Bộ Đề Thi' : 'Thêm Bộ Đề Thi Mới'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Nhập thông tin đề thi HSK, đính kèm link PDF đề bài, file nghe audio & đáp án.
-                  </p>
-                </div>
+      {/* Create / Edit Exam Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#e2e8f0] dark:border-[#1e293b] max-w-xl w-full p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0] dark:border-[#1e293b]">
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} className="text-[#047857]" />
+                <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+                  {editingExam ? 'Chỉnh Sửa Bộ Đề Thi' : 'Thêm Bộ Đề Thi Mới'}
+                </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Modal Body Form */}
-            <form onSubmit={handleSubmitForm} className="p-6 overflow-y-auto space-y-4 flex-1 scrollbar-thin">
-              {/* Title */}
+            <form onSubmit={handleSaveExam} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Tiêu đề đề thi <span className="text-rose-500">*</span>
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  Tên bộ đề thi *
                 </label>
                 <input
                   type="text"
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Ví dụ: Đề thi thật HSK 4 — Tháng 12/2023 (Mã đề H41001)"
-                  className="w-full px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                  placeholder="Ví dụ: Đề Thi Thật HSK 5 Năm 2024 - Mã H51001"
+                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
-              {/* HSK Level & Category */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
                     Cấp độ HSK
                   </label>
                   <select
                     value={formHskLevel}
-                    onChange={(e) => setFormHskLevel((e.target.value === 'HSKK' ? 'HSKK' : Number(e.target.value)) as ExamHskLevel)}
-                    className="w-full px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    onChange={(e) => setFormHskLevel((isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) as ExamHskLevel)}
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   >
-                    <option value={1}>HSK 1</option>
-                    <option value={2}>HSK 2</option>
-                    <option value={3}>HSK 3</option>
-                    <option value={4}>HSK 4</option>
-                    <option value={5}>HSK 5</option>
-                    <option value={6}>HSK 6</option>
-                    <option value="HSKK">HSKK (Thi Khẩu ngữ)</option>
+                    {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
+                      <option key={lvl} value={lvl}>
+                        {lvl === 7 ? 'HSK 7–9' : `HSK ${lvl}`}
+                      </option>
+                    ))}
+                    <option value="HSKK">Khẩu ngữ HSKK</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Dạng đề
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Phân loại
                   </label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value as ExamCategory)}
-                    className="w-full px-3 py-2 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   >
-                    <option value="official">Đề thi thật chính thức (Official)</option>
-                    <option value="mock">Đề thi thử / Mô phỏng chuẩn (Mock)</option>
-                    <option value="listening">Chuyên đề Nghe hiểu (Tingli)</option>
-                    <option value="reading">Chuyên đề Đọc hiểu (Yuedu)</option>
-                    <option value="writing">Chuyên đề Viết (Xiezuo)</option>
+                    <option value="official">Đề thi thật Hanban</option>
+                    <option value="mock">Đề thử nghiệm BLCU</option>
                   </select>
                 </div>
-              </div>
-
-              {/* Source & Year */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Nguồn gốc / Cơ quan ra đề
-                  </label>
-                  <input
-                    type="text"
-                    value={formSource}
-                    onChange={(e) => setFormSource(e.target.value)}
-                    placeholder="Ví dụ: Hanban / BLCU Bắc Kinh"
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                  />
-                </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
                     Năm phát hành
                   </label>
                   <input
                     type="number"
                     value={formYear}
                     onChange={(e) => setFormYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   />
                 </div>
               </div>
 
-              {/* Duration & Questions */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Thời gian làm bài chuẩn (Phút)
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Thời lượng thi (phút)
                   </label>
                   <input
                     type="number"
                     value={formDuration}
-                    onChange={(e) => setFormDuration(e.target.value ? Number(e.target.value) : '')}
-                    placeholder="Ví dụ: 105"
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    onChange={(e) => setFormDuration(Number(e.target.value))}
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Số lượng câu hỏi
+                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                    Tổng số câu hỏi
                   </label>
                   <input
                     type="number"
                     value={formQuestions}
-                    onChange={(e) => setFormQuestions(e.target.value ? Number(e.target.value) : '')}
-                    placeholder="Ví dụ: 100"
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    onChange={(e) => setFormQuestions(Number(e.target.value))}
+                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                   />
                 </div>
               </div>
 
-              {/* PDF URL */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <FileText size={13} className="text-rose-500" />
-                  <span>Link File Đề thi (PDF / Drive)</span>
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  Đường dẫn tệp PDF Đề thi
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={formPdfUrl}
                   onChange={(e) => setFormPdfUrl(e.target.value)}
-                  placeholder="https://... hoặc link Google Drive, OneDrive"
-                  className="w-full px-3 py-2 text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                  placeholder="/exams/pdf/hsk5_exam_2024.pdf hoặc link trực tiếp"
+                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
-              {/* Audio MP3 URL */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <Volume2 size={13} className="text-blue-500" />
-                  <span>Link File Nghe Audio MP3 (Cho phép nghe trực tiếp trên web)</span>
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  Đường dẫn tệp Audio MP3 Nghe hiểu
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={formAudioUrl}
                   onChange={(e) => setFormAudioUrl(e.target.value)}
-                  placeholder="https://.../audio.mp3 (link trực tiếp file âm thanh)"
-                  className="w-full px-3 py-2 text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                  placeholder="/exams/audio/hsk5_audio_2024.mp3 hoặc link trực tiếp"
+                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
-              {/* Answer Key URL */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <KeyRound size={13} className="text-emerald-500" />
-                  <span>Link File Đáp án & Tapescript giải thích</span>
-                </label>
-                <input
-                  type="url"
-                  value={formAnswerUrl}
-                  onChange={(e) => setFormAnswerUrl(e.target.value)}
-                  placeholder="https://.../dapan.pdf hoặc link tài liệu lời giải"
-                  className="w-full px-3 py-2 text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Description & Tips */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Mô tả ngắn & Lời dặn của Admin
+                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  Mô tả & Hướng dẫn làm bài
                 </label>
                 <textarea
                   rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Gợi ý mẹo làm bài, lưu ý phần bẫy ngữ pháp hoặc từ vựng trọng tâm..."
-                  className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                  value={formDesc}
+                  onChange={(e) => setFormDesc(e.target.value)}
+                  placeholder="Ghi chú về nguồn đề, cấu trúc các phần Nghe - Đọc - Viết..."
+                  className="w-full px-3 py-2 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
                 />
               </div>
 
-              {/* Toggles: Pinned & Status */}
-              <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formIsPinned}
                     onChange={(e) => setFormIsPinned(e.target.checked)}
-                    className="rounded text-amber-500 focus:ring-amber-500"
+                    className="w-4 h-4 rounded text-[#047857] focus:ring-[#047857]"
                   />
-                  <span>Ghim bộ đề này lên đầu trang</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={formStatus === 'published'}
-                    onChange={(e) => setFormStatus(e.target.checked ? 'published' : 'draft')}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Công khai cho học viên xem</span>
+                  <span className="text-xs font-semibold text-[#0f172a] dark:text-white">
+                    Ghim đề thi này lên đầu danh sách học viên
+                  </span>
                 </label>
               </div>
 
-              {/* Form Action Buttons */}
-              <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e8f0] dark:border-[#1e293b]">
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-[#475569] dark:text-[#cbd5e1] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] rounded-lg transition-colors cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
+
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50 btn-press"
+                  className="px-4 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg transition-colors cursor-pointer"
                 >
-                  {formSubmitting ? 'Đang lưu...' : editingExam ? 'Lưu Thay Đổi' : 'Thêm Vào Kho Đề'}
+                  {formSubmitting ? 'Đang lưu...' : editingExam ? 'Cập nhật đề thi' : 'Thêm vào thư viện'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* QR CODE SHARE MODAL */}
-      {qrModalExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full p-6 text-center animate-scaleIn">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <QrCode size={18} className="text-emerald-600" />
-                <span>Mã QR Chia Sẻ Đề Thi</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setQrModalExam(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-2 mb-3">
-              {qrModalExam.title}
-            </p>
-
-            {/* QR Code Canvas / Image */}
-            {qrCodeDataUrl ? (
-              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-inner inline-block mx-auto mb-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={qrCodeDataUrl} alt="Mã QR Đề Thi" className="w-56 h-56 mx-auto rounded-lg" />
-              </div>
-            ) : (
-              <div className="w-56 h-56 flex items-center justify-center bg-slate-100 rounded-2xl mx-auto mb-4">
-                <RefreshCw size={24} className="animate-spin text-slate-400" />
-              </div>
-            )}
-
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-4">
-              Quét bằng Camera điện thoại hoặc Zalo để mở đề thi, nghe audio và tải PDF ngay lập tức.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleCopyShareLink(qrModalExam)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-xs"
-              >
-                <Copy size={13} />
-                <span>Sao chép link</span>
-              </button>
-
-              {qrCodeDataUrl && (
-                <a
-                  href={qrCodeDataUrl}
-                  download={`HSK_Exam_${qrModalExam.id}.png`}
-                  className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Download size={13} />
-                  <span>Lưu ảnh QR</span>
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE CONFIRM MODAL */}
-      {deletingExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full p-5 text-center animate-scaleIn">
-            <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
-              <Trash2 size={24} />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              Xác nhận xóa bộ đề thi?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
-              "{deletingExam.title}" sẽ bị xóa vĩnh viễn khỏi kho đề thi của hệ thống.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => setDeletingExam(null)}
-                className="flex-1 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleDeleteExam}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {isDeleting ? 'Đang xóa...' : 'Xóa Đề Thi'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE ALL CONFIRM MODAL */}
-      {isDeleteAllModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full p-5 text-center animate-scaleIn">
-            <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
-              <Trash2 size={24} />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-              Xác nhận xóa TẤT CẢ đề thi?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-              Toàn bộ <strong className="text-rose-600 font-bold">{exams.length} bộ đề thi</strong> hiện có sẽ bị xóa sạch khỏi kho đề. Hệ thống sẽ để trống kho và không tự động nạp lại dữ liệu giả nữa.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={isDeletingAll}
-                onClick={() => setIsDeleteAllModalOpen(false)}
-                className="flex-1 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="button"
-                disabled={isDeletingAll}
-                onClick={handleDeleteAllExams}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {isDeletingAll ? 'Đang xóa...' : 'Xác nhận xóa hết'}
-              </button>
-            </div>
           </div>
         </div>
       )}

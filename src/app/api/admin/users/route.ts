@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllUsers, updateUser, addAuditLog, authenticateAdmin } from '@/lib/server-db';
+import { getAllUsers, updateUser, deleteUser, addAuditLog, authenticateAdmin } from '@/lib/server-db';
 import { UserRole } from '@/types/auth';
 
 export async function GET(request: Request) {
@@ -98,5 +98,57 @@ export async function PATCH(request: Request) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Thao tác không thành công.';
     return NextResponse.json({ success: false, message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const { isAdmin, userId, email: callerEmail } = authenticateAdmin(request);
+  if (!isAdmin) {
+    return NextResponse.json(
+      { success: false, message: 'Truy cập bị từ chối. Chỉ dành cho Quản trị viên.' },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('id');
+
+    if (!targetUserId) {
+      return NextResponse.json({ success: false, message: 'Thiếu ID người dùng cần xóa.' }, { status: 400 });
+    }
+
+    if (targetUserId === userId) {
+      return NextResponse.json(
+        { success: false, message: 'Bạn không thể tự xóa tài khoản của chính mình!' },
+        { status: 400 }
+      );
+    }
+
+    const allUsers = getAllUsers();
+    const targetUser = allUsers.find((u) => u.id === targetUserId);
+    if (!targetUser) {
+      return NextResponse.json({ success: false, message: 'Người dùng không tồn tại.' }, { status: 404 });
+    }
+
+    const ok = deleteUser(targetUserId);
+    if (!ok) {
+      return NextResponse.json({ success: false, message: 'Không thể xóa người dùng.' }, { status: 500 });
+    }
+
+    addAuditLog(
+      'XÓA_NGƯỜI_DÙNG',
+      callerEmail,
+      targetUser.email,
+      `Xóa vĩnh viễn tài khoản ${targetUser.email} (${targetUser.name || 'Không tên'}) và dọn dẹp dữ liệu học tập liên quan`
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Đã xóa tài khoản ${targetUser.email} thành công.`,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Xóa người dùng thất bại.';
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

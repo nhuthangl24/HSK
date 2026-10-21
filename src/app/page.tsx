@@ -628,7 +628,7 @@ function MainApp() {
     }
     setStudyMode(mode);
     if (mode === 'smart_srs') {
-      setIsSmartReviewOpen(true);
+      router.push('/study');
     } else if (mode === 'meaning_recall') {
       setIsMeaningReviewOpen(true);
     }
@@ -895,13 +895,7 @@ function MainApp() {
           setIsBulkPasteOpen(true);
         }}
         onOpenExams={() => router.push('/exams')}
-        onStartSmartReview={() => {
-          if (isGuest) {
-            setIsAuthModalOpen(true);
-            return;
-          }
-          setIsSmartReviewOpen(true);
-        }}
+        onStartSmartReview={() => router.push('/study')}
         onOpenWorksheet={() => router.push('/worksheet')}
         isFirebaseConnected={isClient ? getFirebaseServices().isConfigured : false}
       />
@@ -972,13 +966,7 @@ function MainApp() {
               }
               setIsAddWordOpen(true);
             }}
-            onStartSmartReview={() => {
-              if (isGuest) {
-                setIsAuthModalOpen(true);
-                return;
-              }
-              setIsSmartReviewOpen(true);
-            }}
+            onStartSmartReview={() => router.push('/study')}
             onOpenImport={() => {
               if (isGuest) {
                 setIsAuthModalOpen(true);
@@ -1134,7 +1122,7 @@ function MainApp() {
           setIsSmartReviewOpen(false);
           setStudyMode('full_table');
         }}
-        items={currentDeckItems}
+        items={displayedItems.length > 0 ? displayedItems : currentDeckItems}
         onBatchUpdate={handleBatchUpdate}
       />
 
