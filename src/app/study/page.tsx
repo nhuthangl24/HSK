@@ -56,6 +56,7 @@ import { StrokeOrderModal } from '@/components/modals/StrokeOrderModal';
 import { batchSaveUserProgressToFirestore } from '@/lib/firebase-db';
 import { getFirebaseServices } from '@/lib/firebase';
 import { AuthModal } from '@/components/modals/AuthModal';
+import { AuthCard } from '@/components/auth/AuthCard';
 
 // -------------------------------------------------------------
 // Type Definitions
@@ -655,53 +656,13 @@ export default function StudyPage() {
           </div>
         </header>
 
-        {/* Lock Gate */}
+        {/* Directly Embedded Login Form */}
         <div className="flex-1 flex items-center justify-center py-10 px-4">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-xl p-8 flex flex-col items-center text-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
-              <Lock size={30} className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                Yêu Cầu Đăng Nhập Để Ôn Tập
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-zinc-400 leading-relaxed">
-                Đăng nhập để truy cập hệ thống thẻ ghi nhớ SRS, theo dõi tiến độ và đồng bộ dữ liệu của bạn.
-              </p>
-            </div>
-
-            {/* Benefits */}
-            <ul className="w-full space-y-2.5 text-left">
-              {[
-                { icon: <Brain size={15} className="text-emerald-500 shrink-0" />, text: 'Thuật toán SRS Anki tự động lên lịch ôn tập tối ưu' },
-                { icon: <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />, text: 'Lưu tiến độ & lịch sử ôn tập trên đám mây' },
-                { icon: <Flame size={15} className="text-emerald-500 shrink-0" />, text: 'Theo dõi streak và thống kê học tập của bạn' },
-              ].map((item, i) => (
-                <li key={i} className="flex items-center gap-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl px-3 py-2.5">
-                  {item.icon}
-                  <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">{item.text}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="w-full space-y-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
-                className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
-              >
-                <LogIn size={16} />
-                Đăng Nhập Ngay
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
-                className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-[.98] text-slate-700 dark:text-zinc-200 font-bold text-sm transition-all cursor-pointer"
-              >
-                Tạo tài khoản mới miễn phí
-              </button>
-            </div>
-          </div>
+          <AuthCard
+            title="Đăng Nhập Để Ôn Tập Thẻ HSK"
+            subtitle="Đăng nhập tài khoản để truy cập hệ thống thẻ ghi nhớ SRS, tự động lưu tiến độ và chuỗi ngày học của bạn."
+            icon={<Brain size={24} />}
+          />
         </div>
 
         <AuthModal
