@@ -18,6 +18,7 @@ import {
   Award,
   Clock,
   Sparkles,
+  Flame,
 } from 'lucide-react';
 import { User, UserRole } from '@/types/auth';
 
@@ -360,15 +361,15 @@ export default function AdminUsersTab({
       <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800 uppercase tracking-wider text-[11px] font-semibold">
+            <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800 uppercase tracking-wider text-[11px] font-bold">
               <tr>
-                <th className="py-3.5 px-4">Học viên</th>
-                <th className="py-3.5 px-4">Email</th>
-                <th className="py-3.5 px-4">Vai trò</th>
-                <th className="py-3.5 px-4">Mục tiêu</th>
-                <th className="py-3.5 px-4">Chuỗi Streak</th>
-                <th className="py-3.5 px-4">Trạng thái</th>
-                <th className="py-3.5 px-4 text-right">Thao tác</th>
+                <th className="py-3.5 px-4 min-w-[200px] whitespace-nowrap">Học viên</th>
+                <th className="py-3.5 px-4 min-w-[170px] whitespace-nowrap">Email</th>
+                <th className="py-3.5 px-4 min-w-[120px] whitespace-nowrap">Vai trò</th>
+                <th className="py-3.5 px-4 min-w-[90px] whitespace-nowrap">Mục tiêu</th>
+                <th className="py-3.5 px-4 min-w-[110px] whitespace-nowrap">Chuỗi Streak</th>
+                <th className="py-3.5 px-4 min-w-[120px] whitespace-nowrap">Trạng thái</th>
+                <th className="py-3.5 px-4 text-right min-w-[200px] whitespace-nowrap">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
@@ -396,39 +397,42 @@ export default function AdminUsersTab({
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       {/* Name with initial avatar */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setInspectUser(u)}
                           className="flex items-center gap-3 text-left group cursor-pointer"
                         >
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                             {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <span className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs sm:text-sm">
-                              {u.name || u.email?.split('@')[0] || 'Học viên'}
-                            </span>
-                            {isCurrentAdmin && (
-                              <span className="ml-2 text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold">
-                                Bạn
-                              </span>
-                            )}
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1.5">
+                              <span>{u.name || u.email?.split('@')[0] || 'Học viên'}</span>
+                              {isCurrentAdmin && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold shrink-0">
+                                  Bạn
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                              ID: {u.id ? `${u.id.substring(0, 10)}...` : '—'}
+                            </div>
                           </div>
                         </button>
                       </td>
 
                       {/* Email */}
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
                         {u.email || '—'}
                       </td>
 
                       {/* Role */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-bold inline-flex items-center gap-1 ${
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 whitespace-nowrap ${
                             u.role === 'admin'
-                              ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+                              ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                           }`}
                         >
@@ -443,91 +447,105 @@ export default function AdminUsersTab({
                       </td>
 
                       {/* Target HSK */}
-                      <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
-                        HSK {u.targetHsk || 3}
+                      <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60">
+                          HSK {u.targetHsk || 3}
+                        </span>
                       </td>
 
                       {/* Streak */}
-                      <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300 font-mono">
-                        {u.streakDays || 0} ngày
+                      <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300 font-mono whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Flame size={13} className="text-amber-500 fill-amber-500" />
+                          <span>{u.streakDays || 0} ngày</span>
+                        </span>
                       </td>
 
                       {/* Status */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {u.isLocked ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
                             <Lock size={12} /> Đã khóa
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Bình thường
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 whitespace-nowrap">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span>Hoạt động</span>
                           </span>
                         )}
                       </td>
 
                       {/* Action Buttons */}
-                      <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
-                        {/* Open Workspace directly */}
-                        {onOpenWorkspace && (
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          {onOpenWorkspace && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenWorkspace(u.id)}
+                              className="px-2.5 py-1 text-purple-700 dark:text-purple-300 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/80 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer shadow-2xs hover:shadow-xs"
+                              title="Mở Không gian học viên này"
+                            >
+                              <FolderKanban size={13} />
+                              <span>Không gian</span>
+                            </button>
+                          )}
+
                           <button
                             type="button"
-                            onClick={() => onOpenWorkspace(u.id)}
-                            className="px-2.5 py-1 text-purple-700 dark:text-purple-300 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/60 rounded-lg text-[11px] font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                            title="Mở Không gian học viên này"
+                            onClick={() => setInspectUser(u)}
+                            className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+                            title="Xem chi tiết hồ sơ"
                           >
-                            <FolderKanban size={12} />
-                            <span>Không gian</span>
+                            <UserCheck size={14} />
                           </button>
-                        )}
 
-                        <button
-                          type="button"
-                          onClick={() => setInspectUser(u)}
-                          className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
-                        >
-                          Chi tiết
-                        </button>
+                          {!isCurrentAdmin && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setRoleChangeTarget({
+                                    user: u,
+                                    newRole: u.role === 'admin' ? 'user' : 'admin',
+                                  })
+                                }
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  u.role === 'admin'
+                                    ? 'text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:text-purple-300'
+                                    : 'text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                                }`}
+                                title={u.role === 'admin' ? 'Hạ quyền xuống User' : 'Nâng quyền lên Admin'}
+                              >
+                                <Shield size={14} />
+                              </button>
 
-                        {!isCurrentAdmin && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setRoleChangeTarget({
-                                  user: u,
-                                  newRole: u.role === 'admin' ? 'user' : 'admin',
-                                })
-                              }
-                              className="px-2.5 py-1 text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-[11px] font-medium transition-colors cursor-pointer"
-                            >
-                              {u.role === 'admin' ? 'Hạ User' : 'Nâng Admin'}
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => onToggleLockUser(u)}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  u.isLocked
+                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-800 dark:bg-slate-800'
+                                }`}
+                                title={u.isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                              >
+                                <Lock size={14} />
+                              </button>
 
-                            <button
-                              type="button"
-                              onClick={() => onToggleLockUser(u)}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
-                                u.isLocked
-                                  ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : 'bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                              }`}
-                            >
-                              {u.isLocked ? 'Mở khóa' : 'Khóa'}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDeleteTargetUser(u);
-                                setDeleteConfirmInput('');
-                              }}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 transition-colors cursor-pointer"
-                              title="Xóa vĩnh viễn tài khoản"
-                            >
-                              Xóa
-                            </button>
-                          </>
-                        )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeleteTargetUser(u);
+                                  setDeleteConfirmInput('');
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/60 dark:hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
+                                title="Xóa vĩnh viễn tài khoản"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
