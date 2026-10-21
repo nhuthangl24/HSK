@@ -470,7 +470,11 @@ export function NotificationBell({
                             className="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/80 px-2 py-0.5 rounded-lg shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
                           >
                             <span>{notif.actionLabel}</span>
-                            <ChevronRight size={12} />
+                            {notif.actionLink?.startsWith('http') || notif.actionPayload?.startsWith('http') ? (
+                              <ExternalLink size={11} />
+                            ) : (
+                              <ChevronRight size={12} />
+                            )}
                           </button>
                         )}
                       </div>

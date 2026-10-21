@@ -2792,6 +2792,19 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
 
 const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   {
+    id: 'notif-thanks-fb-contributor',
+    title: '💐 Lời Tri Ân & Cảm Ơn Đóng Góp Tài Liệu Học HSK',
+    message: 'Ban quản trị HSK Master xin gửi lời cảm ơn chân thành và sâu sắc tới Fanpage (Facebook) vì đã tận tâm chia sẻ và cung cấp rất nhiều nguồn tài liệu quý báu, câu mẫu và đề thi chất lượng cao hỗ trợ cộng đồng người học tiếng Trung!',
+    type: 'system',
+    priority: 'high',
+    isPinned: true,
+    actionLabel: 'Ghé thăm Fanpage',
+    actionLink: 'https://www.facebook.com/profile.php?id=61569089072523',
+    actionType: 'link',
+    actionPayload: 'https://www.facebook.com/profile.php?id=61569089072523',
+    createdAt: new Date().toISOString(),
+  },
+  {
     id: 'notif-practice-and-quiz-launch',
     title: '🚀 Ra mắt: Luyện Thi Trắc Nghiệm & Ghép Câu Tiếng Trung!',
     message: 'Hệ thống vừa ra mắt bộ công cụ luyện tập tương tác mới: Trắc nghiệm từ vựng 4 dạng (Hán tự, Pinyin, Dịch nghĩa, Nghe âm), Luyện ghép câu tiếng Trung chuẩn ngữ pháp HSK 1 - 6 (kèm nút Bật/Tắt Pinyin), tự nhập số lượng câu hỏi và Sổ tay câu sai (错题本) tự động lưu lại các câu làm sai để ôn tập củng cố kiến thức!',
