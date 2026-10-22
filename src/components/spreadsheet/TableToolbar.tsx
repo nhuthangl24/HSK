@@ -140,6 +140,19 @@ export function TableToolbar({
               {dueTodayCount}
             </span>
           </Link>
+
+          {/* Dedicated Grammar LMS Link - Placed right next to Thẻ ghi nhớ */}
+          <Link
+            href="/grammar"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
+            title="Khóa học & Cẩm nang Ngữ pháp HSK 1 - 9 (Chuẩn HSK 3.0 GF 0025-2021)"
+          >
+            <BookOpen size={14} />
+            <span>Ngữ pháp</span>
+            <span className="text-[10px] bg-blue-500/90 text-white px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+              HSK 1-9
+            </span>
+          </Link>
         </div>
       </div>
 

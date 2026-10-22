@@ -53,7 +53,9 @@ html[data-font-size="xlarge"] {
 }
 
 /* True Black / OLED Dark Mode - ABSOLUTELY ZERO BLUE/SLATE TINT */
-.dark {
+.dark,
+html.dark {
+  color-scheme: dark;
   --background: #000000;
   --foreground: #f4f4f5;
   --sheet-header-bg: #09090b;
@@ -73,6 +75,11 @@ html[data-font-size="xlarge"] {
   --color-slate-200: #e4e4e7;
   --color-slate-100: #f4f4f5;
   --color-slate-50: #fafafa;
+}
+
+:root,
+html.light {
+  color-scheme: light;
 }
 
 body {
@@ -102,36 +109,89 @@ body {
   font-family: "Lucida Sans Unicode", "Segoe UI", Arial, sans-serif;
 }
 
-/* Custom compact scrollbar for data-dense spreadsheet */
+/* Universal sleek scrollbar styling (prevents stark white native scrollbar in dark mode) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.dark *,
+html.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(16, 185, 129, 0.65);
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #000000;
+.dark ::-webkit-scrollbar-track,
+html.dark ::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 4px;
+.dark ::-webkit-scrollbar-thumb,
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+.dark ::-webkit-scrollbar-thumb:hover,
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.85);
+}
+
+/* Dedicated sleek-scroll utility class */
+.sleek-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.dark .sleek-scroll,
+html.dark .sleek-scroll {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.sleek-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.sleek-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sleek-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+.sleek-scroll::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+.dark .sleek-scroll::-webkit-scrollbar-thumb,
+html.dark .sleek-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.dark .sleek-scroll::-webkit-scrollbar-thumb:hover,
+html.dark .sleek-scroll::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
 }
 
 /* Clear cell grid lines like Excel */
