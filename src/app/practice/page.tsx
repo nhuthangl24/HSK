@@ -32,7 +32,13 @@ import {
 import { VocabItem } from '@/types/vocabulary';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { getStoredVocab, saveStoredVocab } from '@/lib/storage';
+import {
+  getStoredVocab,
+  saveStoredVocab,
+  applyUserProgress,
+  getBaseVocabFromIdb,
+  saveBaseVocabToIdb,
+} from '@/lib/storage';
 import { tts } from '@/lib/tts';
 import { quizSound } from '@/lib/quiz-sound';
 import {
@@ -202,23 +208,33 @@ export default function PracticePage() {
       }
     } catch {}
 
-    // Load vocab list
+    // Load vocab list with persistent progress overlay
     const cached = getStoredVocab(user?.id);
     if (cached && cached.length >= 100) {
       setVocabList(cached);
       setIsLoadingVocab(false);
     } else {
       setIsLoadingVocab(true);
-      fetch('/api/vocab')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.items)) {
-            setVocabList(data.items);
-            saveStoredVocab(data.items, user?.id);
-          }
-        })
-        .catch((err) => console.warn('Vocab fetch error:', err))
-        .finally(() => setIsLoadingVocab(false));
+      getBaseVocabFromIdb().then((idbBase) => {
+        if (idbBase && idbBase.length >= 100) {
+          const merged = applyUserProgress(idbBase, user?.id);
+          setVocabList(merged);
+          setIsLoadingVocab(false);
+        } else {
+          fetch('/api/vocab')
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && Array.isArray(data.items)) {
+                saveBaseVocabToIdb(data.items).catch(() => {});
+                const merged = applyUserProgress(data.items, user?.id);
+                setVocabList(merged);
+                saveStoredVocab(merged, user?.id);
+              }
+            })
+            .catch((err) => console.warn('Vocab fetch error:', err))
+            .finally(() => setIsLoadingVocab(false));
+        }
+      });
     }
   }, [user]);
 

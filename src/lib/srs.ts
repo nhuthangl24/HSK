@@ -4,7 +4,18 @@ export function getTodayDateString(): string {
   if (typeof window === 'undefined') {
     return '2026-10-16';
   }
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function formatDateToLocalDay(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function createInitialSrs(): SrsData {
@@ -103,7 +114,7 @@ export function calculateAnkiSrs(
 
   const nextDate = new Date();
   nextDate.setDate(nextDate.getDate() + intervalDays);
-  const dueDate = nextDate.toISOString().split('T')[0];
+  const dueDate = formatDateToLocalDay(nextDate);
   const nowIso = new Date().toISOString();
 
   const newHistory = [
@@ -113,7 +124,7 @@ export function calculateAnkiSrs(
       result: hanziStatus,
       userAnswer: rating,
     },
-    ...currentSrs.history.slice(0, 19),
+    ...(currentSrs?.history ? currentSrs.history.slice(0, 19) : []),
   ];
 
   const nextSrs: SrsData = {
@@ -122,9 +133,9 @@ export function calculateAnkiSrs(
     easeFactor: Number(easeFactor.toFixed(2)),
     dueDate,
     lastReviewedAt: nowIso,
-    totalReviews: currentSrs.totalReviews + 1,
-    correctCount: currentSrs.correctCount + (isCorrect ? 1 : 0),
-    wrongCount: currentSrs.wrongCount + (!isCorrect ? 1 : 0),
+    totalReviews: (currentSrs?.totalReviews || 0) + 1,
+    correctCount: (currentSrs?.correctCount || 0) + (isCorrect ? 1 : 0),
+    wrongCount: (currentSrs?.wrongCount || 0) + (!isCorrect ? 1 : 0),
     history: newHistory,
   };
 
@@ -153,7 +164,7 @@ export function calculateNextSrs(
     quality = 1;
   }
 
-  let { repetition, interval, easeFactor } = currentSrs;
+  let { repetition = 0, interval = 0, easeFactor = 2.5 } = currentSrs || {};
 
   if (quality >= 3) {
     if (repetition === 0) {
@@ -178,7 +189,7 @@ export function calculateNextSrs(
   // Calculate new dueDate
   const nextDate = new Date();
   nextDate.setDate(nextDate.getDate() + interval);
-  const dueDate = nextDate.toISOString().split('T')[0];
+  const dueDate = formatDateToLocalDay(nextDate);
   const nowIso = new Date().toISOString();
 
   const newHistory = [
@@ -188,7 +199,7 @@ export function calculateNextSrs(
       result,
       userAnswer,
     },
-    ...currentSrs.history.slice(0, 19), // Keep latest 20 records
+    ...(currentSrs?.history ? currentSrs.history.slice(0, 19) : []), // Keep latest 20 records
   ];
 
   return {
@@ -197,9 +208,9 @@ export function calculateNextSrs(
     easeFactor: Number(easeFactor.toFixed(2)),
     dueDate,
     lastReviewedAt: nowIso,
-    totalReviews: currentSrs.totalReviews + 1,
-    correctCount: currentSrs.correctCount + (result === 'correct' ? 1 : 0),
-    wrongCount: currentSrs.wrongCount + (result === 'wrong' ? 1 : 0),
+    totalReviews: (currentSrs?.totalReviews || 0) + 1,
+    correctCount: (currentSrs?.correctCount || 0) + (result === 'correct' ? 1 : 0),
+    wrongCount: (currentSrs?.wrongCount || 0) + (result === 'wrong' ? 1 : 0),
     history: newHistory,
   };
 }
@@ -208,7 +219,7 @@ export function isItemDueForReview(item: VocabItem): boolean {
   if (item.hanziStatus === 'unlearned') return false;
   if (item.hanziStatus === 'wrong') return true;
   const today = getTodayDateString();
-  return !!item.srs.dueDate && item.srs.dueDate <= today;
+  return !!item.srs?.dueDate && item.srs.dueDate <= today;
 }
 
 export function calculateDeckStats(items: VocabItem[]): DeckStatistics {
@@ -236,12 +247,15 @@ export function calculateDeckStats(items: VocabItem[]): DeckStatistics {
   const today = getTodayDateString();
 
   for (const item of items) {
-    totalReviews += item.srs.totalReviews;
-    totalCorrect += item.srs.correctCount;
+    const totalRev = item.srs?.totalReviews || 0;
+    const totalCorr = item.srs?.correctCount || 0;
+    totalReviews += totalRev;
+    totalCorrect += totalCorr;
 
+    const dueDate = item.srs?.dueDate;
     const isDue =
       item.hanziStatus !== 'unlearned' &&
-      (item.hanziStatus === 'wrong' || (!!item.srs.dueDate && item.srs.dueDate <= today));
+      (item.hanziStatus === 'wrong' || (!!dueDate && dueDate <= today));
     if (isDue) {
       dueTodayCount++;
     }
@@ -253,7 +267,7 @@ export function calculateDeckStats(items: VocabItem[]): DeckStatistics {
     } else if (item.hanziStatus === 'uncertain') {
       learning++;
     } else if (item.hanziStatus === 'correct') {
-      if (item.srs.repetition >= 2) {
+      if ((item.srs?.repetition || 0) >= 2) {
         mastered++;
       } else {
         learning++;

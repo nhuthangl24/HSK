@@ -19,6 +19,8 @@ import {
   saveStoredVocab,
   getUserProgressMap,
   saveSingleUserProgress,
+  getBaseVocabFromIdb,
+  saveBaseVocabToIdb,
   DEFAULT_COLUMNS,
 } from '@/lib/storage';
 import { calculateDeckStats, isItemDueForReview } from '@/lib/srs';
@@ -219,7 +221,7 @@ function MainApp() {
   // Ultra-fast vocabulary loader: Instant display from cache + background Firestore sync (< 100ms)
   const loadVocabData = useCallback(async (uid?: string) => {
     // Strictly isolate: base system words in clean initial state (NO foreign user inputs/results)
-    let currentCleanSystemWords = itemsRef.current
+    let currentCleanSystemWords: VocabItem[] = itemsRef.current
       .filter((w) => w.isSystem !== false)
       .map((w) => ({
         ...w,
@@ -231,7 +233,17 @@ function MainApp() {
         notes: '',
       }));
 
-    // Step 1: If system words in memory are fewer than 11,000 or missing examples, fetch fresh official system vocab
+    // Step 1: Check fast IndexedDB cache before network
+    if (currentCleanSystemWords.length < 11000 || !currentCleanSystemWords[10]?.example) {
+      try {
+        const idbBase = await getBaseVocabFromIdb();
+        if (idbBase && idbBase.length >= 11000 && idbBase[10]?.example) {
+          currentCleanSystemWords = idbBase;
+        }
+      } catch {}
+    }
+
+    // Step 2: If system words in memory/IDB are still fewer than 11,000, fetch fresh official system vocab
     const needsFreshVocab = currentCleanSystemWords.length < 11000 || !currentCleanSystemWords[10]?.example;
     if (needsFreshVocab) {
       setIsLoadingVocab(true);
@@ -240,6 +252,7 @@ function MainApp() {
         if (localRes.ok) {
           const localData = await localRes.json();
           if (localData.items && localData.items.length >= 11000) {
+            saveBaseVocabToIdb(localData.items).catch(() => {});
             currentCleanSystemWords = localData.items
               .filter((w: VocabItem) => w.isSystem !== false)
               .map((w: VocabItem) => ({

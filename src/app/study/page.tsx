@@ -41,7 +41,14 @@ import { VocabItem, DeckStatistics, ReviewResult } from '@/types/vocabulary';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/context/ToastContext';
-import { getStoredVocab, saveStoredVocab } from '@/lib/storage';
+import {
+  getStoredVocab,
+  saveStoredVocab,
+  applyUserProgress,
+  getBaseVocabFromIdb,
+  saveBaseVocabToIdb,
+} from '@/lib/storage';
+import { getClientAuthHeaders } from '@/lib/client-auth';
 import { tts, AvailableVoice } from '@/lib/tts';
 import { getHanziFontById, TOP_10_HANZI_FONTS } from '@/lib/hanzi-fonts';
 import {
@@ -51,9 +58,10 @@ import {
   calculateDeckStats,
   AnkiRating,
   getTodayDateString,
+  createInitialSrs,
 } from '@/lib/srs';
 import { StrokeOrderModal } from '@/components/modals/StrokeOrderModal';
-import { batchSaveUserProgressToFirestore } from '@/lib/firebase-db';
+import { batchSaveUserProgressToFirestore, loadUserProgressFromFirestore } from '@/lib/firebase-db';
 import { getFirebaseServices } from '@/lib/firebase';
 import { AuthModal } from '@/components/modals/AuthModal';
 import { AuthCard } from '@/components/auth/AuthCard';
@@ -145,32 +153,95 @@ export default function StudyPage() {
     let isMounted = true;
     setIsLoadingVocab(true);
 
-    const localItems = getStoredVocab(user?.id);
-    if (localItems && localItems.length >= 1000) {
-      if (isMounted) {
-        setItems(localItems);
-        setIsLoadingVocab(false);
-      }
-      return;
-    }
-
-    fetch('/api/vocab')
-      .then((res) => res.json())
-      .then((data) => {
-        if (isMounted && data.items && Array.isArray(data.items)) {
-          setItems(data.items);
-          saveStoredVocab(data.items, user?.id);
+    const initVocab = async () => {
+      // 1. Try sync memory / stored cache first
+      const localItems = getStoredVocab(user?.id);
+      if (localItems && localItems.length >= 1000) {
+        if (isMounted) {
+          setItems(localItems);
+          setIsLoadingVocab(false);
         }
-      })
-      .catch((err) => {
-        console.error('Failed to load vocab:', err);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingVocab(false);
-      });
+      } else {
+        // 2. Try IndexedDB fast load
+        const idbBase = await getBaseVocabFromIdb();
+        if (idbBase && idbBase.length >= 1000) {
+          const merged = applyUserProgress(idbBase, user?.id);
+          if (isMounted) {
+            setItems(merged);
+            setIsLoadingVocab(false);
+          }
+        } else {
+          // 3. Fallback: fetch from unified API gateway
+          try {
+            const authHeaders = getClientAuthHeaders(user);
+            const res = await fetch('/api/vocab', { headers: authHeaders });
+            const data = await res.json();
+            if (isMounted && data.items && Array.isArray(data.items)) {
+              saveBaseVocabToIdb(data.items).catch(() => {});
+              const merged = applyUserProgress(data.items, user?.id);
+              setItems(merged);
+              saveStoredVocab(merged, user?.id);
+            }
+          } catch (err) {
+            console.error('Failed to load vocab:', err);
+          } finally {
+            if (isMounted) setIsLoadingVocab(false);
+          }
+        }
+      }
+
+      // 4. Background sync user progress from Firestore if logged in
+      if (user?.id && getFirebaseServices().isConfigured) {
+        try {
+          const cloudMap = await loadUserProgressFromFirestore(user.id);
+          if (isMounted && Object.keys(cloudMap).length > 0) {
+            setItems((prev) => {
+              if (prev.length === 0) return prev;
+              const updated = prev.map((word) => {
+                const p = cloudMap[word.id];
+                if (p) {
+                  return {
+                    ...word,
+                    hanziPracticeInput: (p.hanziPracticeInput as string) ?? word.hanziPracticeInput,
+                    hanziStatus: (p.hanziStatus as VocabItem['hanziStatus']) ?? word.hanziStatus,
+                    translationPracticeInput: (p.translationPracticeInput as string) ?? word.translationPracticeInput,
+                    translationStatus: (p.translationStatus as VocabItem['translationStatus']) ?? word.translationStatus,
+                    favorite: typeof p.favorite === 'boolean' ? p.favorite : word.favorite,
+                    notes: (p.notes as string) ?? word.notes,
+                    srs: (p.srs as VocabItem['srs']) ?? word.srs,
+                    updatedAt: (p.updatedAt as string) || word.updatedAt,
+                  };
+                }
+                return word;
+              });
+              saveStoredVocab(updated, user.id);
+              return updated;
+            });
+          }
+        } catch (syncErr) {
+          console.warn('Study background sync notice:', syncErr);
+        }
+      }
+    };
+
+    initVocab();
+
+    // 5. Cross-component reactive sync
+    const handleActivity = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (!customEvent.detail || !customEvent.detail.userId || customEvent.detail.userId === (user?.id || 'guest')) {
+        setItems((prev) => {
+          if (prev.length === 0) return prev;
+          return applyUserProgress(prev, user?.id);
+        });
+      }
+    };
+
+    window.addEventListener('hsk_user_activity', handleActivity);
 
     return () => {
       isMounted = false;
+      window.removeEventListener('hsk_user_activity', handleActivity);
     };
   }, [user?.id]);
 
@@ -257,17 +328,17 @@ export default function StudyPage() {
       for (const item of deckWords) {
         const isDue =
           item.hanziStatus !== 'unlearned' &&
-          (item.hanziStatus === 'wrong' || (!!item.srs.dueDate && item.srs.dueDate <= today));
+          (item.hanziStatus === 'wrong' || (!!item.srs?.dueDate && item.srs.dueDate <= today));
 
         if (isDue) {
           dueCount++;
         }
 
-        if (item.hanziStatus === 'unlearned' || item.srs.totalReviews === 0) {
+        if (item.hanziStatus === 'unlearned' || (item.srs?.totalReviews || 0) === 0) {
           newCount++;
-        } else if (item.hanziStatus === 'uncertain' || (item.hanziStatus === 'correct' && item.srs.repetition < 2)) {
+        } else if (item.hanziStatus === 'uncertain' || (item.hanziStatus === 'correct' && (item.srs?.repetition || 0) < 2)) {
           learnCount++;
-        } else if (item.hanziStatus === 'correct' && item.srs.repetition >= 2) {
+        } else if (item.hanziStatus === 'correct' && (item.srs?.repetition || 0) >= 2) {
           masteredCount++;
         }
       }
@@ -391,14 +462,14 @@ export default function StudyPage() {
         }
       }
     } else if (filter === 'new') {
-      filteredQueue = candidateWords.filter((i) => i.hanziStatus === 'unlearned' || i.srs.totalReviews === 0);
+      filteredQueue = candidateWords.filter((i) => i.hanziStatus === 'unlearned' || (i.srs?.totalReviews || 0) === 0);
       if (filteredQueue.length === 0) {
         toast.info('Bạn đã học hết từ mới trong bộ này! Đang chuyển sang chế độ ôn tập.');
         filteredQueue = candidateWords;
       }
     } else if (filter === 'wrong') {
       filteredQueue = candidateWords.filter(
-        (i) => i.hanziStatus === 'wrong' || i.hanziStatus === 'uncertain' || i.srs.wrongCount > 0
+        (i) => i.hanziStatus === 'wrong' || i.hanziStatus === 'uncertain' || (i.srs?.wrongCount || 0) > 0
       );
       if (filteredQueue.length === 0) {
         toast.info('Không có từ nào bị đánh dấu sai! Đang mở ôn tập tổng thể.');
@@ -447,7 +518,7 @@ export default function StudyPage() {
 
   const intervalPreview = useMemo(() => {
     if (!currentCard) return { again: '< 10m', hard: '1 ngày', good: '3 ngày', easy: '7 ngày' };
-    return getAnkiIntervalPreview(currentCard.srs);
+    return getAnkiIntervalPreview(currentCard.srs || createInitialSrs());
   }, [currentCard]);
 
   const handleFlipCard = useCallback(() => {

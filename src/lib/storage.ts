@@ -37,6 +37,116 @@ export type UserProgressMap = Record<string, UserProgressData>;
 const STORAGE_KEY_PROGRESS_PREFIX = 'hsk_progress_map_v2_';
 const STORAGE_KEY_CUSTOM_WORDS_PREFIX = 'hsk_custom_words_v2_';
 
+const IDB_NAME = 'hsk_cache_db';
+const IDB_VERSION = 1;
+const IDB_STORE_NAME = 'vocab_cache';
+const IDB_BASE_KEY = 'base_system_vocab_v1';
+
+// In-memory module cache for high-speed cross-component navigation
+let inMemoryBaseVocab: VocabItem[] | null = null;
+
+export function getInMemoryBaseVocab(): VocabItem[] | null {
+  return inMemoryBaseVocab;
+}
+
+export function setInMemoryBaseVocab(items: VocabItem[]): void {
+  if (!items || items.length < 1000) return;
+  inMemoryBaseVocab = items
+    .filter((w) => w.isSystem !== false)
+    .map((w) => ({
+      ...w,
+      hanziPracticeInput: '',
+      hanziStatus: 'unlearned' as const,
+      translationPracticeInput: '',
+      translationStatus: 'unanswered' as const,
+      favorite: false,
+      notes: '',
+    }));
+}
+
+export async function getBaseVocabFromIdb(): Promise<VocabItem[] | null> {
+  if (typeof window === 'undefined' || !window.indexedDB) return null;
+  if (inMemoryBaseVocab && inMemoryBaseVocab.length >= 1000) return inMemoryBaseVocab;
+
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+          db.createObjectStore(IDB_STORE_NAME);
+        }
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        try {
+          const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+          const store = tx.objectStore(IDB_STORE_NAME);
+          const getReq = store.get(IDB_BASE_KEY);
+          getReq.onsuccess = () => {
+            const result = getReq.result;
+            if (Array.isArray(result) && result.length >= 1000) {
+              inMemoryBaseVocab = result;
+              resolve(result);
+            } else {
+              resolve(null);
+            }
+          };
+          getReq.onerror = () => resolve(null);
+        } catch {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+export async function saveBaseVocabToIdb(items: VocabItem[]): Promise<void> {
+  if (typeof window === 'undefined' || !window.indexedDB || !items || items.length < 1000) return;
+  const cleanSystem = items
+    .filter((w) => w.isSystem !== false)
+    .map((w) => ({
+      ...w,
+      hanziPracticeInput: '',
+      hanziStatus: 'unlearned' as const,
+      translationPracticeInput: '',
+      translationStatus: 'unanswered' as const,
+      favorite: false,
+      notes: '',
+    }));
+  inMemoryBaseVocab = cleanSystem;
+
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+          db.createObjectStore(IDB_STORE_NAME);
+        }
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        try {
+          const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+          const store = tx.objectStore(IDB_STORE_NAME);
+          store.put(cleanSystem, IDB_BASE_KEY);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        } catch {
+          resolve();
+        }
+      };
+      req.onerror = () => resolve();
+    } catch {
+      resolve();
+    }
+  });
+}
+
 export function recoverLegacyProgress(userId?: string): UserProgressMap {
   if (typeof window === 'undefined') return {};
   const progressMap: UserProgressMap = {};
@@ -95,13 +205,34 @@ export function recoverLegacyProgress(userId?: string): UserProgressMap {
 
 export function getUserProgressMap(userId?: string): UserProgressMap {
   if (typeof window === 'undefined') return {};
-  const key = `${STORAGE_KEY_PROGRESS_PREFIX}${userId || 'guest'}`;
+  const effectiveId = userId || 'guest';
+  const key = `${STORAGE_KEY_PROGRESS_PREFIX}${effectiveId}`;
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return parsed;
     }
+
+    // Auto-migrate guest progress to user account if user has empty map
+    if (userId && userId !== 'guest') {
+      const guestKey = `${STORAGE_KEY_PROGRESS_PREFIX}guest`;
+      const guestRaw = localStorage.getItem(guestKey);
+      if (guestRaw) {
+        try {
+          const guestParsed = JSON.parse(guestRaw);
+          if (guestParsed && typeof guestParsed === 'object' && Object.keys(guestParsed).length > 0) {
+            localStorage.setItem(key, guestRaw);
+            const guestStreak = localStorage.getItem('hsk_streak_v2_guest');
+            if (guestStreak && !localStorage.getItem(`hsk_streak_v2_${userId}`)) {
+              localStorage.setItem(`hsk_streak_v2_${userId}`, guestStreak);
+            }
+            return guestParsed;
+          }
+        } catch {}
+      }
+    }
+
     // Attempt auto-recovery from legacy cache keys if empty
     const recovered = recoverLegacyProgress(userId);
     if (Object.keys(recovered).length > 0) {
@@ -122,7 +253,7 @@ export function saveUserProgressMap(progressMap: UserProgressMap, userId?: strin
   try {
     localStorage.setItem(key, JSON.stringify(progressMap));
     try {
-      window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId } }));
+      window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId: userId || 'guest' } }));
     } catch {}
   } catch (err) {
     console.error('Failed to save user progress map:', err);
@@ -146,7 +277,7 @@ export function saveSingleUserProgress(
 
     if (typeof window !== 'undefined') {
       try {
-        window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId } }));
+        window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId: userId || 'guest' } }));
       } catch {}
     }
   } catch (err) {
@@ -154,47 +285,69 @@ export function saveSingleUserProgress(
   }
 }
 
+export function applyUserProgress(items: VocabItem[], userId?: string): VocabItem[] {
+  if (!items || items.length === 0) return [];
+  const progressMap = getUserProgressMap(userId);
+  const customWordsRaw = typeof window !== 'undefined'
+    ? localStorage.getItem(`${STORAGE_KEY_CUSTOM_WORDS_PREFIX}${userId || 'guest'}`)
+    : null;
+  let customWords: VocabItem[] = [];
+  if (customWordsRaw) {
+    try {
+      customWords = JSON.parse(customWordsRaw);
+    } catch {}
+  }
+
+  const mergedSystem = items
+    .filter((item: VocabItem) => item.isSystem !== false)
+    .map((item: VocabItem) => {
+      const p = progressMap[item.id];
+      if (p) {
+        return {
+          ...item,
+          hanziPracticeInput: p.hanziPracticeInput ?? '',
+          hanziStatus: p.hanziStatus ?? 'unlearned',
+          translationPracticeInput: p.translationPracticeInput ?? '',
+          translationStatus: p.translationStatus ?? 'unanswered',
+          favorite: typeof p.favorite === 'boolean' ? p.favorite : false,
+          notes: p.notes ?? '',
+          srs: p.srs ?? item.srs,
+          updatedAt: p.updatedAt || item.updatedAt,
+        };
+      }
+      return {
+        ...item,
+        hanziPracticeInput: '',
+        hanziStatus: 'unlearned' as const,
+        translationPracticeInput: '',
+        translationStatus: 'unanswered' as const,
+        favorite: false,
+        notes: '',
+      };
+    });
+
+  return [...customWords, ...mergedSystem];
+}
+
 export function getStoredVocab(userId?: string): VocabItem[] {
   if (typeof window === 'undefined') return [];
   try {
+    // 1. If in-memory base vocab is ready, return merged result instantly
+    if (inMemoryBaseVocab && inMemoryBaseVocab.length >= 1000) {
+      return applyUserProgress(inMemoryBaseVocab, userId);
+    }
+
+    // 2. Check localStorage cache if available
     const raw = localStorage.getItem(STORAGE_KEY_VOCAB);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length < 11000) return [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length >= 1000) {
+        inMemoryBaseVocab = parsed;
+        return applyUserProgress(parsed, userId);
+      }
+    }
 
-    const progressMap = getUserProgressMap(userId);
-    const customWordsRaw = localStorage.getItem(`${STORAGE_KEY_CUSTOM_WORDS_PREFIX}${userId || 'guest'}`);
-    const customWords: VocabItem[] = customWordsRaw ? JSON.parse(customWordsRaw) : [];
-
-    const mergedSystem = parsed
-      .filter((item: VocabItem) => item.isSystem !== false)
-      .map((item: VocabItem) => {
-        const p = progressMap[item.id];
-        if (p) {
-          return {
-            ...item,
-            hanziPracticeInput: p.hanziPracticeInput ?? '',
-            hanziStatus: p.hanziStatus ?? 'unlearned',
-            translationPracticeInput: p.translationPracticeInput ?? '',
-            translationStatus: p.translationStatus ?? 'unanswered',
-            favorite: typeof p.favorite === 'boolean' ? p.favorite : false,
-            notes: p.notes ?? '',
-            srs: p.srs ?? item.srs,
-            updatedAt: p.updatedAt || item.updatedAt,
-          };
-        }
-        return {
-          ...item,
-          hanziPracticeInput: '',
-          hanziStatus: 'unlearned' as const,
-          translationPracticeInput: '',
-          translationStatus: 'unanswered' as const,
-          favorite: false,
-          notes: '',
-        };
-      });
-
-    return [...customWords, ...mergedSystem];
+    return [];
   } catch (e) {
     console.error('Failed to parse stored vocab:', e);
     return [];
@@ -239,25 +392,12 @@ export function saveStoredVocab(items: VocabItem[], userId?: string): void {
       } catch {}
     }
 
-    // 3. Keep base clean system vocab in general cache
-    if (!localStorage.getItem(STORAGE_KEY_VOCAB)) {
-      const cleanSystemWordsOnly = items
-        .filter((item: VocabItem) => item.isSystem !== false)
-        .map((item: VocabItem) => ({
-          ...item,
-          hanziPracticeInput: '',
-          hanziStatus: 'unlearned' as const,
-          translationPracticeInput: '',
-          translationStatus: 'unanswered' as const,
-          favorite: false,
-          notes: '',
-        }));
-      if (cleanSystemWordsOnly.length > 0) {
-        localStorage.setItem(STORAGE_KEY_VOCAB, JSON.stringify(cleanSystemWordsOnly));
-      }
+    // 3. Keep base clean system vocab in memory and IndexedDB (never crash LocalStorage 5MB limit)
+    if (!inMemoryBaseVocab || inMemoryBaseVocab.length < 1000) {
+      saveBaseVocabToIdb(items).catch(() => {});
     }
   } catch (e) {
-    console.error('Failed to save vocab to localStorage:', e);
+    console.error('Failed to save vocab:', e);
   }
 }
 
