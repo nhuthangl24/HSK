@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Flame,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { AppNotification, NotificationType } from '@/types/notification';
 import { getClientAuthHeaders } from '@/lib/client-auth';
@@ -55,12 +56,13 @@ export function NotificationBell({
     }
   });
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'system' | 'study'>('all');
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch server notifications
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch('/api/notifications');
+      const res = await fetch('/api/notifications', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.notifications)) {
@@ -108,10 +110,12 @@ export function NotificationBell({
     });
   };
 
-  const handleClearAll = (e?: React.MouseEvent) => {
+  const handleOpenClearConfirm = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm('Bạn có chắc chắn muốn dọn sạch tất cả thông báo trong danh sách của bạn?')) return;
+    setShowClearConfirmModal(true);
+  };
 
+  const handleConfirmClearAll = () => {
     const allIds = allCombinedNotifications.map((n) => n.id);
     setDismissedIds((prev) => {
       const next = new Set(prev);
@@ -121,6 +125,7 @@ export function NotificationBell({
       }
       return next;
     });
+    setShowClearConfirmModal(false);
   };
 
   // Generate dynamic study & streak notifications (excluding dismissed ones)
@@ -303,7 +308,13 @@ export function NotificationBell({
       {/* Bell Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsOpen((prev) => {
+            const next = !prev;
+            if (next) fetchNotifications();
+            return next;
+          });
+        }}
         className={`p-2 rounded-xl border transition-all cursor-pointer relative shrink-0 ${
           isOpen
             ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white'
@@ -350,7 +361,7 @@ export function NotificationBell({
               {allCombinedNotifications.length > 0 && (
                 <button
                   type="button"
-                  onClick={handleClearAll}
+                  onClick={handleOpenClearConfirm}
                   className="text-[11px] font-semibold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
                   title="Dọn sạch toàn bộ thông báo"
                 >
@@ -391,6 +402,22 @@ export function NotificationBell({
                 <Bell size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Không có thông báo nào.</p>
                 <p className="text-[10.5px] text-slate-400 mt-0.5">Bạn đã xem hết các thông báo mới nhất!</p>
+                {dismissedIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDismissedIds(new Set());
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('hsk_dismissed_notifications');
+                      }
+                      fetchNotifications();
+                    }}
+                    className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
+                  >
+                    <RotateCcw size={12} />
+                    <span>Khôi phục thông báo đã dọn ({dismissedIds.size})</span>
+                  </button>
+                )}
               </div>
             ) : (
               displayedNotifications.map((notif) => {
@@ -462,6 +489,52 @@ export function NotificationBell({
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Custom In-App Confirmation Modal (No native alert/confirm) */}
+      {showClearConfirmModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowClearConfirmModal(false);
+          }}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 size={22} />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Dọn sạch tất cả thông báo?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Toàn bộ thông báo trong danh sách sẽ được dọn sạch. Bạn vẫn có thể khôi phục lại bất kỳ lúc nào nếu cần.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearConfirmModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearAll}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition-all cursor-pointer"
+              >
+                Dọn sạch
+              </button>
+            </div>
           </div>
         </div>
       )}

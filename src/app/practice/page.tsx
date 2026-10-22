@@ -145,6 +145,15 @@ export default function PracticePage() {
   // Mistakes Storage
   const [mistakes, setMistakes] = useState<PracticeMistake[]>([]);
 
+  // In-App Confirmation Modal (replacing native alert/confirm)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   // --------------------------------------------------------------------
   // Mode B: Vocab Quiz State
   // --------------------------------------------------------------------
@@ -300,9 +309,16 @@ export default function PracticePage() {
   );
 
   const clearAllMistakes = useCallback(() => {
-    if (confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách câu sai đã lưu?')) {
-      saveMistakes([]);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xóa sổ tay câu sai?',
+      message: 'Bạn có chắc chắn muốn xóa toàn bộ danh sách câu sai đã lưu trong sổ tay ôn tập?',
+      confirmLabel: 'Xóa sạch',
+      onConfirm: () => {
+        saveMistakes([]);
+        setConfirmModal(null);
+      },
+    });
   }, [saveMistakes]);
 
   // --------------------------------------------------------------------
@@ -1197,9 +1213,16 @@ export default function PracticePage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm('Bạn có muốn dừng lượt luyện tập hiện tại?')) {
-                        setQuizState('setup');
-                      }
+                      setConfirmModal({
+                        isOpen: true,
+                        title: 'Dừng luyện tập?',
+                        message: 'Bạn có muốn dừng lượt luyện tập trắc nghiệm hiện tại không? Tiến độ câu hỏi này sẽ không được lưu.',
+                        confirmLabel: 'Dừng bài',
+                        onConfirm: () => {
+                          setQuizState('setup');
+                          setConfirmModal(null);
+                        },
+                      });
                     }}
                     className="text-xs text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
                   >
@@ -1654,9 +1677,16 @@ export default function PracticePage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm('Bạn có muốn dừng lượt ghép câu hiện tại?')) {
-                        setOrderState('setup');
-                      }
+                      setConfirmModal({
+                        isOpen: true,
+                        title: 'Dừng ghép câu?',
+                        message: 'Bạn có muốn dừng lượt ghép câu hiện tại không? Tiến độ bài ghép câu sẽ không được lưu.',
+                        confirmLabel: 'Dừng bài',
+                        onConfirm: () => {
+                          setOrderState('setup');
+                          setConfirmModal(null);
+                        },
+                      });
                     }}
                     className="text-xs text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
                   >
@@ -1962,6 +1992,49 @@ export default function PracticePage() {
         onClose={() => setIsAuthModalOpen(false)}
         initialMode={authModalMode}
       />
+
+      {/* Custom In-App Confirmation Modal (No native alert/confirm) */}
+      {confirmModal && confirmModal.isOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setConfirmModal(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 size={22} />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {confirmModal.title}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={confirmModal.onConfirm}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition-all cursor-pointer"
+              >
+                {confirmModal.confirmLabel || 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

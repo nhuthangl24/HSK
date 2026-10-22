@@ -2,7 +2,7 @@
   {
     "id": "notif-grammar-hsk-launch",
     "title": "🎉 Ra mắt: Khóa Học & Cẩm Nang Ngữ Pháp HSK 1 - 9 Chuẩn HSK 3.0!",
-    "message": "Hệ thống vừa chính thức phát hành Trung tâm Ngữ pháp HSK Master với 570 bài học toàn diện từ HSK 1 đến HSK 9 (100% dữ liệu chuẩn hóa, không fake data). Đầy đủ tên bài học tiếng Việt dễ hiểu kèm mẫu chữ Hán, câu ví dụ thực tế có phát âm Audio chuẩn bản xứ, phân tích bẫy thi và bài tập trắc nghiệm củng cố từng bài!",
+    "message": "Hệ thống vừa chính thức phát hành Trung tâm Ngữ pháp HSK Master với 570 bài học toàn diện từ HSK 1 đến HSK 9 . Đầy đủ tên bài học tiếng Việt dễ hiểu kèm mẫu chữ Hán, câu ví dụ thực tế có phát âm Audio chuẩn bản xứ, phân tích bẫy thi và bài tập trắc nghiệm củng cố từng bài!",
     "type": "feature",
     "priority": "urgent",
     "isPinned": true,
@@ -51,16 +51,6 @@
     "createdAt": "2026-10-21T14:58:14.260Z"
   },
   {
-    "id": "notif-exam-hub-launch",
-    "title": "🎓 Kho Đề Thi HSK Tuyển Chọn chính thức ra mắt!",
-    "message": "Admin đã tuyển chọn và đăng tải các bộ đề thi thật HSK 1 - 6 kèm file nghe Audio MP3 trực tiếp và bảng đáp án chi tiết. Hãy vào làm thử ngay!",
-    "type": "exam",
-    "priority": "urgent",
-    "actionLabel": "Mở Kho Đề Thi",
-    "actionType": "open_exams",
-    "createdAt": "2026-10-19T14:58:14.260Z"
-  },
-  {
     "id": "notif-worksheet-pdf",
     "title": "📄 Tính năng: Xuất Phiếu Tập Viết Chữ Hán PDF Khổ A4",
     "message": "Bạn có thể xuất phiếu luyện viết chuẩn ô Mễ điền (米字格) và Điền tự (田字格) ra file PDF A4 cực nét để in ra giấy luyện chữ hàng ngày.",
@@ -69,6 +59,16 @@
     "actionLabel": "In Phiếu Viết",
     "actionType": "open_worksheet",
     "createdAt": "2026-10-20T15:58:14.260Z"
+  },
+  {
+    "id": "notif-exam-hub-launch",
+    "title": "🎓 Kho Đề Thi HSK Tuyển Chọn chính thức ra mắt!",
+    "message": "Admin đã tuyển chọn và đăng tải các bộ đề thi thật HSK 1 - 6 kèm file nghe Audio MP3 trực tiếp và bảng đáp án chi tiết. Hãy vào làm thử ngay!",
+    "type": "exam",
+    "priority": "urgent",
+    "actionLabel": "Mở Kho Đề Thi",
+    "actionType": "open_exams",
+    "createdAt": "2026-10-19T14:58:14.260Z"
   },
   {
     "id": "notif-welcome",
