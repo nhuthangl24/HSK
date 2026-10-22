@@ -1,5 +1,18 @@
 [
   {
+    "id": "notif-grammar-hsk-launch",
+    "title": "🎉 Ra mắt: Khóa Học & Cẩm Nang Ngữ Pháp HSK 1 - 9 Chuẩn HSK 3.0!",
+    "message": "Hệ thống vừa chính thức phát hành Trung tâm Ngữ pháp HSK Master với 570 bài học toàn diện từ HSK 1 đến HSK 9 (100% dữ liệu chuẩn hóa, không fake data). Đầy đủ tên bài học tiếng Việt dễ hiểu kèm mẫu chữ Hán, câu ví dụ thực tế có phát âm Audio chuẩn bản xứ, phân tích bẫy thi và bài tập trắc nghiệm củng cố từng bài!",
+    "type": "feature",
+    "priority": "urgent",
+    "isPinned": true,
+    "actionLabel": "Khám phá Ngữ pháp ngay",
+    "actionLink": "/grammar",
+    "actionType": "link",
+    "actionPayload": "/grammar",
+    "createdAt": "2026-10-22T03:59:33.115863+00:00"
+  },
+  {
     "id": "notif-thanks-fb-contributor",
     "title": "💐 Lời Tri Ân & Cảm Ơn Đóng Góp Tài Liệu Học HSK",
     "message": "Ban quản trị HSK Master xin gửi lời cảm ơn chân thành và sâu sắc tới Fanpage (Facebook: https://www.facebook.com/profile.php?id=61569089072523) vì đã tận tâm chia sẻ và cung cấp rất nhiều nguồn tài liệu quý báu, câu mẫu và đề thi chất lượng cao hỗ trợ cộng đồng người học tiếng Trung!",
