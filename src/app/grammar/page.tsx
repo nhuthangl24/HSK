@@ -64,6 +64,7 @@ import { tts } from '@/lib/tts';
 import { quizSound } from '@/lib/quiz-sound';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AuthModal } from '@/components/modals/AuthModal';
+import { useStreak, recordStudyActivity } from '@/lib/streak';
 
 // Storage keys
 const STORAGE_COMPLETED_KEY = 'hsk_lms_completed_lessons_v2';
@@ -75,6 +76,8 @@ type ContentTab = 'theory' | 'examples' | 'vocab' | 'quiz' | 'docs';
 
 export default function GrammarLmsPage() {
   const { user, logout } = useAuth();
+  const { currentStreak } = useStreak(user?.id);
+  const effectiveStreakDays = Math.max(user?.streakDays || 0, currentStreak);
   const { effectiveTheme, setTheme } = useTheme();
 
   // Active Lesson selection: Default to HSK 1 Bài 1 (Strictly HSK 1 only!)
@@ -241,11 +244,15 @@ export default function GrammarLmsPage() {
   const toggleCompleteLesson = () => {
     quizSound.playCorrect();
     setCompletedLessonIds((prev) => {
-      const next = prev.includes(currentLesson.id)
-        ? prev.filter((id) => id !== currentLesson.id)
-        : [...prev, currentLesson.id];
+      const isCompleting = !prev.includes(currentLesson.id);
+      const next = isCompleting
+        ? [...prev, currentLesson.id]
+        : prev.filter((id) => id !== currentLesson.id);
       try {
         localStorage.setItem(STORAGE_COMPLETED_KEY, JSON.stringify(next));
+        if (isCompleting) {
+          recordStudyActivity(user?.id);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -554,10 +561,10 @@ export default function GrammarLmsPage() {
                   className="flex items-center gap-2 p-1 pl-2 sm:px-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer transition-all text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                   title="Tài khoản cá nhân"
                 >
-                  {user.streakDays > 0 && (
+                  {effectiveStreakDays > 0 && (
                     <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-bold text-[10px] sm:text-[11px] shrink-0 whitespace-nowrap">
                       <Flame size={12} className="fill-amber-500 text-amber-500" />
-                      <span>{user.streakDays}d</span>
+                      <span>{effectiveStreakDays}d</span>
                     </div>
                   )}
                   <span className="hidden sm:inline font-bold max-w-[100px] truncate">
@@ -592,7 +599,7 @@ export default function GrammarLmsPage() {
                       <span>Chuỗi ngày học:</span>
                       <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
                         <Flame size={12} className="fill-amber-500 text-amber-500" />
-                        {user.streakDays || 1} ngày liên tiếp
+                        {effectiveStreakDays} ngày liên tiếp
                       </span>
                     </div>
 
@@ -651,13 +658,24 @@ export default function GrammarLmsPage() {
                 )}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setIsAuthModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-[#1b7a4b] text-white text-xs font-bold shadow-2xs hover:bg-[#15663d] cursor-pointer flex items-center gap-1.5 transition-all"
-              >
-                <span>Đăng nhập</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {effectiveStreakDays > 0 && (
+                  <div
+                    className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-xl border border-amber-200 dark:border-amber-800 font-bold text-xs shrink-0 whitespace-nowrap shadow-2xs"
+                    title={`Chuỗi học tập liên tục: ${effectiveStreakDays} ngày`}
+                  >
+                    <Flame size={12} className="fill-amber-500 text-amber-500" />
+                    <span>{effectiveStreakDays}d</span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-[#1b7a4b] text-white text-xs font-bold shadow-2xs hover:bg-[#15663d] cursor-pointer flex items-center gap-1.5 transition-all"
+                >
+                  <span>Đăng nhập</span>
+                </button>
+              </div>
             )}
           </div>
         </div>

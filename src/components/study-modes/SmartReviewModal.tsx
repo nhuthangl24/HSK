@@ -19,6 +19,7 @@ import { tts } from '@/lib/tts';
 import { getHanziFontById } from '@/lib/hanzi-fonts';
 import { useToast } from '@/context/ToastContext';
 import { useTheme } from '@/context/ThemeContext';
+import { recordStudyActivity } from '@/lib/streak';
 
 interface SmartReviewModalProps {
   isOpen: boolean;
@@ -230,6 +231,8 @@ export function SmartReviewModal({
       setSessionCorrectCount((prev) => prev + 1);
       setStreak((prev) => prev + 1);
     }
+
+    recordStudyActivity();
 
     if (currentIndex + 1 < reviewQueue.length) {
       setCurrentIndex((prev) => prev + 1);

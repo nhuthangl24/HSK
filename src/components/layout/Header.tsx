@@ -20,6 +20,7 @@ import { Deck, DeckStatistics } from '@/types/vocabulary';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { NotificationBell } from '@/components/layout/NotificationBell';
+import { useStreak } from '@/lib/streak';
 
 interface HeaderProps {
   currentDeck: Deck;
@@ -48,6 +49,8 @@ export function Header({
 }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
+  const { currentStreak } = useStreak(user?.id);
+  const effectiveStreak = Math.max(user?.streakDays || 0, currentStreak);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -127,7 +130,7 @@ export function Header({
           onStartSmartReview={onStartSmartReview}
           onOpenWorksheet={onOpenWorksheet}
           dueTodayCount={stats?.dueTodayCount ?? 0}
-          streakDays={user?.streakDays ?? 0}
+          streakDays={effectiveStreak}
         />
 
         {/* User Account / Auth Section */}
@@ -138,10 +141,10 @@ export function Header({
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all text-xs shrink-0 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
             >
-              {user.streakDays > 0 && (
+              {effectiveStreak > 0 && (
                 <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-bold text-[10px] sm:text-[11px] shrink-0 whitespace-nowrap">
                   <Flame size={12} className="fill-amber-500 text-amber-500" />
-                  <span>{user.streakDays}d</span>
+                  <span>{effectiveStreak}d</span>
                 </div>
               )}
               <span className="hidden md:inline font-semibold max-w-[100px] truncate whitespace-nowrap">
@@ -171,7 +174,7 @@ export function Header({
                 <div className="px-2 py-1 text-[11px] text-slate-600 dark:text-slate-300 flex items-center justify-between">
                   <span>Chuỗi ngày học:</span>
                   <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <Flame size={12} className="fill-amber-500" /> {user.streakDays} ngày liên tiếp
+                    <Flame size={12} className="fill-amber-500" /> {effectiveStreak} ngày liên tiếp
                   </span>
                 </div>
 
@@ -215,14 +218,25 @@ export function Header({
             )}
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={onOpenAuthModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-xs transition-colors"
-          >
-            <LogIn size={14} />
-            <span>Đăng nhập</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {effectiveStreak > 0 && (
+              <div
+                className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-xl border border-amber-200 dark:border-amber-800 font-bold text-[11px] shrink-0 whitespace-nowrap shadow-2xs"
+                title={`Chuỗi học tập liên tục: ${effectiveStreak} ngày`}
+              >
+                <Flame size={12} className="fill-amber-500 text-amber-500" />
+                <span>{effectiveStreak}d</span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+            >
+              <LogIn size={14} />
+              <span>Đăng nhập</span>
+            </button>
+          </div>
         )}
       </div>
     </header>

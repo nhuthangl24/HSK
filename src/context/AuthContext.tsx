@@ -19,6 +19,7 @@ import {
   updateUserInFirestore,
 } from '@/lib/firebase-db';
 import { User } from '@/types/auth';
+import { getStreak } from '@/lib/streak';
 
 interface AuthContextType {
   user: User | null;
@@ -158,23 +159,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               updateUserInFirestore(fbUser.uid, { role: 'admin' }).catch(() => {});
             }
 
-            // Update lastLoginAt
+            // Update lastLoginAt & sync real streak
             const now = new Date().toISOString();
-            const fullProfile: User = { ...profile, lastLoginAt: now };
+            const localStreak = getStreak(fbUser.uid);
+            const effectiveStreak = Math.max(profile.streakDays || 0, localStreak.currentStreak);
+            const fullProfile: User = { ...profile, streakDays: effectiveStreak, lastLoginAt: now };
             setCachedUser(fullProfile);
             setUser(fullProfile);
             setIsLoading(false);
 
             // Fire-and-forget background update to Firestore
-            updateUserInFirestore(fbUser.uid, { lastLoginAt: now }).catch(() => {});
+            updateUserInFirestore(fbUser.uid, { lastLoginAt: now, streakDays: effectiveStreak }).catch(() => {});
           } else {
             // First time login - auto create Firestore user document
+            const localStreak = getStreak(fbUser.uid);
             const newUser: User = {
               id: fbUser.uid,
               name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Học viên',
               email: fbUser.email || '',
               role: isAdminByEmail ? 'admin' : 'user',
-              streakDays: 1,
+              streakDays: Math.max(1, localStreak.currentStreak),
               totalMastered: 0,
               targetHsk: 3,
               createdAt: new Date().toISOString(),
@@ -190,12 +194,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('Error fetching/syncing user from Firestore:', err);
           // Fallback minimal user object so UI doesn't crash on permission errors
           const email = (fbUser.email || '').toLowerCase();
+          const localStreak = getStreak(fbUser.uid);
           const fallbackUser: User = {
             id: fbUser.uid,
             name: fbUser.displayName || email.split('@')[0] || 'Người dùng',
             email,
             role: ADMIN_EMAILS.includes(email) ? 'admin' : 'user',
-            streakDays: 1,
+            streakDays: Math.max(1, localStreak.currentStreak),
             totalMastered: 0,
             createdAt: new Date().toISOString(),
           };

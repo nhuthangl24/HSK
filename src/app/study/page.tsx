@@ -57,6 +57,7 @@ import { batchSaveUserProgressToFirestore } from '@/lib/firebase-db';
 import { getFirebaseServices } from '@/lib/firebase';
 import { AuthModal } from '@/components/modals/AuthModal';
 import { AuthCard } from '@/components/auth/AuthCard';
+import { useStreak, recordStudyActivity } from '@/lib/streak';
 
 // -------------------------------------------------------------
 // Type Definitions
@@ -74,6 +75,8 @@ interface SessionRatingRecord {
 export default function StudyPage() {
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { currentStreak } = useStreak(user?.id);
+  const effectiveStreakDays = Math.max(user?.streakDays || 0, currentStreak);
   const { effectiveTheme, setTheme, hanziFont, setHanziFont } = useTheme();
   const toast = useToast();
 
@@ -480,6 +483,8 @@ export default function StudyPage() {
         return nextItems;
       });
 
+      recordStudyActivity(user?.id);
+
       if (getFirebaseServices().isConfigured && user) {
         batchSaveUserProgressToFirestore(user.id, [
           {
@@ -878,7 +883,7 @@ export default function StudyPage() {
               </div>
               <div>
                 <div className="text-2xl sm:text-3xl font-extrabold text-amber-500 tracking-tight">
-                  {user?.streakDays ?? 0} ngày
+                  {effectiveStreakDays} ngày
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">Học 15 phút mỗi ngày với SM-2</p>
               </div>

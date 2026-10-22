@@ -45,6 +45,7 @@ import {
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AuthModal } from '@/components/modals/AuthModal';
 import { AuthCard } from '@/components/auth/AuthCard';
+import { recordStudyActivity } from '@/lib/streak';
 
 // ----------------------------------------------------------------------
 // Types
@@ -446,6 +447,7 @@ export default function PracticePage() {
     const isCorrect = optIndex === q.correctIndex;
     if (isCorrect) {
       quizSound.playCorrect();
+      recordStudyActivity();
       setQuizScore((prev) => prev + 1);
       setQuizStreak((prev) => {
         const next = prev + 1;
@@ -649,6 +651,7 @@ export default function PracticePage() {
 
     if (isCorrect) {
       quizSound.playCorrect();
+      recordStudyActivity();
       setOrderCheckStatus('correct');
       setOrderScore((prev) => prev + 1);
       setOrderStreak((prev) => prev + 1);

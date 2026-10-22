@@ -1,5 +1,6 @@
 import { User } from '@/types/auth';
 import { getCachedUser } from '@/context/AuthContext';
+import { getStreak } from '@/lib/streak';
 
 /**
  * Returns authentication headers containing client session metadata and Bearer token
@@ -25,8 +26,8 @@ export function getClientAuthHeaders(currentUser?: User | null): Record<string, 
         email: u?.email || 'nhuthangl24@gmail.com',
         name: u?.name || 'Lưu Như Thắng (Admin)',
         role: 'admin',
-        streakDays: u?.streakDays || 5,
-        totalMastered: u?.totalMastered || 12,
+        streakDays: typeof u?.streakDays === 'number' ? u.streakDays : getStreak().currentStreak,
+        totalMastered: typeof u?.totalMastered === 'number' ? u.totalMastered : 0,
         createdAt: u?.createdAt || new Date().toISOString(),
       };
     }

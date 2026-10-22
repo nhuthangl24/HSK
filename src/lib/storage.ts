@@ -121,6 +121,9 @@ export function saveUserProgressMap(progressMap: UserProgressMap, userId?: strin
   const key = `${STORAGE_KEY_PROGRESS_PREFIX}${userId || 'guest'}`;
   try {
     localStorage.setItem(key, JSON.stringify(progressMap));
+    try {
+      window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId } }));
+    } catch {}
   } catch (err) {
     console.error('Failed to save user progress map:', err);
   }
@@ -140,6 +143,12 @@ export function saveSingleUserProgress(
       updatedAt: new Date().toISOString(),
     };
     saveUserProgressMap(currentMap, userId);
+
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('hsk_user_activity', { detail: { userId } }));
+      } catch {}
+    }
   } catch (err) {
     console.error('Failed to save single progress:', err);
   }
