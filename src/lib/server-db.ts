@@ -2792,6 +2792,19 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
 
 const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   {
+    id: 'notif-system-incident-recovered',
+    title: '⚡ Khắc phục sự cố gián đoạn truy cập hệ thống',
+    message: 'Vừa qua, hệ thống HSK Master gặp sự cố gián đoạn kết nối máy chủ DNS khiến việc truy cập vào tên miền classnia.id.vn tạm thời bị gián đoạn. Đội ngũ kỹ thuật đã xử lý và khôi phục hoạt động ổn định thành công. Toàn bộ dữ liệu học tập, tiến độ ghi nhớ SRS và tài khoản học viên đều được bảo toàn an toàn 100%. Ban quản trị chân thành cáo lỗi cùng bạn vì sự bất tiện này!',
+    type: 'maintenance',
+    priority: 'urgent',
+    isPinned: true,
+    actionLabel: 'Tiếp tục học tập',
+    actionLink: '/',
+    actionType: 'link',
+    actionPayload: '/',
+    createdAt: new Date().toISOString(),
+  },
+  {
     id: 'notif-grammar-hsk-launch',
     title: '🎉 Ra mắt: Khóa Học & Cẩm Nang Ngữ Pháp HSK 1 - 9 Chuẩn HSK 3.0!',
     message: 'Hệ thống vừa chính thức phát hành Trung tâm Ngữ pháp HSK Master với 570 bài học ngữ pháp toàn diện từ HSK 1 đến HSK 9 (100% dữ liệu chuẩn hóa, không fake data). Đầy đủ tên bài học tiếng Việt dễ hiểu kèm mẫu chữ Hán, câu ví dụ thực tế có phát âm Audio chuẩn bản xứ, phân tích bẫy thi và bài tập trắc nghiệm củng cố từng bài!',

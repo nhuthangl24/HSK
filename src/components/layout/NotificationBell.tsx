@@ -16,6 +16,7 @@ import {
   Flame,
   Trash2,
   RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 import { AppNotification, NotificationType } from '@/types/notification';
 import { getClientAuthHeaders } from '@/lib/client-auth';
@@ -291,6 +292,12 @@ export function NotificationBell({
         return (
           <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <Sparkles size={16} />
+          </div>
+        );
+      case 'maintenance':
+        return (
+          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <AlertTriangle size={16} />
           </div>
         );
       case 'system':
