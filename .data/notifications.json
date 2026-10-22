@@ -1,5 +1,18 @@
 [
   {
+    "id": "notif-zalo-community-group",
+    "title": "💬 Tham gia Nhóm Zalo Học Viên HSK Master",
+    "message": "Cộng đồng học tiếng Trung HSK Master đã chính thức có nhóm Zalo giao lưu, kết nối học tập, chia sẻ tài liệu HSK và giải đáp ngữ pháp mỗi ngày. Mời bạn tham gia cùng các học viên khác ngay nhé!",
+    "type": "system",
+    "priority": "high",
+    "isPinned": true,
+    "actionLabel": "Vào nhóm Zalo ngay",
+    "actionLink": "https://zalo.me/g/sgr73nkz8q6pnhjwfehz",
+    "actionType": "link",
+    "actionPayload": "https://zalo.me/g/sgr73nkz8q6pnhjwfehz",
+    "createdAt": "2026-10-22T05:01:00.000Z"
+  },
+  {
     "id": "notif-system-incident-recovered",
     "title": "⚡ Khắc phục sự cố gián đoạn truy cập hệ thống",
     "message": "Vừa qua, hệ thống HSK Master gặp sự cố gián đoạn kết nối máy chủ DNS khiến việc truy cập vào tên miền classnia.id.vn tạm thời bị gián đoạn. Đội ngũ kỹ thuật đã xử lý và khôi phục hoạt động ổn định thành công. Toàn bộ dữ liệu học tập, tiến độ ghi nhớ SRS và tài khoản học viên đều được bảo toàn an toàn 100%. Ban quản trị chân thành cáo lỗi cùng bạn vì sự bất tiện này!",
