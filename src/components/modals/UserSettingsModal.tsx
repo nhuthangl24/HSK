@@ -68,6 +68,12 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
 
   const [activeTab, setActiveTab] = useState<'tts' | 'theme' | 'font' | 'study' | 'feedback'>(initialTab);
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
+
   // Theme & Font Local State
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>(theme);
   const [selectedHanziFont, setSelectedHanziFont] = useState<string>(hanziFont || 'system');

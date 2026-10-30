@@ -33,6 +33,7 @@ interface HeaderProps {
   onOpenExams?: () => void;
   onStartSmartReview?: () => void;
   onOpenWorksheet?: () => void;
+  onOpenFeedback?: () => void;
   isFirebaseConnected?: boolean;
 }
 
@@ -46,6 +47,7 @@ export function Header({
   onOpenExams,
   onStartSmartReview,
   onOpenWorksheet,
+  onOpenFeedback,
 }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { effectiveTheme, setTheme } = useTheme();
@@ -129,6 +131,7 @@ export function Header({
           onOpenExams={onOpenExams}
           onStartSmartReview={onStartSmartReview}
           onOpenWorksheet={onOpenWorksheet}
+          onOpenFeedback={onOpenFeedback}
           dueTodayCount={stats?.dueTodayCount ?? 0}
           streakDays={effectiveStreak}
         />

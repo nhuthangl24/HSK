@@ -18,7 +18,7 @@ export interface AppNotification {
   isPinned?: boolean;
   actionLabel?: string;
   actionLink?: string;
-  actionType?: 'open_exams' | 'open_srs' | 'open_worksheet' | 'link';
+  actionType?: 'open_exams' | 'open_srs' | 'open_worksheet' | 'open_feedback' | 'link';
   actionPayload?: string;
   createdAt: string;
 }

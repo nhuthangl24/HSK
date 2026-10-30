@@ -25,6 +25,7 @@ interface NotificationBellProps {
   onOpenExams?: () => void;
   onStartSmartReview?: () => void;
   onOpenWorksheet?: () => void;
+  onOpenFeedback?: () => void;
   dueTodayCount?: number;
   streakDays?: number;
 }
@@ -33,6 +34,7 @@ export function NotificationBell({
   onOpenExams,
   onStartSmartReview,
   onOpenWorksheet,
+  onOpenFeedback,
   dueTodayCount = 0,
   streakDays = 0,
 }: NotificationBellProps) {
@@ -218,7 +220,17 @@ export function NotificationBell({
     markAsRead(notif.id);
     setIsOpen(false);
 
-    if (notif.actionType === 'open_exams' && onOpenExams) {
+    if (notif.actionType === 'open_feedback' || notif.actionLink?.includes('feedback=true')) {
+      if (onOpenFeedback) {
+        onOpenFeedback();
+      } else if (typeof window !== 'undefined') {
+        if (window.location.pathname === '/') {
+          window.dispatchEvent(new CustomEvent('hsk_open_feedback'));
+        } else {
+          window.location.href = '/?feedback=true';
+        }
+      }
+    } else if (notif.actionType === 'open_exams' && onOpenExams) {
       onOpenExams();
     } else if (notif.actionType === 'open_srs') {
       if (onStartSmartReview) {

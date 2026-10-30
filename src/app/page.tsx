@@ -159,6 +159,7 @@ function MainApp() {
   const [isMeaningReviewOpen, setIsMeaningReviewOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'tts' | 'theme' | 'font' | 'study' | 'feedback'>('tts');
   const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
   const [strokeModalItem, setStrokeModalItem] = useState<VocabItem | null>(null);
   const [isWorksheetOpen, setIsWorksheetOpen] = useState(false);
@@ -166,7 +167,7 @@ function MainApp() {
   const [isExamHubOpen, setIsExamHubOpen] = useState(false);
   const [directExamId, setDirectExamId] = useState<string | null>(null);
 
-  // Check URL query parameters for direct shared exam link: ?examId=xxx
+  // Check URL query parameters for direct shared exam link: ?examId=xxx or ?feedback=true
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -175,7 +176,21 @@ function MainApp() {
         setDirectExamId(examParam);
         setIsExamHubOpen(true);
       }
+      if (params.get('feedback') === 'true') {
+        setSettingsInitialTab('feedback');
+        setIsSettingsOpen(true);
+      }
     }
+  }, []);
+
+  // Listen to open feedback event from notification bell or shortcut
+  useEffect(() => {
+    const handleOpenFeedback = () => {
+      setSettingsInitialTab('feedback');
+      setIsSettingsOpen(true);
+    };
+    window.addEventListener('hsk_open_feedback', handleOpenFeedback);
+    return () => window.removeEventListener('hsk_open_feedback', handleOpenFeedback);
   }, []);
 
   const currentUserId = user?.id;
@@ -962,7 +977,14 @@ function MainApp() {
             handleToggleSidebarCollapse();
           }
         }}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={() => {
+          setSettingsInitialTab('tts');
+          setIsSettingsOpen(true);
+        }}
+        onOpenFeedback={() => {
+          setSettingsInitialTab('feedback');
+          setIsSettingsOpen(true);
+        }}
         onOpenBulkPaste={() => {
           if (isGuest) {
             setIsAuthModalOpen(true);
@@ -1216,6 +1238,7 @@ function MainApp() {
       <UserSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        initialTab={settingsInitialTab}
       />
 
       <BulkPasteModal

@@ -1,5 +1,31 @@
 [
   {
+    "id": "notif-ui-redesign-upcoming",
+    "title": "🎨 Thông Báo: Sắp Ra Mắt Giao Diện Mới & Tối Ưu Hóa Trải Nghiệm Học Tập!",
+    "message": "HSK Master chuẩn bị ra mắt phiên bản nâng cấp giao diện toàn diện: thiết kế hiện đại, bảng từ trực quan, tối ưu trải nghiệm học và ôn tập trên mọi thiết bị máy tính & điện thoại. Mọi dữ liệu học tập, từ vựng cá nhân và tiến độ SRS của bạn đều được bảo toàn nguyên vẹn 100%. Hãy cùng đón chờ nhé!",
+    "type": "update",
+    "priority": "urgent",
+    "isPinned": true,
+    "actionLabel": "Góp ý giao diện mới",
+    "actionLink": "/?feedback=true",
+    "actionType": "open_feedback",
+    "actionPayload": "/?feedback=true",
+    "createdAt": "2026-10-30T11:58:00.000Z"
+  },
+  {
+    "id": "notif-user-feedback-form",
+    "title": "💌 Hòm Thư Góp Ý: Đóng Góp Ý Kiến Để Cùng Phát Triển HSK Master!",
+    "message": "Bạn muốn đóng góp ý tưởng cải tiến giao diện, đề xuất thêm bài giảng/bộ đề mới hay phát hiện lỗi cần khắc phục? Hãy gửi ngay phản hồi cho đội ngũ phát triển qua Form Hòm Thư Góp Ý. Ban quản trị luôn lắng nghe và trân trọng từng ý kiến đóng góp của bạn!",
+    "type": "system",
+    "priority": "high",
+    "isPinned": true,
+    "actionLabel": "Mở Form Góp Ý ngay",
+    "actionLink": "/?feedback=true",
+    "actionType": "open_feedback",
+    "actionPayload": "/?feedback=true",
+    "createdAt": "2026-10-30T11:57:00.000Z"
+  },
+  {
     "id": "notif-zalo-community-group",
     "title": "💬 Tham gia Nhóm Zalo Học Viên HSK Master",
     "message": "Cộng đồng học tiếng Trung HSK Master đã chính thức có nhóm Zalo giao lưu, kết nối học tập, chia sẻ tài liệu HSK và giải đáp ngữ pháp mỗi ngày. Mời bạn tham gia cùng các học viên khác ngay nhé!",
