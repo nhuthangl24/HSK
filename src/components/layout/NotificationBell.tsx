@@ -241,7 +241,11 @@ export function NotificationBell({
     } else if (notif.actionType === 'open_worksheet' && onOpenWorksheet) {
       onOpenWorksheet();
     } else if (notif.actionType === 'link' && notif.actionPayload) {
-      window.open(notif.actionPayload, '_blank', 'noopener,noreferrer');
+      if (notif.actionPayload.startsWith('http')) {
+        window.open(notif.actionPayload, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = notif.actionPayload;
+      }
     } else if (notif.actionLink) {
       if ((notif.actionLink === '/exams' || notif.actionLink.includes('exam')) && onOpenExams) {
         onOpenExams();

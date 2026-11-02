@@ -1,5 +1,18 @@
 [
   {
+    "id": "notif-ai-tutor-launch-200-credits",
+    "title": "🎉 Khai Mở Trợ Lý AI Tiểu Trí: Tặng Ngay 200 Credits Luyện Nói Tiếng Trung Miễn Phí!",
+    "message": "Hệ thống HSK Master chính thức khai mở tính năng Luyện Nói & Giao Tiếp Tiếng Trung cùng Gia sư AI Tiểu Trí (小智)! Mỗi tài khoản học viên đều được tặng ngay 200 Credits miễn phí để thoải mái luyện nói, giao tiếp phản xạ, sửa lỗi ngữ pháp theo chuẩn HSK 1 - 6 và luyện phát âm giọng Bắc Kinh chuẩn bản xứ. Hãy trải nghiệm ngay nhé!",
+    "type": "feature",
+    "priority": "urgent",
+    "isPinned": true,
+    "actionLabel": "Luyện nói cùng AI ngay",
+    "actionLink": "/chat",
+    "actionType": "link",
+    "actionPayload": "/chat",
+    "createdAt": "2026-11-03T00:07:00.000Z"
+  },
+  {
     "id": "notif-ui-redesign-upcoming",
     "title": "🎨 Thông Báo: Sắp Ra Mắt Giao Diện Mới & Tối Ưu Hóa Trải Nghiệm Học Tập!",
     "message": "HSK Master chuẩn bị ra mắt phiên bản nâng cấp giao diện toàn diện: thiết kế hiện đại, bảng từ trực quan, tối ưu trải nghiệm học và ôn tập trên mọi thiết bị máy tính & điện thoại. Mọi dữ liệu học tập, từ vựng cá nhân và tiến độ SRS của bạn đều được bảo toàn nguyên vẹn 100%. Hãy cùng đón chờ nhé!",
