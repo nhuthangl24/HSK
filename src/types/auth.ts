@@ -10,6 +10,7 @@ export interface User {
   targetHsk?: number;
   role: UserRole;
   isLocked?: boolean;
+  aiCredits?: number;
   lastLoginAt?: string;
   createdAt: string;
   updatedAt?: string;

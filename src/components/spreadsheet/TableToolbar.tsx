@@ -153,6 +153,19 @@ export function TableToolbar({
               HSK 1-9
             </span>
           </Link>
+
+          {/* Dedicated AI Chat Conversation Partner Link */}
+          <Link
+            href="/chat"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
+            title="Trò chuyện và luyện khẩu ngữ với Trợ lý AI Tiểu Trí (Tặng 200 credits)"
+          >
+            <Sparkles size={14} className="text-amber-300" />
+            <span>Hội thoại AI</span>
+            <span className="text-[10px] bg-white/20 text-white px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+              Mới
+            </span>
+          </Link>
         </div>
       </div>
 

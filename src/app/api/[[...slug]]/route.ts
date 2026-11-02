@@ -9,6 +9,7 @@ import { handleNotifications } from '@/lib/server-api/notifications-handler';
 import { handleSystemConfig } from '@/lib/server-api/system-config-handler';
 import { handleTopics } from '@/lib/server-api/topics-handler';
 import { handleUser } from '@/lib/server-api/user-handler';
+import { handleAi } from '@/lib/server-api/ai-handler';
 
 interface RouteContext {
   params: Promise<{ slug?: string[] }>;
@@ -48,6 +49,8 @@ async function dispatch(request: Request, context: RouteContext): Promise<Respon
       return handleTopics(request);
     case 'user':
       return handleUser(request, subSlug);
+    case 'ai':
+      return handleAi(request, subSlug);
     default:
       return NextResponse.json(
         { success: false, message: `Endpoint /api/${domain} không tồn tại.` },

@@ -462,6 +462,7 @@ export async function handleAdmin(request: Request, subSlug: string[]): Promise<
           ...(typeof body.isLocked === 'boolean' ? { isLocked: body.isLocked } : {}),
           ...(body.name ? { name: body.name } : {}),
           ...(typeof body.targetHsk === 'number' ? { targetHsk: body.targetHsk } : {}),
+          ...(typeof body.aiCredits === 'number' ? { aiCredits: body.aiCredits } : {}),
         };
 
         if (!targetId || Object.keys(updates).length === 0) {

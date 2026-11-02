@@ -445,3 +445,25 @@ html {
   }
 }
 
+/* AI Voice Waveform Animations */
+@keyframes waveDance {
+  0% {
+    transform: scaleY(0.25);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.45);
+    opacity: 0.65;
+  }
+}
+
+.animate-wave-bar {
+  animation: waveDance 0.75s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+

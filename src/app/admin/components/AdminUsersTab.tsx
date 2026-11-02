@@ -368,6 +368,7 @@ export default function AdminUsersTab({
                 <th className="py-3.5 px-4 min-w-[120px] whitespace-nowrap">Vai trò</th>
                 <th className="py-3.5 px-4 min-w-[90px] whitespace-nowrap">Mục tiêu</th>
                 <th className="py-3.5 px-4 min-w-[110px] whitespace-nowrap">Chuỗi Streak</th>
+                <th className="py-3.5 px-4 min-w-[110px] whitespace-nowrap">Credit AI</th>
                 <th className="py-3.5 px-4 min-w-[120px] whitespace-nowrap">Trạng thái</th>
                 <th className="py-3.5 px-4 text-right min-w-[200px] whitespace-nowrap">Thao tác</th>
               </tr>
@@ -375,7 +376,7 @@ export default function AdminUsersTab({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
               {loadingUsers ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <RefreshCw size={15} className="animate-spin text-emerald-600" />
                       <span>Đang tải danh sách học viên...</span>
@@ -384,7 +385,7 @@ export default function AdminUsersTab({
                 </tr>
               ) : paginatedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
                     Không tìm thấy học viên nào khớp với bộ lọc hiện tại.
                   </td>
                 </tr>
@@ -458,6 +459,14 @@ export default function AdminUsersTab({
                         <span className="inline-flex items-center gap-1">
                           <Flame size={13} className="text-amber-500 fill-amber-500" />
                           <span>{u.streakDays || 0} ngày</span>
+                        </span>
+                      </td>
+
+                      {/* AI Credits */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-bold text-xs bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                          <Sparkles size={11} className="text-amber-500" />
+                          <span>{typeof u.aiCredits === 'number' ? u.aiCredits : 200} cr</span>
                         </span>
                       </td>
 
@@ -654,6 +663,49 @@ export default function AdminUsersTab({
                 <span className="font-medium text-slate-700 dark:text-slate-300">
                   {inspectUser.createdAt ? new Date(inspectUser.createdAt).toLocaleDateString('vi-VN') : '—'}
                 </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                  <Sparkles size={12} className="text-amber-500" />
+                  <span>Số dư Credit AI:</span>
+                </span>
+                <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400">
+                  {typeof inspectUser.aiCredits === 'number' ? inspectUser.aiCredits : 200} credits
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Credit Topup Bar */}
+            <div className="mb-4 p-3 bg-indigo-50/60 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+              <div className="text-[11px] font-bold text-indigo-900 dark:text-indigo-200 mb-2 flex items-center justify-between">
+                <span>Nạp thêm Credit học tập AI:</span>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-normal">Mỗi tin nhắn trừ 1 credit</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[50, 100, 200].map((addAmount) => (
+                  <button
+                    key={addAmount}
+                    type="button"
+                    onClick={async () => {
+                      const current = typeof inspectUser.aiCredits === 'number' ? inspectUser.aiCredits : 200;
+                      const next = current + addAmount;
+                      try {
+                        await fetch('/api/admin/users', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id: inspectUser.id, updates: { aiCredits: next } }),
+                        });
+                        setInspectUser((prev) => (prev ? { ...prev, aiCredits: next } : null));
+                        onRefreshUsers();
+                      } catch (err) {
+                        console.error('Failed to update credits:', err);
+                      }
+                    }}
+                    className="py-1.5 px-2 bg-white dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-2xs transition-colors text-center cursor-pointer"
+                  >
+                    +{addAmount} cr
+                  </button>
+                ))}
               </div>
             </div>
 

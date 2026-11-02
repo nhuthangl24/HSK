@@ -5,6 +5,7 @@ import { User, UserRole, AdminStats, AuditLog, UserSettings, SystemConfig, UserF
 import { VocabItem, Topic, CustomHskGroup } from '@/types/vocabulary';
 import { ExamItem } from '@/types/exam';
 import { AppNotification } from '@/types/notification';
+import { ConversationAssessmentReport } from '@/types/ai';
 import { hashPassword, verifyPassword, isUserAdmin, extractToken, verifyToken } from './server-auth';
 import bundledSystemVocab from '@/data/system_vocab.json';
 import { INITIAL_ADMIN_GUIDES } from './admin-guides-data';
@@ -126,11 +127,16 @@ function writeJsonFile<T>(filename: string, data: T): void {
   }
 }
 
+export const DEFAULT_AI_CREDITS = 200;
+
 export function toPublicUser(record: StoredUserRecord): User {
   const { passwordHash: _h, salt: _s, ...publicUser } = record;
   void _h;
   void _s;
-  return publicUser;
+  return {
+    ...publicUser,
+    aiCredits: typeof record.aiCredits === 'number' ? record.aiCredits : DEFAULT_AI_CREDITS,
+  };
 }
 
 // -------------------------------------------------------------
@@ -191,6 +197,7 @@ export function registerUser(
     streakDays: 0,
     totalMastered: 0,
     targetHsk,
+    aiCredits: DEFAULT_AI_CREDITS,
     isLocked: false,
     createdAt: now,
     updatedAt: now,
@@ -242,6 +249,7 @@ export function updateUser(id: string, updates: Partial<User>): User {
       streakDays: updates.streakDays || 0,
       totalMastered: updates.totalMastered || 0,
       targetHsk: updates.targetHsk || 3,
+      aiCredits: typeof updates.aiCredits === 'number' ? updates.aiCredits : DEFAULT_AI_CREDITS,
       isLocked: !!updates.isLocked,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -258,6 +266,7 @@ export function updateUser(id: string, updates: Partial<User>): User {
     ...updates,
     id: current.id, // prevent ID change
     email: updates.email ? updates.email.trim().toLowerCase() : current.email,
+    aiCredits: typeof updates.aiCredits === 'number' ? updates.aiCredits : (current.aiCredits ?? DEFAULT_AI_CREDITS),
     updatedAt: new Date().toISOString(),
   };
 
@@ -265,6 +274,52 @@ export function updateUser(id: string, updates: Partial<User>): User {
   writeJsonFile('users.json', users);
 
   return toPublicUser(updated);
+}
+
+export function getUserCredits(userId: string): number {
+  const user = getUserRecordById(userId);
+  if (!user) return DEFAULT_AI_CREDITS;
+  return typeof user.aiCredits === 'number' ? user.aiCredits : DEFAULT_AI_CREDITS;
+}
+
+export function deductUserCredit(
+  userId: string,
+  amount = 1
+): { success: boolean; remainingCredits: number; message?: string } {
+  const users = readJsonFile<StoredUserRecord[]>('users.json', []);
+  const index = users.findIndex((u) => u.id === userId);
+
+  if (index === -1) {
+    // If user not in local file yet, initialize them
+    const currentCredits = DEFAULT_AI_CREDITS;
+    if (currentCredits < amount) {
+      return { success: false, remainingCredits: currentCredits, message: 'Bạn không đủ credit AI để tiếp tục.' };
+    }
+    const remaining = currentCredits - amount;
+    updateUser(userId, { aiCredits: remaining });
+    return { success: true, remainingCredits: remaining };
+  }
+
+  const user = users[index];
+  const currentCredits = typeof user.aiCredits === 'number' ? user.aiCredits : DEFAULT_AI_CREDITS;
+
+  if (currentCredits < amount) {
+    return {
+      success: false,
+      remainingCredits: currentCredits,
+      message: 'Bạn đã hết credit AI (số dư: 0). Vui lòng liên hệ Admin để được cấp thêm credit!',
+    };
+  }
+
+  const remaining = Math.max(0, currentCredits - amount);
+  users[index] = {
+    ...user,
+    aiCredits: remaining,
+    updatedAt: new Date().toISOString(),
+  };
+  writeJsonFile('users.json', users);
+
+  return { success: true, remainingCredits: remaining };
 }
 
 export function authenticateAdmin(request: Request): {
@@ -3546,6 +3601,68 @@ export function runDeepSystemDiagnostic(): DeepDiagnosticResult {
     checks,
   };
 }
+
+// --------------------------------------------------------------------------
+// CONVERSATION SPEAKING ASSESSMENTS PERSISTENCE
+// --------------------------------------------------------------------------
+export function getAllAssessments(): ConversationAssessmentReport[] {
+  return readJsonFile<ConversationAssessmentReport[]>('assessments.json', []);
+}
+
+export function getAssessmentBySessionId(sessionId: string): ConversationAssessmentReport | null {
+  if (!sessionId) return null;
+  const list = getAllAssessments();
+  return list.find((item) => item.session_id === sessionId) || null;
+}
+
+export function getAssessmentsByUserId(userId: string): ConversationAssessmentReport[] {
+  if (!userId) return [];
+  const list = getAllAssessments();
+  return list.filter((item) => item.user_id === userId);
+}
+
+export function saveAssessmentRecord(record: ConversationAssessmentReport): ConversationAssessmentReport {
+  const list = getAllAssessments();
+  const index = list.findIndex((item) => item.session_id === record.session_id);
+
+  if (index >= 0) {
+    // Update existing
+    list[index] = { ...list[index], ...record };
+  } else {
+    // Insert new
+    list.unshift(record);
+  }
+
+  // Cap history length to 1000 records
+  if (list.length > 1000) {
+    list.length = 1000;
+  }
+
+  writeJsonFile('assessments.json', list);
+  return record;
+}
+
+export function updateAssessmentRecord(
+  sessionId: string,
+  updates: Partial<ConversationAssessmentReport>
+): ConversationAssessmentReport | null {
+  const list = getAllAssessments();
+  const index = list.findIndex((item) => item.session_id === sessionId);
+  if (index < 0) return null;
+
+  list[index] = { ...list[index], ...updates };
+  writeJsonFile('assessments.json', list);
+  return list[index];
+}
+
+export function deleteAssessmentRecord(sessionId: string): boolean {
+  const list = getAllAssessments();
+  const filtered = list.filter((item) => item.session_id !== sessionId);
+  if (filtered.length === list.length) return false;
+  writeJsonFile('assessments.json', filtered);
+  return true;
+}
+
 
 
 

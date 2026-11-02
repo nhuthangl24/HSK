@@ -37,6 +37,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
+  updateAiCredits: (newCredits: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -163,13 +164,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const now = new Date().toISOString();
             const localStreak = getStreak(fbUser.uid);
             const effectiveStreak = Math.max(profile.streakDays || 0, localStreak.currentStreak);
-            const fullProfile: User = { ...profile, streakDays: effectiveStreak, lastLoginAt: now };
+            const fullProfile: User = {
+              ...profile,
+              aiCredits: typeof profile.aiCredits === 'number' ? profile.aiCredits : 200,
+              streakDays: effectiveStreak,
+              lastLoginAt: now,
+            };
             setCachedUser(fullProfile);
             setUser(fullProfile);
             setIsLoading(false);
 
             // Fire-and-forget background update to Firestore
-            updateUserInFirestore(fbUser.uid, { lastLoginAt: now, streakDays: effectiveStreak }).catch(() => {});
+            updateUserInFirestore(fbUser.uid, {
+              lastLoginAt: now,
+              streakDays: effectiveStreak,
+              aiCredits: fullProfile.aiCredits,
+            }).catch(() => {});
           } else {
             // First time login - auto create Firestore user document
             const localStreak = getStreak(fbUser.uid);
@@ -181,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               streakDays: Math.max(1, localStreak.currentStreak),
               totalMastered: 0,
               targetHsk: 3,
+              aiCredits: 200,
               createdAt: new Date().toISOString(),
               lastLoginAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -202,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: ADMIN_EMAILS.includes(email) ? 'admin' : 'user',
             streakDays: Math.max(1, localStreak.currentStreak),
             totalMastered: 0,
+            aiCredits: 200,
             createdAt: new Date().toISOString(),
           };
           setCachedUser(fallbackUser);
@@ -296,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           streakDays: 1,
           totalMastered: 0,
           targetHsk: 3,
+          aiCredits: 200,
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -360,6 +373,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         streakDays: 1,
         totalMastered: 0,
         targetHsk,
+        aiCredits: 200,
         createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -430,6 +444,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await updateUserInFirestore(user.id, updates);
   };
 
+  const updateAiCredits = (newCredits: number) => {
+    if (!user) return;
+    const updated: User = {
+      ...user,
+      aiCredits: Math.max(0, newCredits),
+      updatedAt: new Date().toISOString(),
+    };
+    setCachedUser(updated);
+    setUser(updated);
+    updateUserInFirestore(user.id, { aiCredits: updated.aiCredits }).catch(() => {});
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
@@ -446,6 +472,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         logout,
         updateProfile,
+        updateAiCredits,
       }}
     >
       {children}

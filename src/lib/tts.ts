@@ -380,6 +380,8 @@ class ChineseTTS {
           pitch?: number;
           voiceName?: string;
           lang?: string;
+          onEnd?: () => void;
+          onError?: () => void;
         }
   ): void {
     if (!this.synth) return;
@@ -458,11 +460,13 @@ class ChineseTTS {
       if (this.activeUtterance === utterance) {
         this.activeUtterance = null;
       }
+      opts?.onEnd?.();
     };
     utterance.onerror = () => {
       if (this.activeUtterance === utterance) {
         this.activeUtterance = null;
       }
+      opts?.onError?.();
     };
 
     try {
