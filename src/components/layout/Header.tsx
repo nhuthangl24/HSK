@@ -13,7 +13,6 @@ import {
   Sun,
   Moon,
   ClipboardPaste,
-  Sparkles,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -104,20 +103,6 @@ export function Header({
             <span className="font-bold text-blue-600 dark:text-blue-400">{stats.retentionRate}%</span>
           </div>
         </div>
-
-        {/* Dedicated AI Chat Partner Button */}
-        <Link
-          href="/chat"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-xs cursor-pointer transition-all btn-press shrink-0"
-          title="Trò chuyện & Luyện nói tiếng Trung với AI (Tặng 200 credits)"
-        >
-          <Sparkles size={14} className="text-amber-300 animate-pulse" />
-          <span className="hidden sm:inline">Hội thoại AI</span>
-          <span className="sm:hidden">AI</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono bg-white/20 text-white font-extrabold ml-0.5">
-            {user?.aiCredits ?? 200}
-          </span>
-        </Link>
 
         {/* Quick Theme Toggle Button */}
         <button
