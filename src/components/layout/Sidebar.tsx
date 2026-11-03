@@ -25,6 +25,7 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 import { Deck, VocabItem } from '@/types/vocabulary';
 import { isItemDueForReview } from '@/lib/srs';
@@ -833,6 +834,40 @@ export function Sidebar({
           <span>Tạo bộ từ mới</span>
         </button>
       </div>
+
+      {/* Help & Policies Footer */}
+      <div className="px-3 py-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100/50 dark:bg-zinc-950/40">
+        <Link
+          href="/faq"
+          onClick={() => {
+            if (isMobile && onCloseMobile) onCloseMobile();
+          }}
+          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 font-medium"
+        >
+          <HelpCircle size={12} />
+          <span>Trợ giúp & FAQ</span>
+        </Link>
+        <span className="text-slate-300 dark:text-slate-700">•</span>
+        <Link
+          href="/faq?tab=terms"
+          onClick={() => {
+            if (isMobile && onCloseMobile) onCloseMobile();
+          }}
+          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium"
+        >
+          Điều khoản
+        </Link>
+        <span className="text-slate-300 dark:text-slate-700">•</span>
+        <Link
+          href="/faq?tab=privacy"
+          onClick={() => {
+            if (isMobile && onCloseMobile) onCloseMobile();
+          }}
+          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium"
+        >
+          Bảo mật
+        </Link>
+      </div>
     </div>
   );
 
@@ -986,6 +1021,17 @@ export function Sidebar({
               >
                 <FolderPlus size={16} />
               </button>
+            </div>
+
+            {/* Help & FAQ in Collapsed Mode */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 w-full flex justify-center">
+              <Link
+                href="/faq"
+                title="Trợ giúp & Câu hỏi thường gặp (FAQ)"
+                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer transition-all btn-press"
+              >
+                <HelpCircle size={16} />
+              </Link>
             </div>
           </div>
         ) : (

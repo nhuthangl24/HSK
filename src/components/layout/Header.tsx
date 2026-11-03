@@ -13,6 +13,8 @@ import {
   Sun,
   Moon,
   ClipboardPaste,
+  HelpCircle,
+  FileText,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -126,6 +128,15 @@ export function Header({
           </button>
         )}
 
+        {/* Help & FAQ Button */}
+        <Link
+          href="/faq"
+          className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
+          title="Trung tâm trợ giúp & Câu hỏi thường gặp (FAQ)"
+        >
+          <HelpCircle size={15} />
+        </Link>
+
         {/* Notification Bell */}
         <NotificationBell
           onOpenExams={onOpenExams}
@@ -194,6 +205,24 @@ export function Header({
                     <span>Cài đặt cá nhân & TTS</span>
                   </button>
                 )}
+
+                <Link
+                  href="/faq"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full mt-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-2 cursor-pointer transition-colors font-medium"
+                >
+                  <HelpCircle size={14} className="text-slate-400" />
+                  <span>Trợ giúp & FAQ</span>
+                </Link>
+
+                <Link
+                  href="/faq?tab=terms"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full mt-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-2 cursor-pointer transition-colors font-medium"
+                >
+                  <FileText size={14} className="text-slate-400" />
+                  <span>Điều khoản & Chính sách</span>
+                </Link>
 
                 {user.role === 'admin' && (
                   <Link

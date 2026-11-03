@@ -31,6 +31,8 @@ import {
   Radio,
   User as UserIcon,
   Palette,
+  ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import { useTheme, ThemeMode, FontSize } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -700,6 +702,46 @@ export function UserSettingsModal({ isOpen, onClose, initialTab = 'tts' }: UserS
                   </button>
                 );
               })}
+            </div>
+
+            {/* Help & Legal Links */}
+            <div className="pt-3 mt-3 border-t border-slate-200/60 dark:border-slate-800/60 space-y-1">
+              <div className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 py-1">
+                Trợ giúp & Pháp lý
+              </div>
+              <a
+                href="/faq"
+                onClick={() => onClose()}
+                className="w-full flex items-center justify-between p-2 rounded-xl text-left cursor-pointer transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-xs font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <HelpCircle size={14} className="text-slate-400" />
+                  <span>Câu hỏi thường gặp (FAQ)</span>
+                </div>
+                <ExternalLink size={12} className="text-slate-400 opacity-60" />
+              </a>
+              <a
+                href="/faq?tab=terms"
+                onClick={() => onClose()}
+                className="w-full flex items-center justify-between p-2 rounded-xl text-left cursor-pointer transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-xs font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText size={14} className="text-slate-400" />
+                  <span>Điều khoản dịch vụ</span>
+                </div>
+                <ExternalLink size={12} className="text-slate-400 opacity-60" />
+              </a>
+              <a
+                href="/faq?tab=privacy"
+                onClick={() => onClose()}
+                className="w-full flex items-center justify-between p-2 rounded-xl text-left cursor-pointer transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-xs font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={14} className="text-slate-400" />
+                  <span>Chính sách bảo mật</span>
+                </div>
+                <ExternalLink size={12} className="text-slate-400 opacity-60" />
+              </a>
             </div>
           </div>
 

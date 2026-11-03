@@ -148,17 +148,17 @@ export default function AdminUsersTab({
     <div className="space-y-6">
       {/* Top Banner & Quick KPI Cards */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
-              <Users size={20} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-500/20">
+              <Users size={22} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
                 Quản Trị Người Dùng & Học Viên
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Quản lý tài khoản, phân quyền, xem nhanh không gian học tập và an toàn dữ liệu.
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Quản lý tài khoản, phân quyền, cấp phát credit AI, giám sát chuỗi học và bảo mật dữ liệu.
               </p>
             </div>
           </div>
@@ -166,9 +166,9 @@ export default function AdminUsersTab({
           <button
             type="button"
             onClick={onRefreshUsers}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors self-start sm:self-center cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors self-start sm:self-center cursor-pointer border border-slate-200/60 dark:border-zinc-700/60"
           >
-            <RefreshCw size={13} className={loadingUsers ? 'animate-spin text-emerald-600' : ''} />
+            <RefreshCw size={13} className={loadingUsers ? 'animate-spin text-emerald-500' : ''} />
             <span>Làm mới danh sách</span>
           </button>
         </div>
@@ -184,18 +184,18 @@ export default function AdminUsersTab({
             }}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
               roleFilter === 'all' && statusFilter === 'all'
-                ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
-                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
+                : 'bg-white dark:bg-zinc-900 border-slate-200/90 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Tổng người dùng</span>
+            <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Tổng người dùng</span>
               <Users size={16} className="text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
+            <div className="text-2xl font-black text-slate-900 dark:text-zinc-100">
               {userMetrics.total}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Tất cả tài khoản trong hệ thống
             </div>
           </button>
@@ -209,18 +209,18 @@ export default function AdminUsersTab({
             }}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
               roleFilter === 'admin'
-                ? 'bg-purple-50/70 dark:bg-purple-950/40 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
-                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                ? 'bg-purple-50/70 dark:bg-purple-950/30 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
+                : 'bg-white dark:bg-zinc-900 border-slate-200/90 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Quản trị viên</span>
+            <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Quản trị viên</span>
               <Shield size={16} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-2xl font-black text-purple-700 dark:text-purple-300">
               {userMetrics.admins}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Quyền cấu hình và kiểm toán
             </div>
           </button>
@@ -234,18 +234,18 @@ export default function AdminUsersTab({
             }}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
               roleFilter === 'user' && statusFilter === 'all'
-                ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-500/50 shadow-xs ring-1 ring-blue-500/30'
-                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-500/50 shadow-xs ring-1 ring-blue-500/30'
+                : 'bg-white dark:bg-zinc-900 border-slate-200/90 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Học viên thường</span>
+            <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Học viên thường</span>
               <UserCheck size={16} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-2xl font-black text-blue-700 dark:text-blue-300">
               {userMetrics.learners}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Tài khoản học từ vựng HSK
             </div>
           </button>
@@ -259,18 +259,18 @@ export default function AdminUsersTab({
             }}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
               statusFilter === 'locked'
-                ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
-                : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
+                : 'bg-white dark:bg-zinc-900 border-slate-200/90 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider">Bị khóa</span>
+            <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider">Bị khóa</span>
               <Lock size={16} className="text-rose-600 dark:text-rose-400" />
             </div>
             <div className="text-2xl font-black text-rose-700 dark:text-rose-300">
               {userMetrics.locked}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Tạm ngừng truy cập hệ thống
             </div>
           </button>

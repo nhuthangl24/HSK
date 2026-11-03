@@ -3,6 +3,19 @@ import { authenticateUser, registerUser, getUserRecordById, toPublicUser } from 
 import { createToken, extractToken, verifyToken } from '@/lib/server-auth';
 import { User } from '@/types/auth';
 
+function getCookieOptions() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieDomain = process.env.COOKIE_DOMAIN || (isProd ? '.classnia.id.vn' : undefined);
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 7 * 24 * 3600,
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  };
+}
+
 export async function handleAuth(request: Request, subSlug: string[]): Promise<Response> {
   const method = request.method.toUpperCase();
   const action = subSlug[0];
@@ -59,13 +72,7 @@ export async function handleAuth(request: Request, subSlug: string[]): Promise<R
           message: 'Đăng nhập thành công.',
         });
 
-        response.cookies.set('hsk_session_token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 3600,
-        });
+        response.cookies.set('hsk_session_token', token, getCookieOptions());
 
         return response;
       } catch (err: unknown) {
@@ -100,13 +107,7 @@ export async function handleAuth(request: Request, subSlug: string[]): Promise<R
           message: 'Đăng ký tài khoản thành công.',
         });
 
-        response.cookies.set('hsk_session_token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 3600,
-        });
+        response.cookies.set('hsk_session_token', token, getCookieOptions());
 
         return response;
       } catch (err: unknown) {
@@ -118,7 +119,7 @@ export async function handleAuth(request: Request, subSlug: string[]): Promise<R
     // 3. /api/auth/logout
     if (action === 'logout') {
       const response = NextResponse.json({ success: true, message: 'Đã đăng xuất.' });
-      response.cookies.delete('hsk_session_token');
+      response.cookies.set('hsk_session_token', '', { ...getCookieOptions(), maxAge: 0 });
       return response;
     }
 
@@ -139,13 +140,7 @@ export async function handleAuth(request: Request, subSlug: string[]): Promise<R
           message: 'Phiên đăng nhập đã được đồng bộ.',
         });
 
-        response.cookies.set('hsk_session_token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 3600,
-        });
+        response.cookies.set('hsk_session_token', token, getCookieOptions());
 
         return response;
       } catch (err: unknown) {

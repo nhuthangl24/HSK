@@ -60,6 +60,14 @@ export function StatusBar({ stats, filteredCount, totalInDeck }: StatusBarProps)
         <span className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-slate-700 dark:text-slate-300">
           Tab: Chuyển ô
         </span>
+        <div className="w-px h-3 bg-slate-300 dark:bg-slate-700 mx-1" />
+        <a
+          href="/faq"
+          className="hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors cursor-pointer"
+          title="Xem câu hỏi thường gặp & Hướng dẫn sử dụng"
+        >
+          Trợ giúp & FAQ
+        </a>
       </div>
     </footer>
   );

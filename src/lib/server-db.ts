@@ -2847,6 +2847,19 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
 
 const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   {
+    id: 'notif-faq-and-policies-launch',
+    title: '📚 Ra Mắt: Trung Tâm Trợ Giúp (FAQ) & Chính Sách Người Dùng!',
+    message: 'HSK Master vừa cập nhật Trung tâm Trợ giúp toàn diện: Tổng hợp các câu hỏi thường gặp về thuật toán SRS, hướng dẫn xuất phiếu tập viết chữ Hán PDF A4, xử lý lỗi âm thanh TTS, cùng văn bản Điều khoản sử dụng và Chính sách bảo mật quyền riêng tư chi tiết.',
+    type: 'feature',
+    priority: 'high',
+    isPinned: true,
+    actionLabel: 'Xem Trợ giúp & FAQ',
+    actionLink: '/faq',
+    actionType: 'link',
+    actionPayload: '/faq',
+    createdAt: new Date().toISOString(),
+  },
+  {
     id: 'notif-ui-redesign-upcoming',
     title: '🎨 Thông Báo: Sắp Ra Mắt Giao Diện Mới & Tối Ưu Hóa Trải Nghiệm Học Tập!',
     message: 'HSK Master chuẩn bị ra mắt phiên bản nâng cấp giao diện toàn diện: thiết kế hiện đại, bảng từ trực quan, tối ưu trải nghiệm học và ôn tập trên mọi thiết bị máy tính & điện thoại. Mọi dữ liệu học tập, từ vựng cá nhân và tiến độ SRS của bạn đều được bảo toàn nguyên vẹn 100%. Hãy cùng đón chờ nhé!',
