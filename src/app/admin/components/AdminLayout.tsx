@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Shield,
@@ -93,6 +93,11 @@ export default function AdminLayout({
   const { effectiveTheme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navGroups = [
     {
@@ -236,15 +241,24 @@ export default function AdminLayout({
 
           {/* User Profile Pill */}
           <div className="flex items-center gap-1.5 pl-1.5 border-l border-[#e2e8f0] dark:border-[#1e293b]">
-            <div className="w-6 h-6 rounded-full bg-[#047857] text-white font-bold flex items-center justify-center text-[10.5px] shadow-2xs shrink-0">
-              {(currentUser?.name || currentUser?.email || 'A').charAt(0).toUpperCase()}
+            <div
+              suppressHydrationWarning
+              className="w-6 h-6 rounded-full bg-[#047857] text-white font-bold flex items-center justify-center text-[10.5px] shadow-2xs shrink-0"
+            >
+              {((mounted ? currentUser?.name || currentUser?.email : '') || 'Q').charAt(0).toUpperCase()}
             </div>
             <div className="hidden xl:block text-left">
-              <div className="text-[11px] font-bold text-[#0f172a] dark:text-white leading-tight truncate max-w-[110px]">
-                {currentUser?.name || 'Quản trị viên'}
+              <div
+                suppressHydrationWarning
+                className="text-[11px] font-bold text-[#0f172a] dark:text-white leading-tight truncate max-w-[110px]"
+              >
+                {mounted ? (currentUser?.name || 'Quản trị viên') : 'Quản trị viên Hệ thống'}
               </div>
-              <div className="text-[9.5px] text-[#94a3b8] font-mono leading-tight truncate max-w-[120px]">
-                {currentUser?.email || 'admin@hsk.com'}
+              <div
+                suppressHydrationWarning
+                className="text-[9.5px] text-[#94a3b8] font-mono leading-tight truncate max-w-[120px]"
+              >
+                {mounted ? (currentUser?.email || 'admin@hsk.com') : 'luunhuthang2402@gmail.com'}
               </div>
             </div>
             <button
