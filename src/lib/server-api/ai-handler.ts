@@ -17,7 +17,7 @@ import { evaluateConversation } from './assessment-service';
 const activeEvaluatingSessions = new Set<string>();
 
 const HHTECH_BASE_URL = process.env.HHTECH_BASE_URL || 'https://hhtechapi.net/v1';
-const HHTECH_API_KEY = process.env.HHTECH_API_KEY || 'sk-372528de2e1f44d098a5fa7d';
+const HHTECH_API_KEY = process.env.HHTECH_API_KEY || '';
 const DEFAULT_MODEL = process.env.HHTECH_MODEL || 'deepseek-v4.1-flash';
 
 interface ChatMessage {
