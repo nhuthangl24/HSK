@@ -146,16 +146,16 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 rounded-xl">
             <FileSpreadsheet size={20} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Nhập & Xuất Tệp Dữ Liệu (Import / Export)
+              Nhập &amp; Xuất Tệp Dữ Liệu (Import / Export)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
               Xuất sao lưu hoặc nhập kho từ vựng, danh sách học viên định dạng CSV, Excel và JSON chuẩn.
             </p>
           </div>
@@ -165,8 +165,8 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
       {/* 2-Column Grid: Export Panels & Import Zone */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Export Data Panel */}
-        <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-zinc-800">
             <Download size={18} className="text-emerald-600 dark:text-emerald-400" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Xuất Tệp Dữ Liệu (Export)
@@ -174,13 +174,13 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
           </div>
 
           {/* 1. Export Vocab */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-3">
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                 <BookOpen size={14} className="text-blue-500" />
                 Kho Từ Vựng HSK 1–9 ({vocabList.length.toLocaleString()} từ)
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                 Bao gồm HSK level, chữ Hán, pinyin, nghĩa tiếng Việt và câu ví dụ.
               </p>
             </div>
@@ -188,14 +188,14 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
               <button
                 type="button"
                 onClick={exportVocabCsv}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer"
               >
                 CSV
               </button>
               <button
                 type="button"
                 onClick={() => downloadJson(vocabList, `hsk-vocab-backup-${Date.now()}.json`)}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
               >
                 JSON
               </button>
@@ -203,13 +203,13 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
           </div>
 
           {/* 2. Export Users */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-3">
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Users size={14} className="text-indigo-500" />
                 Danh Sách Học Viên ({users.length} tài khoản)
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                 Bao gồm thông tin hồ sơ, vai trò, chuỗi streak và trạng thái tài khoản.
               </p>
             </div>
@@ -217,14 +217,14 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
               <button
                 type="button"
                 onClick={exportUsersCsv}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer"
               >
                 CSV
               </button>
               <button
                 type="button"
                 onClick={() => downloadJson(users, `hsk-users-backup-${Date.now()}.json`)}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
               >
                 JSON
               </button>
@@ -232,13 +232,13 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
           </div>
 
           {/* 3. Export Audit Logs */}
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-3">
             <div>
               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                 <History size={14} className="text-slate-500" />
                 Nhật Ký Kiểm Toán ({logs.length} bản ghi)
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                 Lưu vết toàn bộ biến động dữ liệu và thao tác quản trị.
               </p>
             </div>
@@ -246,7 +246,7 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
               <button
                 type="button"
                 onClick={() => downloadJson(logs, `hsk-audit-logs-${Date.now()}.json`)}
-                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white transition-colors"
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer"
               >
                 JSON
               </button>
@@ -255,23 +255,23 @@ export default function AdminIoTab({ vocabList, users, logs, onImportComplete }:
         </div>
 
         {/* Import Data Panel */}
-        <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-zinc-800">
             <Upload size={18} className="text-blue-600 dark:text-blue-400" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Nhập Tệp Vào Hệ Thống (Import JSON)
             </h3>
           </div>
 
-          <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center space-y-3 bg-slate-50/50 dark:bg-slate-900/40">
+          <div className="border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3 bg-slate-50/50 dark:bg-zinc-900/40">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
               <Upload size={24} />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">
                 Chọn tệp JSON từ máy tính của bạn
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Cấu trúc tệp chứa mảng các từ vựng với các trường hanzi, pinyin, meaning, hskLevel.
               </p>
             </div>

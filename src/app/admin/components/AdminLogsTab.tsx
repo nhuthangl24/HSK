@@ -55,16 +55,16 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
-            <History size={20} />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-slate-500/10 text-slate-700 dark:text-zinc-300 rounded-xl border border-slate-500/20">
+            <History size={22} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
               Nhật Ký Kiểm Toán Hoạt Động (Audit Trail)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
               Lưu vết toàn bộ thao tác thêm, sửa, xóa, phân quyền, khóa tài khoản và biến động dữ liệu.
             </p>
           </div>
@@ -73,17 +73,17 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
         <button
           type="button"
           onClick={onRefreshLogs}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+          className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors border border-slate-200/60 dark:border-zinc-700/60 cursor-pointer self-start sm:self-center"
         >
-          <RefreshCw size={13} className={loadingLogs ? 'animate-spin text-emerald-600' : ''} />
+          <RefreshCw size={13} className={loadingLogs ? 'animate-spin text-emerald-500' : ''} />
           <span>Làm mới nhật ký</span>
         </button>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
           <input
             type="text"
             placeholder="Tìm theo quản trị viên, đối tượng, mô tả hành động..."
@@ -92,7 +92,7 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500"
           />
         </div>
 
@@ -102,7 +102,7 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
             setActionFilter(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
+          className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-700 dark:text-zinc-200 font-medium cursor-pointer"
         >
           <option value="all">Tất cả hành động</option>
           <option value="KHÓA">Khóa / Mở khóa</option>
@@ -115,49 +115,52 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
       </div>
 
       {/* Audit Logs Table */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800 uppercase tracking-wider text-[11px] font-semibold">
+            <thead className="bg-slate-50 dark:bg-zinc-950/80 text-slate-500 dark:text-zinc-400 border-b border-slate-200/90 dark:border-zinc-800 uppercase tracking-wider text-xs font-bold">
               <tr>
-                <th className="py-3 px-4">Thời gian</th>
-                <th className="py-3 px-4">Hành động</th>
-                <th className="py-3 px-4">Người thực hiện</th>
-                <th className="py-3 px-4">Đối tượng tác động</th>
-                <th className="py-3 px-4">Chi tiết thao tác</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Thời gian</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Hành động</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Người thực hiện</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Đối tượng tác động</th>
+                <th className="py-3.5 px-4 min-w-[200px]">Chi tiết thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
+            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-slate-700 dark:text-zinc-300">
               {loadingLogs ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
-                    Đang tải nhật ký kiểm toán...
+                  <td colSpan={5} className="py-12 text-center text-slate-400 dark:text-zinc-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw size={15} className="animate-spin text-emerald-500" />
+                      <span>Đang tải nhật ký kiểm toán...</span>
+                    </div>
                   </td>
                 </tr>
               ) : paginatedLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 dark:text-zinc-500">
                     Không có nhật ký nào khớp với bộ lọc.
                   </td>
                 </tr>
               ) : (
                 paginatedLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/50 transition-colors">
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500 dark:text-zinc-400 whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleString('vi-VN')}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 font-mono">
                         {log.action}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">
+                    <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-zinc-100 whitespace-nowrap">
                       {log.adminEmail || log.admin || 'System'}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                    <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-zinc-200 whitespace-nowrap">
                       {log.target || 'Hệ thống'}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 max-w-md truncate">
+                    <td className="py-3.5 px-4 text-slate-500 dark:text-zinc-400 max-w-md truncate">
                       {log.details || '—'}
                     </td>
                   </tr>
@@ -169,7 +172,7 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
 
         {/* Pagination */}
         {filteredLogs.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="px-4 py-3 bg-slate-50 dark:bg-zinc-950/80 border-t border-slate-200/90 dark:border-zinc-800 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
             <span>
               Hiển thị {(page - 1) * pageSize + 1} -{' '}
               {Math.min(page * pageSize, filteredLogs.length)} trên tổng số {filteredLogs.length} bản ghi
@@ -180,18 +183,18 @@ export default function AdminLogsTab({ logs, loadingLogs, onRefreshLogs }: Props
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 <ChevronLeft size={13} />
               </button>
-              <span className="px-2 font-semibold text-slate-800 dark:text-slate-200">
+              <span className="px-2 font-semibold text-slate-800 dark:text-zinc-200">
                 {page} / {totalPages}
               </span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 <ChevronRight size={13} />
               </button>

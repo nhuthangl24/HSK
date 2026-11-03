@@ -134,11 +134,11 @@ export default function AdminTopicsTab() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Tag className="text-emerald-600" size={22} />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Tag className="text-emerald-600 dark:text-emerald-400" size={22} />
             Quản Lý Chủ Đề Học Tập (Topics)
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             Chủ đề hệ thống dùng chung cho toàn bộ học viên và các chủ đề do từng học viên tự định nghĩa.
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function AdminTopicsTab() {
           <button
             type="button"
             onClick={fetchTopics}
-            className="flex items-center gap-1.5 text-xs text-slate-700 bg-white border border-slate-200 px-3 py-2 rounded-xl shadow-2xs hover:bg-slate-50 cursor-pointer font-semibold transition-all"
+            className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-3 py-2 rounded-xl shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer font-semibold transition-all"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
             <span>Làm mới</span>
@@ -164,28 +164,30 @@ export default function AdminTopicsTab() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-zinc-950 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-          <Search size={15} className="text-slate-400 shrink-0" />
+          <Search size={15} className="text-slate-400 dark:text-zinc-500 shrink-0" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên hoặc mô tả chủ đề..."
-            className="w-full text-xs border-none focus:outline-hidden text-slate-800 placeholder:text-slate-400"
+            className="w-full text-xs border-none focus:outline-hidden text-slate-800 dark:text-zinc-200 placeholder:text-slate-400 dark:placeholder:text-zinc-500 bg-transparent"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter size={13} className="text-slate-400" />
-          <div className="flex bg-slate-100 p-0.5 rounded-xl text-xs">
+          <Filter size={13} className="text-slate-400 dark:text-zinc-500" />
+          <div className="flex bg-slate-100 dark:bg-zinc-900 p-0.5 rounded-xl text-xs">
             {(['all', 'system', 'user'] as const).map((sc) => (
               <button
                 key={sc}
                 type="button"
                 onClick={() => setScopeFilter(sc)}
                 className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                  scopeFilter === sc ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                  scopeFilter === sc
+                    ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-bold shadow-2xs'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
                 }`}
               >
                 {sc === 'all' ? 'Tất cả' : sc === 'system' ? 'Hệ thống' : 'Học viên'}
@@ -197,12 +199,12 @@ export default function AdminTopicsTab() {
 
       {/* Topics Grid */}
       {loading ? (
-        <div className="py-16 text-center text-xs text-slate-400">
+        <div className="py-16 text-center text-xs text-slate-400 dark:text-zinc-500">
           <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
           Đang tải danh sách chủ đề...
         </div>
       ) : filteredTopics.length === 0 ? (
-        <div className="bg-white py-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+        <div className="bg-white dark:bg-zinc-950 py-12 text-center text-xs text-slate-400 dark:text-zinc-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl">
           Không tìm thấy chủ đề nào phù hợp. Nhấn &quot;Tạo chủ đề mới&quot; để thêm.
         </div>
       ) : (
@@ -210,7 +212,7 @@ export default function AdminTopicsTab() {
           {filteredTopics.map((topic) => (
             <div
               key={topic.id}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+              className="bg-white dark:bg-zinc-950 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -219,37 +221,37 @@ export default function AdminTopicsTab() {
                       className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs"
                       style={{ backgroundColor: topic.color || '#10b981' }}
                     />
-                    <h3 className="text-sm font-bold text-slate-900 truncate max-w-[160px]">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[160px]">
                       {topic.name}
                     </h3>
                   </div>
                   <span
-                    className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
+                    className={`text-xs font-bold uppercase px-2.5 py-0.5 rounded-full border ${
                       topic.scope === 'system'
-                        ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-500/10 text-amber-700 border-amber-200'
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                        : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                     }`}
                   >
                     {topic.scope === 'system' ? 'Hệ thống' : 'Cá nhân'}
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-500 line-clamp-2 min-h-[32px]">
+                <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 min-h-[32px]">
                   {topic.description || 'Chưa có mô tả cho chủ đề này.'}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                  <span className="text-base text-slate-900">{topic.wordCount || 0}</span>
-                  <span className="text-[11px] text-slate-400 font-normal">từ vựng</span>
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-zinc-300">
+                  <span className="text-base text-slate-900 dark:text-white font-mono">{topic.wordCount || 0}</span>
+                  <span className="text-xs text-slate-400 dark:text-zinc-500 font-normal">từ vựng</span>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(topic)}
-                    className="p-1.5 text-slate-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer"
+                    className="p-1.5 text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
                     title="Chỉnh sửa chủ đề"
                   >
                     <Edit2 size={14} />
@@ -257,7 +259,7 @@ export default function AdminTopicsTab() {
                   <button
                     type="button"
                     onClick={() => setDeleteConfirm(topic)}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     title="Xóa chủ đề"
                   >
                     <Trash2 size={14} />
@@ -271,41 +273,41 @@ export default function AdminTopicsTab() {
 
       {/* Modal Create / Edit */}
       {isModalOpen && editingTopic && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 p-6 relative">
-            <h3 className="text-base font-bold text-slate-900 mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-950 rounded-3xl shadow-2xl max-w-md w-full border border-slate-200 dark:border-zinc-800 p-6 relative">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
               {editingTopic.id ? 'Chỉnh sửa chủ đề' : 'Tạo chủ đề mới'}
             </h3>
-            <p className="text-xs text-slate-500 mb-4">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4">
               Chủ đề giúp phân loại từ vựng thành các lĩnh vực trong cuộc sống.
             </p>
 
             <form onSubmit={handleSaveTopic} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Tên chủ đề *</label>
+                <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">Tên chủ đề *</label>
                 <input
                   type="text"
                   required
                   value={editingTopic.name || ''}
                   onChange={(e) => setEditingTopic({ ...editingTopic, name: e.target.value })}
                   placeholder="Ví dụ: Du lịch, Ẩm thực, Công nghệ..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden"
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-zinc-800 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Mô tả ngắn</label>
+                <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">Mô tả ngắn</label>
                 <textarea
                   value={editingTopic.description || ''}
                   onChange={(e) => setEditingTopic({ ...editingTopic, description: e.target.value })}
                   placeholder="Mô tả phạm vi từ vựng của chủ đề này..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden resize-none"
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-zinc-800 rounded-xl focus:border-emerald-500 focus:outline-hidden resize-none bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Màu nhận diện</label>
+                <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">Màu nhận diện</label>
                 <div className="flex items-center gap-2">
                   {PRESET_COLORS.map((col) => (
                     <button
@@ -313,7 +315,7 @@ export default function AdminTopicsTab() {
                       type="button"
                       onClick={() => setEditingTopic({ ...editingTopic, color: col })}
                       className={`w-6 h-6 rounded-full transition-transform cursor-pointer ${
-                        editingTopic.color === col ? 'scale-125 ring-2 ring-emerald-500 ring-offset-2' : 'hover:scale-110'
+                        editingTopic.color === col ? 'scale-125 ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-zinc-900' : 'hover:scale-110'
                       }`}
                       style={{ backgroundColor: col }}
                     />
@@ -322,17 +324,17 @@ export default function AdminTopicsTab() {
                     type="color"
                     value={editingTopic.color || '#10b981'}
                     onChange={(e) => setEditingTopic({ ...editingTopic, color: e.target.value })}
-                    className="w-7 h-7 rounded-lg border border-slate-200 cursor-pointer p-0 ml-1"
+                    className="w-7 h-7 rounded-lg border border-slate-200 dark:border-zinc-700 cursor-pointer p-0 ml-1 bg-transparent"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Phạm vi áp dụng</label>
+                <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1">Phạm vi áp dụng</label>
                 <select
                   value={editingTopic.scope || 'system'}
                   onChange={(e) => setEditingTopic({ ...editingTopic, scope: e.target.value as 'system' | 'user' })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white"
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-zinc-800 rounded-xl focus:border-emerald-500 focus:outline-hidden bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
                 >
                   <option value="system">Chủ đề chuẩn Hệ thống (Dành cho toàn bộ người dùng)</option>
                   <option value="user">Chủ đề Cá nhân</option>
@@ -343,7 +345,7 @@ export default function AdminTopicsTab() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold cursor-pointer transition-colors"
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl font-semibold cursor-pointer transition-colors"
                 >
                   Hủy
                 </button>
@@ -362,21 +364,21 @@ export default function AdminTopicsTab() {
 
       {/* Confirmation Modal Delete */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full border border-slate-100 p-6 relative">
-            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-950 rounded-3xl shadow-2xl max-w-sm w-full border border-slate-200 dark:border-zinc-800 p-6 relative">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
               <Trash2 size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">Xác nhận xóa chủ đề</h3>
-            <p className="text-xs text-slate-500 leading-relaxed mb-5">
-              Bạn có chắc chắn muốn xóa chủ đề <strong className="text-slate-900 font-bold">{deleteConfirm.name}</strong>?
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Xác nhận xóa chủ đề</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mb-5">
+              Bạn có chắc chắn muốn xóa chủ đề <strong className="text-slate-900 dark:text-white font-bold">{deleteConfirm.name}</strong>?
               Các từ vựng hiện đang gắn chủ đề này sẽ được hủy liên kết an toàn mà không bị mất từ.
             </p>
             <div className="flex gap-2.5">
               <button
                 type="button"
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
               >
                 Hủy
               </button>

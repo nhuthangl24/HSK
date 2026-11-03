@@ -278,11 +278,11 @@ export default function AdminUsersTab({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           {/* Search Box */}
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
             <input
               type="text"
               placeholder="Tìm kiếm theo tên học viên, email hoặc ID..."
@@ -291,13 +291,13 @@ export default function AdminUsersTab({
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-9 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
+              className="w-full pl-10 pr-9 py-2 text-xs rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-0.5 rounded-sm cursor-pointer"
               >
                 <X size={14} />
               </button>
@@ -318,10 +318,10 @@ export default function AdminUsersTab({
                   setRoleFilter(f.role);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   roleFilter === f.role
                     ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700'
                 }`}
               >
                 {f.label}
@@ -336,7 +336,7 @@ export default function AdminUsersTab({
               setStatusFilter(e.target.value as any);
               setPage(1);
             }}
-            className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
+            className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-700 dark:text-zinc-200 font-medium cursor-pointer"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="active">Đang hoạt động</option>
@@ -347,7 +347,7 @@ export default function AdminUsersTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
+            className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-700 dark:text-zinc-200 font-medium cursor-pointer"
           >
             <option value="recent">Mới nhất trước</option>
             <option value="name">Tên (A-Z)</option>
@@ -358,10 +358,10 @@ export default function AdminUsersTab({
       </div>
 
       {/* Modern High-Density Table */}
-      <div className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-slate-800 uppercase tracking-wider text-[11px] font-bold">
+            <thead className="bg-slate-50 dark:bg-zinc-950/80 text-slate-500 dark:text-zinc-400 border-b border-slate-200/90 dark:border-zinc-800 uppercase tracking-wider text-xs font-bold">
               <tr>
                 <th className="py-3.5 px-4 min-w-[200px] whitespace-nowrap">Học viên</th>
                 <th className="py-3.5 px-4 min-w-[170px] whitespace-nowrap">Email</th>
@@ -373,19 +373,19 @@ export default function AdminUsersTab({
                 <th className="py-3.5 px-4 text-right min-w-[200px] whitespace-nowrap">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
+            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-slate-700 dark:text-zinc-300">
               {loadingUsers ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400 dark:text-zinc-500">
                     <div className="flex items-center justify-center gap-2">
-                      <RefreshCw size={15} className="animate-spin text-emerald-600" />
+                      <RefreshCw size={15} className="animate-spin text-emerald-500" />
                       <span>Đang tải danh sách học viên...</span>
                     </div>
                   </td>
                 </tr>
               ) : paginatedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400 dark:text-zinc-500">
                     Không tìm thấy học viên nào khớp với bộ lọc hiện tại.
                   </td>
                 </tr>
@@ -395,7 +395,7 @@ export default function AdminUsersTab({
                   return (
                     <tr
                       key={u.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/50 transition-colors"
                     >
                       {/* Name with initial avatar */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
@@ -408,15 +408,15 @@ export default function AdminUsersTab({
                             {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1.5">
+                            <div className="font-bold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-xs sm:text-sm whitespace-nowrap flex items-center gap-1.5">
                               <span>{u.name || u.email?.split('@')[0] || 'Học viên'}</span>
                               {isCurrentAdmin && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold shrink-0">
+                                <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold shrink-0 border border-emerald-300 dark:border-emerald-800">
                                   Bạn
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                            <div className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
                               ID: {u.id ? `${u.id.substring(0, 10)}...` : '—'}
                             </div>
                           </div>
@@ -424,22 +424,22 @@ export default function AdminUsersTab({
                       </td>
 
                       {/* Email */}
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono text-xs text-slate-600 dark:text-zinc-400 whitespace-nowrap">
                         {u.email || '—'}
                       </td>
 
                       {/* Role */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 whitespace-nowrap ${
+                          className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 whitespace-nowrap ${
                             u.role === 'admin'
                               ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                              : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700'
                           }`}
                         >
                           {u.role === 'admin' ? (
                             <>
-                              <Shield size={11} /> Quản trị viên
+                              <Shield size={12} /> Quản trị viên
                             </>
                           ) : (
                             'Học viên'
@@ -455,7 +455,7 @@ export default function AdminUsersTab({
                       </td>
 
                       {/* Streak */}
-                      <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300 font-mono whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-zinc-300 font-mono whitespace-nowrap">
                         <span className="inline-flex items-center gap-1">
                           <Flame size={13} className="text-amber-500 fill-amber-500" />
                           <span>{u.streakDays || 0} ngày</span>
@@ -473,11 +473,11 @@ export default function AdminUsersTab({
                       {/* Status */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {u.isLocked ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 whitespace-nowrap">
                             <Lock size={12} /> Đã khóa
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 whitespace-nowrap">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                             <span>Hoạt động</span>
                           </span>
@@ -502,7 +502,7 @@ export default function AdminUsersTab({
                           <button
                             type="button"
                             onClick={() => setInspectUser(u)}
-                            className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-colors cursor-pointer border border-slate-200/60 dark:border-zinc-700/60"
                             title="Xem chi tiết hồ sơ"
                           >
                             <UserCheck size={14} />
@@ -518,10 +518,10 @@ export default function AdminUsersTab({
                                     newRole: u.role === 'admin' ? 'user' : 'admin',
                                   })
                                 }
-                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
                                   u.role === 'admin'
-                                    ? 'text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:text-purple-300'
-                                    : 'text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                                    ? 'text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                    : 'text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400 border-slate-200/60 dark:border-zinc-700/60'
                                 }`}
                                 title={u.role === 'admin' ? 'Hạ quyền xuống User' : 'Nâng quyền lên Admin'}
                               >
@@ -531,10 +531,10 @@ export default function AdminUsersTab({
                               <button
                                 type="button"
                                 onClick={() => onToggleLockUser(u)}
-                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer border ${
                                   u.isLocked
-                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300'
-                                    : 'bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-800 dark:bg-slate-800'
+                                    ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-900'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-800 dark:bg-zinc-800 border-slate-200/60 dark:border-zinc-700/60'
                                 }`}
                                 title={u.isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                               >
@@ -547,7 +547,7 @@ export default function AdminUsersTab({
                                   setDeleteTargetUser(u);
                                   setDeleteConfirmInput('');
                                 }}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/60 dark:hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 dark:bg-zinc-800 dark:hover:bg-rose-950/60 dark:hover:text-rose-400 rounded-lg transition-colors cursor-pointer border border-slate-200/60 dark:border-zinc-700/60"
                                 title="Xóa vĩnh viễn tài khoản"
                               >
                                 <Trash2 size={14} />
@@ -566,7 +566,7 @@ export default function AdminUsersTab({
 
         {/* Table Pagination */}
         {filteredUsers.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="px-4 py-3 bg-slate-50 dark:bg-zinc-950/80 border-t border-slate-200/90 dark:border-zinc-800 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
             <span>
               Hiển thị {(page - 1) * pageSize + 1} -{' '}
               {Math.min(page * pageSize, filteredUsers.length)} trên tổng số {filteredUsers.length} tài khoản
@@ -577,18 +577,18 @@ export default function AdminUsersTab({
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 <ChevronLeft size={13} />
               </button>
-              <span className="px-2 font-semibold text-slate-800 dark:text-slate-200">
+              <span className="px-2 font-semibold text-slate-800 dark:text-zinc-200">
                 {page} / {totalPages}
               </span>
               <button
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 <ChevronRight size={13} />
               </button>
@@ -599,32 +599,32 @@ export default function AdminUsersTab({
 
       {/* User Detail & Profile Modal */}
       {inspectUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full border border-slate-200/90 dark:border-zinc-800 p-6 relative">
             <button
               type="button"
               onClick={() => setInspectUser(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <X size={18} />
             </button>
 
             <div className="flex items-center gap-3.5 mb-5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-lg">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold text-lg border border-emerald-300 dark:border-emerald-800">
                 {(inspectUser.name || inspectUser.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">
                   {inspectUser.name || inspectUser.email?.split('@')[0] || 'Học viên'}
                 </h3>
-                <p className="text-xs text-slate-400 font-mono">{inspectUser.email}</p>
+                <p className="text-xs text-slate-400 dark:text-zinc-500 font-mono">{inspectUser.email}</p>
               </div>
             </div>
 
-            <div className="space-y-2.5 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 mb-5">
+            <div className="space-y-2.5 bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200/60 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-300 mb-5">
               <div className="flex justify-between">
                 <span>UID Định danh:</span>
-                <span className="font-mono text-slate-900 dark:text-white truncate max-w-[180px]">
+                <span className="font-mono text-slate-900 dark:text-zinc-100 truncate max-w-[180px]">
                   {inspectUser.id}
                 </span>
               </div>
@@ -654,17 +654,17 @@ export default function AdminUsersTab({
               </div>
               <div className="flex justify-between">
                 <span>Đăng nhập gần nhất:</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
+                <span className="font-medium text-slate-700 dark:text-zinc-300">
                   {inspectUser.lastLoginAt ? new Date(inspectUser.lastLoginAt).toLocaleString('vi-VN') : 'Chưa có thông tin'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Ngày tạo tài khoản:</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
+                <span className="font-medium text-slate-700 dark:text-zinc-300">
                   {inspectUser.createdAt ? new Date(inspectUser.createdAt).toLocaleDateString('vi-VN') : '—'}
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-zinc-800">
                 <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
                   <Sparkles size={12} className="text-amber-500" />
                   <span>Số dư Credit AI:</span>
@@ -676,10 +676,10 @@ export default function AdminUsersTab({
             </div>
 
             {/* Quick Credit Topup Bar */}
-            <div className="mb-4 p-3 bg-indigo-50/60 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
-              <div className="text-[11px] font-bold text-indigo-900 dark:text-indigo-200 mb-2 flex items-center justify-between">
+            <div className="mb-4 p-3 bg-indigo-50/60 dark:bg-indigo-950/30 rounded-xl border border-indigo-200/80 dark:border-indigo-900/40">
+              <div className="text-xs font-bold text-indigo-900 dark:text-indigo-200 mb-2 flex items-center justify-between">
                 <span>Nạp thêm Credit học tập AI:</span>
-                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-normal">Mỗi tin nhắn trừ 1 credit</span>
+                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-normal">Mỗi tin nhắn trừ 1 credit</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[50, 100, 200].map((addAmount) => (
@@ -701,7 +701,7 @@ export default function AdminUsersTab({
                         console.error('Failed to update credits:', err);
                       }
                     }}
-                    className="py-1.5 px-2 bg-white dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-2xs transition-colors text-center cursor-pointer"
+                    className="py-1.5 px-2 bg-white dark:bg-zinc-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-2xs transition-colors text-center cursor-pointer"
                   >
                     +{addAmount} cr
                   </button>
@@ -716,7 +716,7 @@ export default function AdminUsersTab({
                   onOpenWorkspace(inspectUser.id);
                   setInspectUser(null);
                 }}
-                className="w-full mb-4 py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-800"
+                className="w-full mb-4 py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-800 cursor-pointer"
               >
                 <FolderKanban size={14} />
                 <span>Mở không gian dữ liệu riêng của học viên này</span>
@@ -724,7 +724,7 @@ export default function AdminUsersTab({
             )}
 
             {inspectUser.id !== currentUser?.id && (
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-200/80 dark:border-zinc-800 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => {
@@ -733,7 +733,7 @@ export default function AdminUsersTab({
                     setDeleteTargetUser(u);
                     setDeleteConfirmInput('');
                   }}
-                  className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1 p-1"
+                  className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1 p-1 cursor-pointer"
                 >
                   <Trash2 size={13} />
                   <span>Xóa vĩnh viễn tài khoản</span>
@@ -746,7 +746,7 @@ export default function AdminUsersTab({
                       onToggleLockUser(inspectUser);
                       setInspectUser((prev) => (prev ? { ...prev, isLocked: !prev.isLocked } : null));
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 cursor-pointer border border-slate-200/60 dark:border-zinc-700/60"
                   >
                     {inspectUser.isLocked ? 'Mở khóa' : 'Khóa'}
                   </button>
@@ -759,13 +759,13 @@ export default function AdminUsersTab({
 
       {/* Deletion Safeguard Modal */}
       {deleteTargetUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full border border-rose-200 dark:border-rose-900 p-6 relative">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full border border-rose-200 dark:border-rose-900/80 p-6 relative">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 border border-rose-200 dark:border-rose-900">
               <Trash2 size={24} />
             </div>
 
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1.5">
+            <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 mb-1.5">
               Cảnh Báo: Xóa Vĩnh Viễn Người Dùng
             </h3>
 
@@ -775,7 +775,7 @@ export default function AdminUsersTab({
                 Khi xóa tài khoản <strong className="font-mono text-rose-950 dark:text-rose-100">{deleteTargetUser.email}</strong>,
                 hệ thống sẽ dọn dẹp liên hoàn (**cascade cleanup**) toàn bộ dữ liệu:
               </p>
-              <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-[11px] text-rose-700 dark:text-rose-300">
+              <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-xs text-rose-700 dark:text-rose-300">
                 <li>Sổ từ vựng cá nhân đã tạo</li>
                 <li>Tiến trình ôn tập thẻ ghi nhớ SRS SM-2</li>
                 <li>Lịch sử chuỗi học streak</li>
@@ -783,15 +783,15 @@ export default function AdminUsersTab({
             </div>
 
             <div className="mb-5">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Nhập chính xác email hoặc <code className="text-rose-600 font-bold">XÓA</code> để xác nhận:
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                Nhập chính xác email hoặc <code className="text-rose-600 dark:text-rose-400 font-bold">XÓA</code> để xác nhận:
               </label>
               <input
                 type="text"
                 value={deleteConfirmInput}
                 onChange={(e) => setDeleteConfirmInput(e.target.value)}
                 placeholder={deleteTargetUser.email}
-                className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
@@ -803,7 +803,7 @@ export default function AdminUsersTab({
                   setDeleteTargetUser(null);
                   setDeleteConfirmInput('');
                 }}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               >
                 Hủy bỏ
               </button>
@@ -815,7 +815,7 @@ export default function AdminUsersTab({
                     deleteConfirmInput.trim() !== 'XÓA')
                 }
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
               >
                 {isDeleting ? 'Đang xóa...' : 'Xác nhận Xóa Vĩnh Viễn'}
               </button>
@@ -826,16 +826,16 @@ export default function AdminUsersTab({
 
       {/* Role Change Confirmation Modal */}
       {roleChangeTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200 dark:border-slate-800 p-6 relative">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200/90 dark:border-zinc-800 p-6 relative">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 flex items-center justify-center mb-3 border border-purple-200 dark:border-purple-800">
               <Shield size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 mb-1">
               Xác nhận thay đổi phân quyền
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
-              Bạn có chắc chắn muốn đổi vai trò của tài khoản <strong className="text-slate-800 dark:text-slate-200">{roleChangeTarget.user.email}</strong> thành{' '}
+            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mb-5">
+              Bạn có chắc chắn muốn đổi vai trò của tài khoản <strong className="text-slate-800 dark:text-zinc-200">{roleChangeTarget.user.email}</strong> thành{' '}
               <strong className="text-purple-600 dark:text-purple-400 font-bold">
                 {roleChangeTarget.newRole === 'admin' ? 'Quản trị viên (Admin)' : 'Học viên (User)'}
               </strong>?
@@ -844,14 +844,14 @@ export default function AdminUsersTab({
               <button
                 type="button"
                 onClick={() => setRoleChangeTarget(null)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Hủy bỏ
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRoleChange}
-                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs"
+                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
               >
                 Xác nhận
               </button>

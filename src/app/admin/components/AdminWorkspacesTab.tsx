@@ -599,9 +599,9 @@ export default function AdminWorkspacesTab({
       {/* Master-Detail Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: User List (4 cols) */}
-        <div className="lg:col-span-4 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs p-4 space-y-3.5">
+        <div className="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs p-4 space-y-3.5">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <FolderKanban size={14} className="text-emerald-600 dark:text-emerald-400" />
               <span>Danh sách học viên ({filteredSummaries.length})</span>
             </h3>
@@ -609,19 +609,19 @@ export default function AdminWorkspacesTab({
 
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo tên hoặc email..."
-              className="w-full pl-8 pr-8 py-2 text-xs border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:border-emerald-500 focus:outline-hidden transition-all"
+              className="w-full pl-8 pr-8 py-2 text-xs border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 rounded-xl focus:border-emerald-500 focus:outline-hidden transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-0.5 rounded cursor-pointer"
               >
                 <X size={13} />
               </button>
@@ -631,12 +631,12 @@ export default function AdminWorkspacesTab({
           {/* User List Scrollable */}
           <div className="space-y-2 max-h-[620px] overflow-y-auto pr-1">
             {loadingList && summaries.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-400">
+              <div className="py-12 text-center text-xs text-slate-400 dark:text-zinc-500">
                 <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 Đang tải danh sách học viên...
               </div>
             ) : filteredSummaries.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
+              <div className="py-8 text-center text-xs text-slate-400 dark:text-zinc-500">
                 Không tìm thấy học viên nào phù hợp.
               </div>
             ) : (
@@ -649,7 +649,7 @@ export default function AdminWorkspacesTab({
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer text-xs ${
                       isSelected
                         ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-600 shadow-xs ring-1 ring-emerald-500/30'
-                        : 'bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-slate-200/80 dark:border-slate-800'
+                        : 'bg-white dark:bg-zinc-950/60 hover:bg-slate-50 dark:hover:bg-zinc-800/60 border-slate-200/90 dark:border-zinc-800'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 mb-1.5">
@@ -658,34 +658,34 @@ export default function AdminWorkspacesTab({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
-                          <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
+                          <span className="font-bold text-slate-900 dark:text-zinc-100 truncate text-xs sm:text-sm">
                             {u.name}
                           </span>
                           {u.isLocked ? (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400 font-bold shrink-0 flex items-center gap-0.5">
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400 font-bold shrink-0 flex items-center gap-0.5 border border-rose-200 dark:border-rose-900">
                               <Lock size={10} /> Đã khóa
                             </span>
                           ) : (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-medium shrink-0">
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 font-medium shrink-0 border border-slate-200/60 dark:border-zinc-700/60">
                               Bình thường
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate font-mono">
+                        <p className="text-xs text-slate-400 dark:text-zinc-500 truncate font-mono">
                           {u.email || u.userId}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-400 pt-2 border-t border-slate-100 dark:border-zinc-800 flex-wrap">
                       <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                         {u.customWordsCount} từ riêng
                       </span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
+                      <span className="text-slate-300 dark:text-zinc-700">•</span>
                       <span>{u.customHskCount} nhóm HSK</span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
+                      <span className="text-slate-300 dark:text-zinc-700">•</span>
                       <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-semibold">
-                        <Flame size={11} /> {u.streakDays}d
+                        <Flame size={12} /> {u.streakDays}d
                       </span>
                     </div>
                   </div>
@@ -696,58 +696,58 @@ export default function AdminWorkspacesTab({
         </div>
 
         {/* Right Column: Detail Inspector (8 cols) */}
-        <div className="lg:col-span-8 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs p-6 space-y-6 text-slate-900 dark:text-white">
+        <div className="lg:col-span-8 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs p-6 space-y-6 text-slate-900 dark:text-zinc-100">
           {!selectedUserId ? (
-            <div className="py-24 text-center text-xs text-slate-400">
-              <FolderKanban size={36} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+            <div className="py-24 text-center text-xs text-slate-400 dark:text-zinc-500">
+              <FolderKanban size={36} className="mx-auto text-slate-300 dark:text-zinc-600 mb-2" />
               Chọn một học viên từ danh sách bên trái để kiểm tra không gian làm việc.
             </div>
           ) : loadingDetail && !workspaceData ? (
-            <div className="py-24 text-center text-xs text-slate-400">
+            <div className="py-24 text-center text-xs text-slate-400 dark:text-zinc-500">
               <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               Đang tải dữ liệu không gian của học viên...
             </div>
           ) : workspaceData ? (
             <>
               {/* Modern SaaS Header */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-slate-50 to-teal-500/5 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-emerald-500/20 dark:border-emerald-500/20 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-slate-50 to-teal-500/5 dark:from-zinc-950 dark:via-zinc-900/90 dark:to-zinc-950 border border-emerald-500/20 dark:border-emerald-500/20 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-sm shadow-emerald-500/20">
                     {(workspaceData.user.name || workspaceData.user.email || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
                         {workspaceData.user.name}
                       </h3>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                         Workspace Cá Nhân
                       </span>
                       {workspaceData.user.isLocked ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center gap-1">
-                          <Lock size={10} /> Đã khóa
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center gap-1">
+                          <Lock size={11} /> Đã khóa
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                          <CheckCircle2 size={10} className="text-emerald-500" /> Hoạt động
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 flex items-center gap-1">
+                          <CheckCircle2 size={11} className="text-emerald-500" /> Hoạt động
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono flex items-center gap-2 flex-wrap">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-mono flex items-center gap-2 flex-wrap">
                       <span>{workspaceData.user.email || 'Chưa liên kết email'}</span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500">UID: {workspaceData.user.id}</span>
+                      <span className="text-slate-300 dark:text-zinc-700">•</span>
+                      <span className="text-xs text-slate-400 dark:text-zinc-500">UID: {workspaceData.user.id}</span>
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5 sm:self-center">
-                  <div className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs text-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mục tiêu</span>
+                  <div className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs text-center">
+                    <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Mục tiêu</span>
                     <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">HSK {workspaceData.user.targetHsk || 3}</span>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs text-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Streak</span>
+                  <div className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs text-center">
+                    <span className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Streak</span>
                     <span className="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center justify-center gap-0.5">
                       <Flame size={12} /> {workspaceData.user.streakDays || 0}d
                     </span>
@@ -757,60 +757,60 @@ export default function AdminWorkspacesTab({
 
               {/* Stats KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-50/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Từ đã học & làm</span>
+                <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider">Từ đã học & làm</span>
                     <BookOpen size={14} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="text-2xl font-black text-slate-900 dark:text-white">
+                  <div className="text-2xl font-black text-slate-900 dark:text-zinc-100">
                     {practicedStats.total}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Tiến độ tổng hợp</div>
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">Tiến độ tổng hợp</div>
                 </div>
 
-                <div className="bg-slate-50/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Từ đã thuộc</span>
+                <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider">Từ đã thuộc</span>
                     <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     {practicedStats.mastered}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">SRS Mastered</div>
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">SRS Mastered</div>
                 </div>
 
-                <div className="bg-slate-50/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Từ vựng riêng</span>
+                <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider">Từ vựng riêng</span>
                     <FileText size={14} className="text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     {workspaceData.customWords.length}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Do user tự tạo</div>
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">Do user tự tạo</div>
                 </div>
 
-                <div className="bg-slate-50/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-slate-400 mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Lượt ôn tập</span>
+                <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider">Lượt ôn tập</span>
                     <GraduationCap size={14} className="text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="text-2xl font-black text-purple-600 dark:text-purple-400">
                     {workspaceData.totalReviews}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">Flashcard & Test</div>
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">Flashcard & Test</div>
                 </div>
               </div>
 
               {/* Sub-tabs Navigation */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl overflow-x-auto text-xs border border-slate-200/60 dark:border-slate-800">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-zinc-950 rounded-xl overflow-x-auto text-xs border border-slate-200/80 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setWorkspaceSubTab('practiced')}
                   className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'practiced'
-                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Sparkles size={13} className={workspaceSubTab === 'practiced' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -821,8 +821,8 @@ export default function AdminWorkspacesTab({
                   onClick={() => setWorkspaceSubTab('words')}
                   className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'words'
-                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <BookOpen size={13} className={workspaceSubTab === 'words' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -833,8 +833,8 @@ export default function AdminWorkspacesTab({
                   onClick={() => setWorkspaceSubTab('hsk')}
                   className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'hsk'
-                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Layers size={13} className={workspaceSubTab === 'hsk' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -845,8 +845,8 @@ export default function AdminWorkspacesTab({
                   onClick={() => setWorkspaceSubTab('topics')}
                   className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'topics'
-                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Tag size={13} className={workspaceSubTab === 'topics' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -857,8 +857,8 @@ export default function AdminWorkspacesTab({
                   onClick={() => setWorkspaceSubTab('settings')}
                   className={`px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     workspaceSubTab === 'settings'
-                      ? 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Settings size={13} className={workspaceSubTab === 'settings' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
@@ -916,8 +916,8 @@ export default function AdminWorkspacesTab({
 
                     {/* Filter Pills */}
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-                        <Filter size={11} /> Lọc:
+                      <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 shrink-0 mr-1 flex items-center gap-1">
+                        <Filter size={12} /> Lọc:
                       </span>
                       {[
                         { id: 'all', label: `Tất cả (${practicedStats.total})` },
@@ -932,10 +932,10 @@ export default function AdminWorkspacesTab({
                           key={chip.id}
                           type="button"
                           onClick={() => setPracticedFilter(chip.id as any)}
-                          className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-colors cursor-pointer ${
                             practicedFilter === chip.id
                               ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
+                              : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700'
                           }`}
                         >
                           {chip.label}
@@ -946,8 +946,8 @@ export default function AdminWorkspacesTab({
 
                   {/* Practiced Words List - High Density Redesign */}
                   {filteredPracticedWords.length === 0 ? (
-                    <div className="py-16 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30">
-                      <Sparkles size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                    <div className="py-16 text-center text-xs text-slate-400 dark:text-zinc-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50/50 dark:bg-zinc-950/30">
+                      <Sparkles size={32} className="mx-auto text-slate-300 dark:text-zinc-600 mb-2" />
                       {practicedStats.total === 0
                         ? 'Học viên này chưa bắt đầu luyện tập hoặc học từ vựng nào trong hệ thống.'
                         : 'Không có từ vựng nào khớp với bộ lọc tìm kiếm.'}
@@ -962,21 +962,21 @@ export default function AdminWorkspacesTab({
                         return (
                           <div
                             key={w.vocabId}
-                            className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/70 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-2xs space-y-2.5"
+                            className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-950/70 hover:border-slate-300 dark:hover:border-zinc-700 transition-all shadow-xs space-y-2.5"
                           >
                             {/* Main Row: Hanzi, Audio, Pinyin, HSK, Star, Meaning + Status */}
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex items-center gap-3">
                                 {/* Large Hanzi with quick Audio button */}
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-2xl font-black text-slate-900 dark:text-white font-hanzi tracking-wide leading-none">
+                                  <span className="text-2xl font-black text-slate-900 dark:text-zinc-100 font-hanzi tracking-wide leading-none">
                                     {w.hanzi}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => speakWord(w.hanzi)}
                                     title="Nghe phát âm"
-                                    className="p-1 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                    className="p-1 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                                   >
                                     <Volume2 size={13} />
                                   </button>
@@ -988,7 +988,7 @@ export default function AdminWorkspacesTab({
                                       {w.pinyin || '—'}
                                     </span>
                                     <span
-                                      className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${
+                                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                         w.hskLevel === 1
                                           ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
                                           : w.hskLevel === 2
@@ -1012,7 +1012,7 @@ export default function AdminWorkspacesTab({
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5 font-medium">
+                                  <p className="text-xs text-slate-700 dark:text-zinc-300 mt-0.5 font-medium">
                                     {w.vietnamese || '—'}
                                   </p>
                                 </div>
@@ -1021,11 +1021,11 @@ export default function AdminWorkspacesTab({
                               {/* Right status badge */}
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {w.isMastered ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[11px] font-bold">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold">
                                     <Sparkles size={11} className="text-emerald-600 dark:text-emerald-400" /> Đã thuộc
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold border border-slate-200/60 dark:border-slate-700/60">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-semibold border border-slate-200/60 dark:border-zinc-700/60">
                                     <RefreshCw size={10} className="text-slate-400" /> {w.srs?.totalReviews || 0} lượt ôn
                                   </span>
                                 )}
@@ -1034,13 +1034,13 @@ export default function AdminWorkspacesTab({
 
                             {/* Conditional Practice Insights (Only rendered when data exists!) */}
                             {(hasWriting || hasTranslation || hasNotes || w.lastPracticedAt) && (
-                              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {/* Writing Activity */}
                                   {hasWriting && (
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-[11px]">
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-xs">
                                       <PenTool size={11} className="text-slate-400 shrink-0" />
-                                      <span className="text-slate-500 dark:text-slate-400 font-medium">Viết:</span>
+                                      <span className="text-slate-500 dark:text-zinc-400 font-medium">Viết:</span>
                                       {w.hanziStatus === 'correct' ? (
                                         <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                                           <Check size={10} /> Đúng
@@ -1055,7 +1055,7 @@ export default function AdminWorkspacesTab({
                                         </span>
                                       )}
                                       {w.hanziPracticeInput && (
-                                        <span className="font-hanzi font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 px-1 py-0.2 rounded border border-slate-200/60 dark:border-slate-700 ml-0.5">
+                                        <span className="font-hanzi font-bold text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-zinc-700 ml-0.5">
                                           "{w.hanziPracticeInput}"
                                         </span>
                                       )}
@@ -1064,9 +1064,9 @@ export default function AdminWorkspacesTab({
 
                                   {/* Translation Activity */}
                                   {hasTranslation && (
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-[11px]">
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 text-xs">
                                       <Languages size={11} className="text-slate-400 shrink-0" />
-                                      <span className="text-slate-500 dark:text-slate-400 font-medium">Dịch:</span>
+                                      <span className="text-slate-500 dark:text-zinc-400 font-medium">Dịch:</span>
                                       {w.translationStatus === 'correct' ? (
                                         <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                                           <Check size={10} /> Chuẩn
@@ -1077,7 +1077,7 @@ export default function AdminWorkspacesTab({
                                         </span>
                                       )}
                                       {w.translationPracticeInput && (
-                                        <span className="text-slate-800 dark:text-slate-200 max-w-[200px] truncate ml-0.5">
+                                        <span className="text-slate-800 dark:text-zinc-200 max-w-[200px] truncate ml-0.5">
                                           "{w.translationPracticeInput}"
                                         </span>
                                       )}
@@ -1086,7 +1086,7 @@ export default function AdminWorkspacesTab({
 
                                   {/* Note */}
                                   {hasNotes && (
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-[11px] max-w-sm truncate">
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-xs max-w-sm truncate">
                                       <Bookmark size={11} className="text-amber-500 shrink-0" />
                                       <span className="truncate">"{w.notes}"</span>
                                     </div>
@@ -1094,8 +1094,8 @@ export default function AdminWorkspacesTab({
                                 </div>
 
                                 {w.lastPracticedAt && (
-                                  <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-mono ml-auto">
-                                    <Calendar size={10} />
+                                  <div className="flex items-center gap-1 text-xs text-slate-400 dark:text-zinc-500 font-mono ml-auto">
+                                    <Calendar size={11} />
                                     <span>{new Date(w.lastPracticedAt).toLocaleString('vi-VN')}</span>
                                   </div>
                                 )}
@@ -1114,44 +1114,44 @@ export default function AdminWorkspacesTab({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="relative flex-1 max-w-xs">
-                      <Search size={13} className="absolute left-3 top-2.5 text-slate-400" />
+                      <Search size={13} className="absolute left-3 top-2.5 text-slate-400 dark:text-zinc-500" />
                       <input
                         type="text"
                         value={wordSearch}
                         onChange={(e) => setWordSearch(e.target.value)}
                         placeholder="Tìm từ của học viên này..."
-                        className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl focus:border-emerald-500 focus:outline-hidden"
+                        className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 rounded-xl focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-slate-500 dark:text-zinc-400">
                       Hiển thị {filteredWords.length} / {workspaceData.customWords.length} từ
                     </span>
                   </div>
 
                   {filteredWords.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                    <div className="py-12 text-center text-xs text-slate-400 dark:text-zinc-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
                       {workspaceData.customWords.length === 0
                         ? 'Học viên này chưa tạo từ vựng cá nhân nào.'
                         : 'Không tìm thấy từ vựng nào khớp với bộ lọc tìm kiếm.'}
                     </div>
                   ) : (
-                    <div className="overflow-x-auto max-h-[460px] overflow-y-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <div className="overflow-x-auto max-h-[460px] overflow-y-auto rounded-xl border border-slate-200/90 dark:border-zinc-800">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px] sticky top-0 bg-slate-50 dark:bg-slate-900 z-10">
-                            <th className="py-2.5 px-3">Hán tự</th>
-                            <th className="py-2.5 px-3">Pinyin</th>
-                            <th className="py-2.5 px-3">Nghĩa tiếng Việt</th>
-                            <th className="py-2.5 px-3">Cấp HSK</th>
-                            <th className="py-2.5 px-3">Chủ đề</th>
-                            <th className="py-2.5 px-3 text-center">Lượt ôn</th>
-                            <th className="py-2.5 px-3 text-right">Xóa</th>
+                          <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 font-bold uppercase text-xs sticky top-0 bg-slate-50 dark:bg-zinc-950 z-10">
+                            <th className="py-3 px-3">Hán tự</th>
+                            <th className="py-3 px-3">Pinyin</th>
+                            <th className="py-3 px-3">Nghĩa tiếng Việt</th>
+                            <th className="py-3 px-3">Cấp HSK</th>
+                            <th className="py-3 px-3">Chủ đề</th>
+                            <th className="py-3 px-3 text-center">Lượt ôn</th>
+                            <th className="py-3 px-3 text-right">Xóa</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
                           {filteredWords.map((w) => (
-                            <tr key={w.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                              <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white font-hanzi text-sm flex items-center gap-1.5">
+                            <tr key={w.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/50 transition-colors">
+                              <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-zinc-100 font-hanzi text-sm flex items-center gap-1.5">
                                 <span>{w.hanzi}</span>
                                 <button
                                   type="button"
@@ -1165,18 +1165,18 @@ export default function AdminWorkspacesTab({
                               <td className="py-2.5 px-3 font-medium text-emerald-700 dark:text-emerald-400 font-mono">
                                 {w.pinyin}
                               </td>
-                              <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 max-w-xs truncate">
+                              <td className="py-2.5 px-3 text-slate-700 dark:text-zinc-300 max-w-xs truncate">
                                 {w.meaning}
                               </td>
                               <td className="py-2.5 px-3">
-                                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px]">
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-semibold text-xs border border-slate-200 dark:border-zinc-700">
                                   HSK {w.hskLevel || 1}
                                 </span>
                               </td>
-                              <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
+                              <td className="py-2.5 px-3 text-slate-500 dark:text-zinc-400 truncate max-w-[120px]">
                                 {w.topicName || '—'}
                               </td>
-                              <td className="py-2.5 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                              <td className="py-2.5 px-3 text-center font-bold text-slate-700 dark:text-zinc-300">
                                 {w.srs?.totalReviews || 0}
                               </td>
                               <td className="py-2.5 px-3 text-right">
@@ -1203,26 +1203,26 @@ export default function AdminWorkspacesTab({
               {workspaceSubTab === 'hsk' && (
                 <div className="space-y-3">
                   {workspaceData.customHskGroups.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                    <div className="py-12 text-center text-xs text-slate-400 dark:text-zinc-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
                       Học viên này chưa tạo nhóm HSK tùy chỉnh nào.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {workspaceData.customHskGroups.map((g) => (
-                        <div key={g.id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                        <div key={g.id} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40">
                           <div className="flex items-center justify-between mb-1">
-                            <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                            <h4 className="font-bold text-slate-900 dark:text-zinc-100 text-xs flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: g.color || '#f59e0b' }} />
                               {g.name}
                             </h4>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
                               HSK {g.levelNumber}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1">
                             {g.description || 'Chưa có mô tả.'}
                           </p>
-                          <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                          <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-400 font-semibold">
                             {g.wordCount || 0} từ trong nhóm
                           </div>
                         </div>
@@ -1236,23 +1236,23 @@ export default function AdminWorkspacesTab({
               {workspaceSubTab === 'topics' && (
                 <div className="space-y-3">
                   {workspaceData.customTopics.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                    <div className="py-12 text-center text-xs text-slate-400 dark:text-zinc-500 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
                       Học viên này chưa tạo chủ đề riêng nào.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {workspaceData.customTopics.map((t) => (
-                        <div key={t.id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                        <div key={t.id} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40">
                           <div className="flex items-center justify-between mb-1">
-                            <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                            <h4 className="font-bold text-slate-900 dark:text-zinc-100 text-xs flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.color || '#10b981' }} />
                               {t.name}
                             </h4>
                           </div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1">
                             {t.description || 'Chưa có mô tả.'}
                           </p>
-                          <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                          <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-400 font-semibold">
                             {t.wordCount || 0} từ trong chủ đề
                           </div>
                         </div>
@@ -1265,34 +1265,34 @@ export default function AdminWorkspacesTab({
               {/* Sub-tab 4: Personal Settings */}
               {workspaceSubTab === 'settings' && (
                 <div className="space-y-4 max-w-md">
-                  <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs space-y-3">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 text-xs space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400">Chế độ giao diện:</span>
-                      <span className="font-bold text-slate-800 dark:text-white capitalize">
+                      <span className="text-slate-500 dark:text-zinc-400">Chế độ giao diện:</span>
+                      <span className="font-bold text-slate-800 dark:text-zinc-100 capitalize">
                         {workspaceData.settings?.theme || 'Mặc định'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400">Giọng đọc TTS:</span>
-                      <span className="font-bold text-slate-800 dark:text-white font-mono text-[11px]">
+                      <span className="text-slate-500 dark:text-zinc-400">Giọng đọc TTS:</span>
+                      <span className="font-bold text-slate-800 dark:text-zinc-100 font-mono text-xs">
                         {workspaceData.settings?.ttsVoiceURI || 'Mặc định hệ điều hành'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400">Tốc độ đọc (Rate):</span>
-                      <span className="font-bold text-slate-800 dark:text-white">
+                      <span className="text-slate-500 dark:text-zinc-400">Tốc độ đọc (Rate):</span>
+                      <span className="font-bold text-slate-800 dark:text-zinc-100">
                         {workspaceData.settings?.ttsRate || 0.85}x
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400">Tự động phát âm:</span>
-                      <span className={workspaceData.settings?.autoPronounce ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                      <span className="text-slate-500 dark:text-zinc-400">Tự động phát âm:</span>
+                      <span className={workspaceData.settings?.autoPronounce ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-zinc-500'}>
                         {workspaceData.settings?.autoPronounce ? 'Bật' : 'Tắt'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 dark:text-slate-400">Cỡ chữ Hán:</span>
-                      <span className="font-bold text-slate-800 dark:text-white capitalize">
+                      <span className="text-slate-500 dark:text-zinc-400">Cỡ chữ Hán:</span>
+                      <span className="font-bold text-slate-800 dark:text-zinc-100 capitalize">
                         {workspaceData.settings?.fontSize || 'Bình thường'}
                       </span>
                     </div>

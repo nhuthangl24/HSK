@@ -212,15 +212,15 @@ export default function AdminQualityAuditTab({
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Quality Score */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
+        <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs mb-1">
             <span>Điểm chất lượng dữ liệu</span>
             <Sparkles className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
             {qualityScore}%
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Dựa trên {words.length} từ vựng hệ thống</p>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Dựa trên {words.length} từ vựng hệ thống</p>
         </div>
 
         {/* Duplicate Hanzi */}
@@ -229,17 +229,17 @@ export default function AdminQualityAuditTab({
           className={`p-4 rounded-xl border cursor-pointer transition-all ${
             activeFilter === 'duplicates'
               ? 'bg-amber-50/80 border-amber-300 dark:bg-amber-950/30 dark:border-amber-700'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+              : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
+          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs mb-1">
             <span>Từ trùng lặp (Hanzi)</span>
             <AlertTriangle className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400">
             {duplicateGroups.length} <span className="text-xs font-normal text-slate-500">nhóm</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">{duplicateWordsCount} bản ghi bị trùng</p>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{duplicateWordsCount} bản ghi bị trùng</p>
         </div>
 
         {/* Missing Pinyin */}
@@ -248,17 +248,17 @@ export default function AdminQualityAuditTab({
           className={`p-4 rounded-xl border cursor-pointer transition-all ${
             activeFilter === 'missing-pinyin'
               ? 'bg-rose-50/80 border-rose-300 dark:bg-rose-950/30 dark:border-rose-700'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+              : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
+          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs mb-1">
             <span>Thiếu Pinyin</span>
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">
             {missingPinyinList.length}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Cần bổ sung phiên âm</p>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Cần bổ sung phiên âm</p>
         </div>
 
         {/* Missing Meaning */}
@@ -267,24 +267,24 @@ export default function AdminQualityAuditTab({
           className={`p-4 rounded-xl border cursor-pointer transition-all ${
             activeFilter === 'missing-meaning'
               ? 'bg-indigo-50/80 border-indigo-300 dark:bg-indigo-950/30 dark:border-indigo-700'
-              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+              : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
+          <div className="flex items-center justify-between text-slate-500 dark:text-zinc-400 text-xs mb-1">
             <span>Thiếu nghĩa Việt</span>
             <Info className="w-4 h-4 text-indigo-500" />
           </div>
           <div className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400">
             {missingMeaningList.length}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Cần cập nhật nghĩa</p>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Cần cập nhật nghĩa</p>
         </div>
       </div>
 
       {/* Main Inspection View */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
         {/* Filter Toolbar */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/40">
+        <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-zinc-900/40">
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setActiveFilter('duplicates')}
@@ -376,38 +376,38 @@ export default function AdminQualityAuditTab({
                         {group.items.map((item, idx) => (
                           <div
                             key={item.id}
-                            className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col justify-between gap-2"
+                            className="p-3 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between gap-2"
                           >
                             <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                   HSK {item.hskLevel}
                                 </span>
-                                <span className="text-[10px] text-slate-400 font-mono">#{item.id.slice(0, 8)}</span>
+                                <span className="text-xs text-slate-400 font-mono">#{item.id.slice(0, 8)}</span>
                               </div>
                               <div className="font-mono text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
                                 {item.pinyin || '<chưa có pinyin>'}
                               </div>
-                              <div className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                              <div className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
                                 {item.meaning || '<chưa có nghĩa>'}
                               </div>
                               {item.example && (
-                                <div className="text-[11px] text-slate-500 italic line-clamp-1">
+                                <div className="text-xs text-slate-500 italic line-clamp-1">
                                   VD: {item.example}
                                 </div>
                               )}
                             </div>
 
-                            <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-end gap-2">
+                            <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2">
                               <button
                                 onClick={() => setSelectedWordToFix(item)}
-                                className="px-2 py-1 text-[11px] font-medium rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+                                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 cursor-pointer transition-colors"
                               >
                                 Sửa
                               </button>
                               <button
                                 onClick={() => handleDeleteItem(item)}
-                                className="px-2 py-1 text-[11px] font-medium rounded bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100"
+                                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100 cursor-pointer transition-colors"
                               >
                                 Xóa bản này
                               </button>
@@ -425,7 +425,7 @@ export default function AdminQualityAuditTab({
           {(activeFilter === 'missing-pinyin' || activeFilter === 'missing-meaning' || activeFilter === 'no-example') && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase tracking-wider text-[11px]">
+                <thead className="bg-slate-50 dark:bg-zinc-900 text-slate-500 uppercase tracking-wider text-xs">
                   <tr>
                     <th className="py-2.5 px-3">Cấp độ</th>
                     <th className="py-2.5 px-3">Chữ Hán</th>
@@ -435,7 +435,7 @@ export default function AdminQualityAuditTab({
                     <th className="py-2.5 px-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
                   {(activeFilter === 'missing-pinyin'
                     ? missingPinyinList
                     : activeFilter === 'missing-meaning'
@@ -445,9 +445,9 @@ export default function AdminQualityAuditTab({
                     .filter((w) => !searchQuery || w.hanzi.includes(searchQuery) || (w.meaning && w.meaning.includes(searchQuery)))
                     .slice(0, 50)
                     .map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-zinc-900/40">
                         <td className="py-2.5 px-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                             HSK {item.hskLevel}
                           </span>
                         </td>

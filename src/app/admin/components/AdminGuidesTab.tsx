@@ -236,11 +236,11 @@ export default function AdminGuidesTab() {
           const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
           if (imgMatch) {
             return (
-              <div key={idx} className="my-5 rounded-xl overflow-hidden border border-[#e2e8f0] dark:border-[#1e293b] shadow-xs bg-slate-50 dark:bg-slate-900">
+              <div key={idx} className="my-5 rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-xs bg-slate-50 dark:bg-zinc-900">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={imgMatch[2]} alt={imgMatch[1]} className="w-full h-auto object-contain max-h-[500px]" />
                 {imgMatch[1] && (
-                  <div className="px-3.5 py-1.5 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border-t border-[#e2e8f0] dark:border-[#1e293b] text-center font-medium">
+                  <div className="px-3.5 py-1.5 text-xs text-slate-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 text-center font-medium">
                     📸 {imgMatch[1]}
                   </div>
                 )}
@@ -374,18 +374,18 @@ export default function AdminGuidesTab() {
                   className={`px-2 py-1 text-xs rounded-lg transition-colors flex items-center gap-1 ${
                     selectedCategory === key
                       ? 'bg-emerald-600 text-white font-medium'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800'
+                      : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800'
                   }`}
                 >
                   <span>{item.label}</span>
-                  <span className="opacity-70 text-[10px]">({count})</span>
+                  <span className="opacity-70 text-xs">({count})</span>
                 </button>
               );
             })}
           </div>
 
           {/* Guide Items List */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800 max-h-[640px] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-zinc-800 max-h-[640px] overflow-y-auto">
             {filteredGuides.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
                 Không tìm thấy tài liệu phù hợp.
@@ -400,10 +400,10 @@ export default function AdminGuidesTab() {
                   <button
                     key={guide.id}
                     onClick={() => setActiveGuideId(guide.id)}
-                    className={`w-full text-left p-3.5 transition-colors flex items-start gap-3 ${
+                    className={`w-full text-left p-3.5 transition-colors flex items-start gap-3 cursor-pointer ${
                       isActive
                         ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-l-4 border-l-emerald-600'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                        : 'hover:bg-slate-50 dark:hover:bg-zinc-900/40'
                     }`}
                   >
                     <div className={`p-1.5 rounded-lg flex-shrink-0 mt-0.5 ${cat.color}`}>
@@ -411,8 +411,8 @@ export default function AdminGuidesTab() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-[11px] font-medium text-slate-400">#{guide.order}</span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-xs font-medium text-slate-400">#{guide.order}</span>
+                        <span className="text-xs text-slate-400">
                           {new Date(guide.updatedAt).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
@@ -420,12 +420,12 @@ export default function AdminGuidesTab() {
                         className={`text-xs font-semibold truncate ${
                           isActive
                             ? 'text-emerald-900 dark:text-emerald-300'
-                            : 'text-slate-900 dark:text-slate-200'
+                            : 'text-slate-900 dark:text-zinc-200'
                         }`}
                       >
                         {guide.title}
                       </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
                         {guide.summary}
                       </p>
                     </div>
@@ -437,7 +437,7 @@ export default function AdminGuidesTab() {
         </div>
 
         {/* Right Reader Panel (8 cols) */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col min-h-[640px]">
+        <div className="lg:col-span-8 bg-white dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col min-h-[640px]">
           {activeGuide ? (
             <>
               {/* Reader Header */}
@@ -494,7 +494,7 @@ export default function AdminGuidesTab() {
                     {activeGuide.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-200/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        className="px-2 py-0.5 rounded text-xs font-mono bg-slate-200/60 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"
                       >
                         #{tag}
                       </span>

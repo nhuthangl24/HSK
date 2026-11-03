@@ -447,7 +447,7 @@ export default function AdminPage() {
   // -------------------------------------------------------------
   if (isLoading && !devAdminActive) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0f19] flex items-center justify-center p-6 text-slate-600 dark:text-slate-300">
+      <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-6 text-slate-600 dark:text-zinc-300">
         <div className="flex flex-col items-center gap-3">
           <RefreshCw size={24} className="animate-spin text-emerald-600" />
           <span className="text-xs font-semibold">Đang xác thực quyền truy cập Quản trị viên...</span>
@@ -458,8 +458,8 @@ export default function AdminPage() {
 
   if (!isEffectiveAdmin) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0f19] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl text-center space-y-5">
+      <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-3xl p-8 shadow-xl text-center space-y-5">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-xs">
             <Shield size={28} />
           </div>
@@ -468,7 +468,7 @@ export default function AdminPage() {
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               HSK Exam Suite Admin Portal
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
               Khu vực dành riêng cho Quản trị viên hệ thống để giám sát hạ tầng, quản trị học viên và khảo thí HSK.
             </p>
           </div>
@@ -479,7 +479,7 @@ export default function AdminPage() {
               <Sparkles size={14} className="text-emerald-600" />
               <span>Chế độ Nhà phát triển / Quản trị nội bộ</span>
             </div>
-            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
+            <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
               Bạn đang chạy trên môi trường máy chủ cục bộ (localhost). Bạn có thể mở khóa chế độ Quản trị viên ngay lập tức để trải nghiệm và kiểm thử hệ thống.
             </p>
             <button
@@ -503,7 +503,7 @@ export default function AdminPage() {
                 fetchUsers();
                 fetchVocab();
               }}
-              className="w-full mt-2 py-2.5 px-4 bg-[#047857] hover:bg-[#059669] text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full mt-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <KeyRound size={14} />
               <span>Kích hoạt quyền Quản trị viên ngay</span>
@@ -513,7 +513,7 @@ export default function AdminPage() {
           <div className="pt-2 flex items-center justify-between text-xs">
             <Link
               href="/"
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-semibold flex items-center gap-1"
+              className="text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-semibold flex items-center gap-1 transition-colors"
             >
               <ArrowLeft size={13} />
               <span>Quay về trang học</span>

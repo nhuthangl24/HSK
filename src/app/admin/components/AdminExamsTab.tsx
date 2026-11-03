@@ -240,38 +240,43 @@ export default function AdminExamsTab() {
   return (
     <div className="space-y-6">
       {/* Editorial Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#e2e8f0] dark:border-[#1e293b]">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#0f172a] dark:text-white">
-              Quản Trị Thư Viện Đề Thi HSK
-            </h1>
-            <span className="px-2 py-0.5 text-[10.5px] font-bold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/40 rounded border border-[#a7f3d0] dark:border-[#065f46]">
-              {totalCount} bộ đề
-            </span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-500/20">
+            <BookOpen size={22} />
           </div>
-          <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1">
-            Quản lý tệp đề thi PDF, bản ghi âm MP3 nghe hiểu, đáp án mẫu và chỉ số cấp độ từ HSK 1 đến HSK 7-9 & HSKK.
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+                Quản Trị Thư Viện Đề Thi HSK
+              </h1>
+              <span className="px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 rounded-md border border-emerald-200 dark:border-emerald-800/60">
+                {totalCount} bộ đề
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+              Quản lý tệp đề thi PDF, bản ghi âm MP3 nghe hiểu, đáp án mẫu và chỉ số cấp độ từ HSK 1 đến HSK 7-9 & HSKK.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-center">
           <button
             type="button"
             onClick={fetchExams}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#334155] dark:text-[#cbd5e1] bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-lg hover:bg-[#f8fafc] dark:hover:bg-[#334155]/60 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-200 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl transition-colors cursor-pointer"
           >
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={13} className={loading ? 'animate-spin text-emerald-500' : ''} />
             <span>Làm mới</span>
           </button>
 
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
           >
-            <Plus size={14} />
+            <Plus size={15} />
             <span>Thêm đề thi mới</span>
           </button>
         </div>
@@ -279,71 +284,71 @@ export default function AdminExamsTab() {
 
       {/* Metadata Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
-          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs">
+          <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
             Tổng đề thi
           </div>
-          <div className="text-xl font-black text-[#0f172a] dark:text-white mt-1">
+          <div className="text-2xl font-black text-slate-900 dark:text-zinc-100 mt-1">
             {totalCount}
           </div>
-          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Đầy đủ dữ liệu học thuật
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
-          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs">
+          <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
             Đề thật Hanban
           </div>
-          <div className="text-xl font-black text-[#047857] dark:text-[#34d399] mt-1">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
             {officialCount}
           </div>
-          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Đề thi chính thức
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
-          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs">
+          <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
             Đề thử nghiệm BLCU
           </div>
-          <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">
+          <div className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
             {mockCount}
           </div>
-          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Tuyển tập đại học Bắc Kinh
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b]">
-          <div className="text-[10.5px] font-bold text-[#64748b] dark:text-[#94a3b8] uppercase tracking-wider">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs">
+          <div className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
             Bản ghi Audio MP3
           </div>
-          <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {audioCount}
           </div>
-          <div className="text-[10px] text-[#94a3b8] dark:text-[#64748b] mt-0.5">
+          <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Sẵn sàng nghe trực tuyến
           </div>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white dark:bg-[#0f172a] p-3 rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] space-y-3">
+      <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/90 dark:border-zinc-800 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo tên đề thi, nhà xuất bản, mã đề..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg placeholder-[#94a3b8] focus:outline-hidden focus:border-[#047857]"
+              className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40 transition-all"
             />
           </div>
 
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8]">Phân loại:</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Phân loại:</span>
             {[
               { id: 'all', label: 'Tất cả' },
               { id: 'official', label: 'Hanban Official' },
@@ -353,10 +358,10 @@ export default function AdminExamsTab() {
                 key={cat.id}
                 type="button"
                 onClick={() => setCategoryFilter(cat.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                   categoryFilter === cat.id
-                    ? 'bg-[#047857] text-white'
-                    : 'bg-[#f1f5f9] dark:bg-[#1e293b] text-[#475569] dark:text-[#94a3b8] hover:bg-[#e2e8f0] dark:hover:bg-[#334155]'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 border border-slate-200/60 dark:border-zinc-700/60'
                 }`}
               >
                 {cat.label}
@@ -366,24 +371,24 @@ export default function AdminExamsTab() {
         </div>
 
         {/* Level Filters */}
-        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-[#f1f5f9] dark:border-[#1e293b]/80 text-xs">
-          <span className="text-[11px] font-semibold text-[#64748b] dark:text-[#94a3b8] mr-1">Cấp độ:</span>
+        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-zinc-800/80 text-xs">
+          <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 mr-1">Cấp độ:</span>
           {['all', '1', '2', '3', '4', '5', '6', '7', 'HSKK'].map((lvl) => (
             <button
               key={lvl}
               type="button"
               onClick={() => setLevelFilter(lvl)}
-              className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 levelFilter === lvl
-                  ? 'bg-[#0f172a] text-white dark:bg-white dark:text-[#0f172a] font-semibold'
-                  : 'text-[#64748b] dark:text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]'
+                  ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 border border-slate-200/60 dark:border-zinc-700/60'
               }`}
             >
               {lvl === 'all' ? 'Tất cả cấp độ' : lvl === '7' ? 'HSK 7–9' : lvl === 'HSKK' ? 'Khẩu ngữ HSKK' : `HSK ${lvl}`}
             </button>
           ))}
           {filteredExams.length !== totalCount && (
-            <span className="ml-auto text-[11px] text-[#64748b] dark:text-[#94a3b8]">
+            <span className="ml-auto text-xs text-slate-500 dark:text-zinc-400 font-mono">
               Hiển thị {filteredExams.length} / {totalCount}
             </span>
           )}
@@ -391,24 +396,24 @@ export default function AdminExamsTab() {
       </div>
 
       {/* Catalog Table */}
-      <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-[#e2e8f0] dark:border-[#1e293b] overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-zinc-800 overflow-hidden shadow-xs">
         {loading && exams.length === 0 ? (
-          <div className="py-16 text-center text-xs text-[#64748b] dark:text-[#94a3b8]">
-            <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#047857]" />
+          <div className="py-16 text-center text-xs text-slate-500 dark:text-zinc-400">
+            <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-emerald-500" />
             Đang tải danh mục đề thi...
           </div>
         ) : filteredExams.length === 0 ? (
           <div className="py-16 text-center">
-            <BookOpen size={32} className="mx-auto text-[#cbd5e1] dark:text-[#334155] mb-2" />
-            <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+            <BookOpen size={32} className="mx-auto text-slate-300 dark:text-zinc-600 mb-2" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
               Không tìm thấy đề thi phù hợp
             </h3>
-            <p className="text-xs text-[#64748b] dark:text-[#94a3b8] mt-1 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
               Thử tìm kiếm với từ khóa khác hoặc bỏ chọn bộ lọc cấp độ.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#f1f5f9] dark:divide-[#1e293b]">
+          <div className="divide-y divide-slate-100 dark:divide-zinc-800/80">
             {filteredExams.map((e) => {
               const levelLabel =
                 e.hskLevel === 'HSKK'
@@ -420,40 +425,40 @@ export default function AdminExamsTab() {
               return (
                 <div
                   key={e.id}
-                  className="p-3.5 transition-colors hover:bg-[#f8fafc] dark:hover:bg-[#131c2e]"
+                  className="p-4 transition-colors hover:bg-slate-50/80 dark:hover:bg-zinc-800/50"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     {/* Left: Metadata & Title */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
                       {/* Level Badge */}
-                      <div className="w-12 h-10 rounded-lg bg-[#047857]/10 dark:bg-[#064e3b]/30 text-[#047857] dark:text-[#34d399] border border-[#a7f3d0] dark:border-[#065f46] flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold leading-tight uppercase">{levelLabel}</span>
+                      <div className="w-14 h-11 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-xs font-extrabold leading-tight uppercase">{levelLabel}</span>
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <span className="text-[10.5px] font-semibold text-[#047857] dark:text-[#34d399] bg-[#ecfdf5] dark:bg-[#064e3b]/30 px-1.5 py-0.2 rounded border border-[#a7f3d0] dark:border-[#065f46]">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/60">
                             {e.category === 'official' ? 'Hanban Official' : 'BLCU Mock'}
                           </span>
                           {e.year && (
-                            <span className="text-[11px] text-[#64748b] dark:text-[#94a3b8] font-mono">
+                            <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
                               Năm {e.year}
                             </span>
                           )}
                           {e.isPinned && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">
-                              <Pin size={9} />
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
+                              <Pin size={11} />
                               Ghim
                             </span>
                           )}
                         </div>
 
-                        <h3 className="text-xs font-bold text-[#0f172a] dark:text-white truncate">
+                        <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                           {e.title}
                         </h3>
 
-                        <div className="flex items-center gap-3 text-[11px] text-[#64748b] dark:text-[#94a3b8] mt-1 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-zinc-400 mt-1 flex-wrap">
                           <span>Nguồn: {e.source || 'Hanban'}</span>
                           <span>•</span>
                           <span>{e.durationMinutes || 90} phút</span>
@@ -461,7 +466,7 @@ export default function AdminExamsTab() {
                           <span>{e.questionCount || 80} câu hỏi</span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1 font-medium">
-                            <Headphones size={11} className={e.audioUrl ? 'text-[#047857]' : 'text-slate-400'} />
+                            <Headphones size={13} className={e.audioUrl ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
                             {e.audioUrl ? 'Có Audio MP3' : 'Chưa có Audio'}
                           </span>
                         </div>
@@ -469,16 +474,16 @@ export default function AdminExamsTab() {
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                       {e.pdfUrl && (
                         <a
                           href={e.pdfUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 rounded-lg border border-[#cbd5e1] dark:border-[#334155] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white hover:bg-[#f8fafc] dark:hover:bg-[#1e293b]"
+                          className="p-2 rounded-xl border border-slate-200/80 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
                           title="Xem tệp PDF đề thi"
                         >
-                          <FileText size={13} />
+                          <FileText size={14} />
                         </a>
                       )}
 
@@ -486,22 +491,22 @@ export default function AdminExamsTab() {
                         type="button"
                         onClick={() => handleTogglePin(e)}
                         title={e.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
-                        className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${
                           e.isPinned
                             ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300'
-                            : 'bg-white dark:bg-[#1e293b] border-[#cbd5e1] dark:border-[#334155] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white'
+                            : 'bg-white dark:bg-zinc-800 border-slate-200/80 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100'
                         }`}
                       >
-                        {e.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+                        {e.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(e)}
                         title="Chỉnh sửa thông tin đề thi"
-                        className="p-1.5 rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#64748b] hover:text-[#0f172a] dark:hover:text-white transition-colors cursor-pointer"
+                        className="p-2 rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                       >
-                        <Edit2 size={13} />
+                        <Edit2 size={14} />
                       </button>
 
                       <button
@@ -509,9 +514,9 @@ export default function AdminExamsTab() {
                         disabled={deletingId === e.id}
                         onClick={() => handleDeleteExam(e.id)}
                         title="Xóa đề thi này"
-                        className="p-1.5 rounded-lg text-[#94a3b8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-900"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -524,27 +529,29 @@ export default function AdminExamsTab() {
 
       {/* Create / Edit Exam Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#e2e8f0] dark:border-[#1e293b] max-w-xl w-full p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0] dark:border-[#1e293b]">
-              <div className="flex items-center gap-2">
-                <BookOpen size={18} className="text-[#047857]" />
-                <h3 className="text-sm font-bold text-[#0f172a] dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-zinc-800 max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/90 dark:border-zinc-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                  <BookOpen size={18} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">
                   {editingExam ? 'Chỉnh Sửa Bộ Đề Thi' : 'Thêm Bộ Đề Thi Mới'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-[#94a3b8] hover:text-[#0f172a] dark:hover:text-white"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveExam} className="space-y-3">
+            <form onSubmit={handleSaveExam} className="space-y-3.5">
               <div>
-                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Tên bộ đề thi *
                 </label>
                 <input
@@ -553,19 +560,19 @@ export default function AdminExamsTab() {
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="Ví dụ: Đề Thi Thật HSK 5 Năm 2024 - Mã H51001"
-                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Cấp độ HSK
                   </label>
                   <select
                     value={formHskLevel}
                     onChange={(e) => setFormHskLevel((isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value)) as ExamHskLevel)}
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                    className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   >
                     {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
                       <option key={lvl} value={lvl}>
@@ -577,13 +584,13 @@ export default function AdminExamsTab() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Phân loại
                   </label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value as ExamCategory)}
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                    className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   >
                     <option value="official">Đề thi thật Hanban</option>
                     <option value="mock">Đề thử nghiệm BLCU</option>
@@ -591,46 +598,46 @@ export default function AdminExamsTab() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Năm phát hành
                   </label>
                   <input
                     type="number"
                     value={formYear}
                     onChange={(e) => setFormYear(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                    className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Thời lượng thi (phút)
                   </label>
                   <input
                     type="number"
                     value={formDuration}
                     onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                    className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                     Tổng số câu hỏi
                   </label>
                   <input
                     type="number"
                     value={formQuestions}
                     onChange={(e) => setFormQuestions(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                    className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Đường dẫn tệp PDF Đề thi
                 </label>
                 <input
@@ -638,12 +645,12 @@ export default function AdminExamsTab() {
                   value={formPdfUrl}
                   onChange={(e) => setFormPdfUrl(e.target.value)}
                   placeholder="/exams/pdf/hsk5_exam_2024.pdf hoặc link trực tiếp"
-                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Đường dẫn tệp Audio MP3 Nghe hiểu
                 </label>
                 <input
@@ -651,12 +658,12 @@ export default function AdminExamsTab() {
                   value={formAudioUrl}
                   onChange={(e) => setFormAudioUrl(e.target.value)}
                   placeholder="/exams/audio/hsk5_audio_2024.mp3 hoặc link trực tiếp"
-                  className="w-full px-3 py-1.5 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#475569] dark:text-[#cbd5e1] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                   Mô tả & Hướng dẫn làm bài
                 </label>
                 <textarea
@@ -664,7 +671,7 @@ export default function AdminExamsTab() {
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   placeholder="Ghi chú về nguồn đề, cấu trúc các phần Nghe - Đọc - Viết..."
-                  className="w-full px-3 py-2 text-xs bg-[#f8fafc] dark:bg-[#1e293b] text-[#0f172a] dark:text-white border border-[#e2e8f0] dark:border-[#334155] rounded-lg focus:outline-hidden focus:border-[#047857]"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
@@ -674,19 +681,19 @@ export default function AdminExamsTab() {
                     type="checkbox"
                     checked={formIsPinned}
                     onChange={(e) => setFormIsPinned(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#047857] focus:ring-[#047857]"
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="text-xs font-semibold text-[#0f172a] dark:text-white">
+                  <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
                     Ghim đề thi này lên đầu danh sách học viên
                   </span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e8f0] dark:border-[#1e293b]">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200/90 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-[#475569] dark:text-[#cbd5e1] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
@@ -694,7 +701,7 @@ export default function AdminExamsTab() {
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-4 py-1.5 text-xs font-bold text-white bg-[#047857] hover:bg-[#059669] rounded-lg transition-colors cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   {formSubmitting ? 'Đang lưu...' : editingExam ? 'Cập nhật đề thi' : 'Thêm vào thư viện'}
                 </button>

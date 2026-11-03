@@ -332,7 +332,7 @@ export default function AdminLayout({
               </div>
               <div
                 suppressHydrationWarning
-                className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono leading-tight truncate max-w-[130px]"
+                className="text-xs text-slate-400 dark:text-zinc-500 font-mono leading-tight truncate max-w-[130px]"
               >
                 {mounted ? currentUser?.email || 'admin@hsk.com' : 'admin@hsk.com'}
               </div>

@@ -22,11 +22,11 @@ export default function AdminPasteTab({ onImportComplete }: AdminPasteTabProps) 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <ClipboardPaste className="text-emerald-600" size={22} />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <ClipboardPaste className="text-emerald-600 dark:text-emerald-400" size={22} />
             Công Cụ Nhập Liệu Hàng Loạt Bằng Paste (Bulk Paste Engine)
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             Quy trình chuẩn hóa 10 bước: Tách cột thông minh, kiểm tra trùng lặp thời gian thực, bảng xem trước tương tác và phân phối vào đích lưu.
           </p>
         </div>
@@ -35,17 +35,17 @@ export default function AdminPasteTab({ onImportComplete }: AdminPasteTabProps) 
           <button
             type="button"
             onClick={() => downloadSampleTemplate('xlsx')}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs"
           >
-            <Download size={14} className="text-emerald-600" />
+            <Download size={14} className="text-emerald-600 dark:text-emerald-400" />
             <span>Mẫu Excel (.xlsx)</span>
           </button>
           <button
             type="button"
             onClick={() => downloadSampleTemplate('csv')}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-2xs"
           >
-            <Download size={14} className="text-emerald-600" />
+            <Download size={14} className="text-emerald-600 dark:text-emerald-400" />
             <span>Mẫu CSV (.csv)</span>
           </button>
           <button
@@ -60,9 +60,9 @@ export default function AdminPasteTab({ onImportComplete }: AdminPasteTabProps) 
       </div>
 
       {/* Feature Highlight Banner */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
         <div className="max-w-2xl relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-bold text-emerald-200">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-emerald-200">
             <Sparkles size={13} />
             <span>Được tối ưu cho dữ liệu lớn lên tới 500 từ/lần</span>
           </div>
@@ -89,45 +89,45 @@ export default function AdminPasteTab({ onImportComplete }: AdminPasteTabProps) 
       </div>
 
       {/* 10-Step Workflow Explanation Grid */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <CheckCircle2 size={16} className="text-emerald-600" />
-          Tiêu chuẩn định dạng & Quy trình xử lý 10 bước (Khớp 100% cột web)
+      <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs p-6 space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+          Tiêu chuẩn định dạng &amp; Quy trình xử lý 10 bước (Khớp 100% cột web)
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-            <span className="font-bold text-slate-800 block">Định dạng phân tách chuẩn (`|` hoặc Tab)</span>
-            <code className="block p-3 rounded-lg bg-slate-900 text-emerald-300 font-mono text-[11px] overflow-x-auto whitespace-nowrap">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800 space-y-2">
+            <span className="font-bold text-slate-800 dark:text-zinc-200 block">Định dạng phân tách chuẩn (`|` hoặc Tab)</span>
+            <code className="block p-3 rounded-lg bg-zinc-900 dark:bg-black text-emerald-300 font-mono text-xs overflow-x-auto whitespace-nowrap">
               Từ mới (Chữ Hán) | Phiên âm | Nghĩa tiếng Việt | Ví dụ (Chữ Hán) | Phiên âm ví dụ | Dịch câu ví dụ
             </code>
-            <p className="text-slate-500 text-[11px] leading-relaxed">
+            <p className="text-slate-500 dark:text-zinc-400 text-xs leading-relaxed">
               Trong đó <strong>Từ mới, Phiên âm, Nghĩa tiếng Việt</strong> là 3 trường bắt buộc. Các cột câu ví dụ, phiên âm ví dụ và dịch nghĩa có thể bổ sung sau hoặc sao chép nguyên cột từ Excel.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-            <span className="font-bold text-slate-800 block">Dữ liệu mẫu thực tế</span>
-            <pre className="p-3 rounded-lg bg-slate-100 text-slate-700 font-mono text-[11px] overflow-x-auto whitespace-pre-wrap">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800 space-y-2">
+            <span className="font-bold text-slate-800 dark:text-zinc-200 block">Dữ liệu mẫu thực tế</span>
+            <pre className="p-3 rounded-lg bg-slate-100 dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
               {SAMPLE_DATA}
             </pre>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-          <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
-            <div className="font-bold text-slate-800 mb-1">1. Lọc dòng trống & Khoảng trắng</div>
-            <p className="text-slate-500 text-[11px]">Tự động dọn dẹp các dòng trống hoặc khoảng cách thừa giữa các ký tự.</p>
+          <div className="p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+            <div className="font-bold text-slate-800 dark:text-zinc-200 mb-1">1. Lọc dòng trống &amp; Khoảng trắng</div>
+            <p className="text-slate-500 dark:text-zinc-400 text-xs">Tự động dọn dẹp các dòng trống hoặc khoảng cách thừa giữa các ký tự.</p>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
-            <div className="font-bold text-slate-800 mb-1">2. Phát hiện từ trùng lặp</div>
-            <p className="text-slate-500 text-[11px]">Kiểm tra so với cơ sở dữ liệu hiện tại để cảnh báo các chữ Hán đã có sẵn.</p>
+          <div className="p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+            <div className="font-bold text-slate-800 dark:text-zinc-200 mb-1">2. Phát hiện từ trùng lặp</div>
+            <p className="text-slate-500 dark:text-zinc-400 text-xs">Kiểm tra so với cơ sở dữ liệu hiện tại để cảnh báo các chữ Hán đã có sẵn.</p>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-slate-100 bg-white">
-            <div className="font-bold text-slate-800 mb-1">3. Chỉnh sửa tương tác</div>
-            <p className="text-slate-500 text-[11px]">Cho phép chỉnh sửa từng ô trực tiếp trên bảng xem trước trước khi bấm Nhập.</p>
+          <div className="p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+            <div className="font-bold text-slate-800 dark:text-zinc-200 mb-1">3. Chỉnh sửa tương tác</div>
+            <p className="text-slate-500 dark:text-zinc-400 text-xs">Cho phép chỉnh sửa từng ô trực tiếp trên bảng xem trước trước khi bấm Nhập.</p>
           </div>
         </div>
       </div>
