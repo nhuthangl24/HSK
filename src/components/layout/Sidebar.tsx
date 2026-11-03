@@ -795,30 +795,6 @@ export function Sidebar({
         )}
       </div>
 
-      {/* AI Tutor Chat Shortcut */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800">
-        <Link
-          href="/chat"
-          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-emerald-600/10 via-teal-600/10 to-emerald-600/10 hover:from-emerald-600/20 hover:to-teal-600/20 border border-emerald-300 dark:border-emerald-800 transition-all group shadow-2xs cursor-pointer btn-press"
-          title="Hội thoại & Luyện nói tiếng Trung với AI Tiểu Trí (200 credits)"
-        >
-          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-            <Sparkles size={16} className="text-amber-300 animate-pulse" />
-          </div>
-          <div className="min-w-0 flex-1 text-left">
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-              <span className="truncate">Hội Thoại AI Tiểu Trí</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold shrink-0">
-                {user?.aiCredits ?? 200} cr
-              </span>
-            </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-              Luyện nói & sửa ngữ pháp
-            </div>
-          </div>
-        </Link>
-      </div>
-
       {/* Zalo Community Widget if enabled */}
       {zaloConfig.enabled && zaloConfig.url && (
         <div className="p-3 border-t border-slate-200 dark:border-slate-800">
@@ -983,17 +959,6 @@ export function Sidebar({
                     </button>
                   );
                 })}
-            </div>
-
-            {/* AI Tutor Chat in Collapsed Mode */}
-            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 w-full flex justify-center">
-              <Link
-                href="/chat"
-                title="Hội thoại & Luyện nói tiếng Trung AI Tiểu Trí (200 credits)"
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-xs hover:scale-105 transition-all btn-press cursor-pointer"
-              >
-                <Sparkles size={16} className="text-amber-300" />
-              </Link>
             </div>
 
             {/* Zalo Community in Collapsed Mode */}

@@ -2847,32 +2847,6 @@ export function incrementExamStats(id: string, type: 'view' | 'download'): boole
 
 const INITIAL_STARTER_NOTIFICATIONS: AppNotification[] = [
   {
-    id: 'notif-apology-compensation-200-credits',
-    title: '🎁 Tặng 200 Credits AI Bồi Thường & Lời Xin Lỗi Vì Sự Cố Website',
-    message: 'Kính gửi Quý học viên, vừa qua hệ thống HSK Master đã gặp sự cố gián đoạn dịch vụ trong quá trình triển khai nâng cấp hệ thống. Đội ngũ phát triển thành thật xin lỗi vì những bất tiện này. Để tạ lỗi và cảm ơn sự đồng hành của bạn, ban quản trị đã tự động cộng ngay 200 Credits luyện nói AI miễn phí vào tài khoản của tất cả học viên. Chúc bạn học tập thật tốt!',
-    type: 'system',
-    priority: 'urgent',
-    isPinned: true,
-    actionLabel: 'Kiểm tra & Luyện nói ngay',
-    actionLink: '/chat',
-    actionType: 'link',
-    actionPayload: '/chat',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'notif-ai-speaking-tutor-launch',
-    title: '🤖 Ra Mắt Gia Sư Luyện Nói AI Tiểu Trí (小智) - Phản Xạ Tiếng Trung Tương Tác!',
-    message: 'Hệ thống HSK Master chính thức ra mắt tính năng Luyện Nói & Giao Tiếp Tiếng Trung cùng Trợ lý AI Tiểu Trí (小智)! Trải nghiệm giao tiếp giọng nói tương tác trực tiếp bằng micro, sửa lỗi ngữ pháp theo chuẩn HSK 1 - 6, hướng dẫn phiên âm pinyin, dịch nghĩa tiếng Việt tự nhiên và luyện phát âm giọng Bắc Kinh chuẩn bản xứ. Hãy trải nghiệm ngay nhé!',
-    type: 'feature',
-    priority: 'urgent',
-    isPinned: true,
-    actionLabel: 'Khám phá AI Tiểu Trí ngay',
-    actionLink: '/chat',
-    actionType: 'link',
-    actionPayload: '/chat',
-    createdAt: new Date().toISOString(),
-  },
-  {
     id: 'notif-ui-redesign-upcoming',
     title: '🎨 Thông Báo: Sắp Ra Mắt Giao Diện Mới & Tối Ưu Hóa Trải Nghiệm Học Tập!',
     message: 'HSK Master chuẩn bị ra mắt phiên bản nâng cấp giao diện toàn diện: thiết kế hiện đại, bảng từ trực quan, tối ưu trải nghiệm học và ôn tập trên mọi thiết bị máy tính & điện thoại. Mọi dữ liệu học tập, từ vựng cá nhân và tiến độ SRS của bạn đều được bảo toàn nguyên vẹn 100%. Hãy cùng đón chờ nhé!',
