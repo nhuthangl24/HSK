@@ -1,5 +1,18 @@
 [
   {
+    "id": "notif-ai-chat-speaking-launch",
+    "title": "🤖 Ra Mắt: Trò Chuyện Cùng AI & Luyện Nói Tiếng Trung Phản Xạ!",
+    "message": "HSK Master chính thức tích hợp nền tảng Trò chuyện với AI và Luyện nói phản xạ tiếng Trung tại https://chat.classnia.id.vn/. Trợ lý AI thông minh sẵn sàng đồng hành cùng bạn luyện giao tiếp, chỉnh sửa phát âm và nâng cao phản xạ khẩu ngữ HSK mỗi ngày!",
+    "type": "feature",
+    "priority": "urgent",
+    "isPinned": true,
+    "actionLabel": "Trò chuyện với AI ngay",
+    "actionLink": "https://chat.classnia.id.vn/",
+    "actionType": "link",
+    "actionPayload": "https://chat.classnia.id.vn/",
+    "createdAt": "2026-11-05T05:25:00.000Z"
+  },
+  {
     "id": "notif-faq-and-policies-launch",
     "title": "📚 Ra Mắt: Trung Tâm Trợ Giúp (FAQ) & Chính Sách Người Dùng!",
     "message": "HSK Master vừa cập nhật Trung tâm Trợ giúp toàn diện: Tổng hợp các câu hỏi thường gặp về thuật toán SRS, hướng dẫn xuất phiếu tập viết chữ Hán PDF A4, xử lý lỗi âm thanh TTS, cùng văn bản Điều khoản sử dụng và Chính sách bảo mật quyền riêng tư chi tiết.",

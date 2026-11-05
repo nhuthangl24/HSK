@@ -21,6 +21,7 @@ import {
   PenTool,
   Printer,
   GraduationCap,
+  Bot,
 } from 'lucide-react';
 import {
   StudyMode,
@@ -153,6 +154,21 @@ export function TableToolbar({
               HSK 1-9
             </span>
           </Link>
+
+          {/* AI Chat & Speaking Practice Link - Placed right next to Ngữ pháp */}
+          <a
+            href="https://chat.classnia.id.vn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-700 hover:via-indigo-700 hover:to-violet-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
+            title="Trò chuyện với AI, Luyện nói & Phản xạ tiếng Trung (https://chat.classnia.id.vn/)"
+          >
+            <Bot size={14} />
+            <span>Trò chuyện AI</span>
+            <span className="text-[10px] bg-white/20 text-white px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+              Luyện nói
+            </span>
+          </a>
         </div>
       </div>
 

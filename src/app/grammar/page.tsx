@@ -46,6 +46,8 @@ import {
   Shield,
   Settings,
   User,
+  Bot,
+  ExternalLink,
 } from 'lucide-react';
 
 import {
@@ -371,6 +373,24 @@ export default function GrammarLmsPage() {
             <span>Ngữ pháp</span>
           </div>
 
+          {/* AI Chat & Speaking Practice link */}
+          <a
+            href="https://chat.classnia.id.vn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 transition-colors group"
+            title="Trò chuyện với AI & Luyện nói tiếng Trung (https://chat.classnia.id.vn/)"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <Bot size={16} className="text-indigo-500 group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate">Trò chuyện AI</span>
+            </div>
+            <span className="text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+              <span>Luyện nói</span>
+              <ExternalLink size={10} className="opacity-70" />
+            </span>
+          </a>
+
           <Link
             href="/practice"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/60 transition-colors"
@@ -543,8 +563,21 @@ export default function GrammarLmsPage() {
             </nav>
           </div>
 
-          {/* Quick Sound & Profile */}
+          {/* Quick AI Chat, Sound & Profile */}
           <div className="flex items-center gap-2">
+            <a
+              href="https://chat.classnia.id.vn/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-700 hover:via-indigo-700 hover:to-violet-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all btn-press"
+              title="Trò chuyện với AI & Luyện nói tiếng Trung (https://chat.classnia.id.vn/)"
+            >
+              <Bot size={14} />
+              <span>Trò chuyện AI</span>
+              <span className="text-[10px] bg-white/20 text-white px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+                Luyện nói
+              </span>
+            </a>
             <button
               type="button"
               onClick={() => setSoundEnabled(quizSound.toggle())}
